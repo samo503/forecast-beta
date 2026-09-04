@@ -64,10 +64,14 @@ export default function PredictClient({
   predictions,
   myPicks,
   currentUser,
+  accuracy,
 }: {
   predictions: PredictionData[];
   myPicks: Record<string, string>;
   currentUser: TopBarUser | null;
+  /** Real computed accuracy, null when there are zero *resolved* picks
+   *  (rendered as "—"). Day streak and "this week" below are still mock. */
+  accuracy: number | null;
 }) {
   const router = useRouter();
   const [activeCard, setActiveCard] = useState<PredictionData | null>(null);
@@ -161,7 +165,7 @@ export default function PredictClient({
             {/* Accuracy */}
             <div className="flex flex-col items-center gap-1">
               <span className="text-[1.15rem] font-black leading-none text-white">
-                {predictStats.accuracy}%
+                {accuracy === null ? "—" : `${accuracy}%`}
               </span>
               <span className="text-[0.42rem] uppercase tracking-[0.12em] text-slate-500">
                 Accuracy

@@ -48,6 +48,11 @@ export default async function PredictPage() {
   // getCurrentUserBadge(), built from data already fetched here instead of
   // querying auth/profiles a second time.
   let currentUserBadge: TopBarUser | null = null;
+  // "Your Forecast" accuracy — null (rendered as "—") until there's at
+  // least one *resolved* pick, same fallback as profile's stats row.
+  // Day streak and "this week" in that section are still mock — only
+  // accuracy was in scope for this step.
+  let accuracy: number | null = null;
 
   if (user) {
     const { data: profileRow } = await authedSupabase
@@ -61,6 +66,17 @@ export default async function PredictPage() {
       avatar: profileRow?.avatar_url ?? null,
       streak: profileRow?.streak_count ?? 0,
     };
+
+    const { data: pickResults } = await authedSupabase
+      .from("user_predictions")
+      .select("is_correct")
+      .eq("user_id", user.id);
+
+    const resolved = (pickResults ?? []).filter((p) => p.is_correct !== null);
+    const correct = resolved.filter((p) => p.is_correct === true);
+    accuracy = resolved.length
+      ? Math.round((correct.length / resolved.length) * 100)
+      : null;
 
     if (predictions.length) {
       const { data: pickRows } = await authedSupabase
@@ -81,6 +97,7 @@ export default async function PredictPage() {
       predictions={predictions}
       myPicks={myPicks}
       currentUser={currentUserBadge}
+      accuracy={accuracy}
     />
   );
 }
