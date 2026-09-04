@@ -14,6 +14,10 @@ function isPast(iso: string): boolean {
   return new Date(iso).getTime() < Date.now();
 }
 
+function isWithinPastWeek(iso: string): boolean {
+  return Date.now() - new Date(iso).getTime() <= 7 * 24 * 60 * 60 * 1000;
+}
+
 export default async function PredictPage() {
   const { data: predictionRows } = await supabase
     .from("predictions")
@@ -73,15 +77,14 @@ export default async function PredictPage() {
   let currentUserBadge: TopBarUser | null = null;
   // "Your Forecast" accuracy — null (rendered as "—") until there's at
   // least one *resolved* pick, same fallback as profile's stats row.
-  // "This week" in that section is still mock — day streak and accuracy
-  // are the two real numbers now.
   let accuracy: number | null = null;
   let streak = 0;
+  let correctThisWeek = 0;
 
   if (user) {
     const { data: profileRow } = await authedSupabase
       .from("profiles")
-      .select("username, display_name, avatar_url")
+      .select("username, display_name, avatar_url, timezone")
       .eq("id", user.id)
       .single();
 
@@ -95,7 +98,11 @@ export default async function PredictPage() {
     accuracy = resolved.length
       ? Math.round((correct.length / resolved.length) * 100)
       : null;
-    streak = computeStreak((pickResults ?? []).map((p) => p.created_at));
+    streak = computeStreak(
+      (pickResults ?? []).map((p) => p.created_at),
+      profileRow?.timezone ?? "UTC"
+    );
+    correctThisWeek = correct.filter((p) => isWithinPastWeek(p.created_at)).length;
 
     currentUserBadge = {
       name: profileRow?.display_name ?? profileRow?.username ?? "You",
@@ -124,6 +131,7 @@ export default async function PredictPage() {
       currentUser={currentUserBadge}
       accuracy={accuracy}
       streak={streak}
+      correctThisWeek={correctThisWeek}
     />
   );
 }

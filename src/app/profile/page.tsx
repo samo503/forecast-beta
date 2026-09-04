@@ -42,7 +42,10 @@ export default async function ProfilePage() {
     handle: profileRow?.username ? `@${profileRow.username}` : "",
     avatar: profileRow?.avatar_url ?? null,
     identityLine: profileRow?.identity_line ?? null,
-    streak: computeStreak(allPicks.map((p) => p.created_at)),
+    streak: computeStreak(
+      allPicks.map((p) => p.created_at),
+      profileRow?.timezone ?? "UTC"
+    ),
   };
   const resolvedPicks = allPicks.filter((p) => p.is_correct !== null);
   const correctPicks = resolvedPicks.filter((p) => p.is_correct === true);

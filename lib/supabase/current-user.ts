@@ -21,7 +21,7 @@ export async function getCurrentUserBadge(): Promise<CurrentUserBadge | null> {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("username, display_name, avatar_url")
+    .select("username, display_name, avatar_url, timezone")
     .eq("id", user.id)
     .single();
 
@@ -33,6 +33,9 @@ export async function getCurrentUserBadge(): Promise<CurrentUserBadge | null> {
   return {
     name: profile?.display_name ?? profile?.username ?? "You",
     avatar: profile?.avatar_url ?? null,
-    streak: computeStreak((picks ?? []).map((p) => p.created_at)),
+    streak: computeStreak(
+      (picks ?? []).map((p) => p.created_at),
+      profile?.timezone ?? "UTC"
+    ),
   };
 }

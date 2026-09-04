@@ -26,6 +26,13 @@ export default function AuthForm() {
       email,
       options: {
         emailRedirectTo: redirectUrl.toString(),
+        // Only ever consumed by handle_new_user() on first sign-in, to
+        // snapshot the day-streak's local timezone once. Harmless to send
+        // on every request — returning users' profiles.timezone is never
+        // touched again.
+        data: {
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        },
       },
     })
 

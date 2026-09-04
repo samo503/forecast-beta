@@ -8,7 +8,6 @@ import TopBar, { type TopBarUser } from "../components/TopBar";
 import { lockPrediction } from "../actions/predictions";
 import {
   pastItems,
-  predictStats,
   upcomingItems,
 } from "../../../lib/mock-data";
 
@@ -67,15 +66,18 @@ export default function PredictClient({
   currentUser,
   accuracy,
   streak,
+  correctThisWeek,
 }: {
   predictions: PredictionData[];
   myPicks: Record<string, string>;
   currentUser: TopBarUser | null;
   /** Real computed accuracy, null when there are zero *resolved* picks
-   *  (rendered as "—"). "This week" below is still mock. */
+   *  (rendered as "—"). */
   accuracy: number | null;
   /** Real, live-computed day streak (participation-based). */
   streak: number;
+  /** Real count of correct, resolved picks made in the past 7 days. */
+  correctThisWeek: number;
 }) {
   const router = useRouter();
   const [activeCard, setActiveCard] = useState<PredictionData | null>(null);
@@ -181,7 +183,7 @@ export default function PredictClient({
             {/* This week */}
             <div className="flex flex-col items-center gap-1">
               <span className="text-[1.15rem] font-black leading-none text-white">
-                {predictStats.correctThisWeek}
+                {correctThisWeek}
               </span>
               <span className="text-[0.42rem] uppercase tracking-[0.12em] text-slate-500">
                 This week
