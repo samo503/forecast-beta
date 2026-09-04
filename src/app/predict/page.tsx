@@ -9,20 +9,42 @@ const channelPosters: Record<string, string> = {
     "https://deadline.com/wp-content/uploads/2025/08/love-island-usa-season-7-reunion-trailer-photos.jpg?w=1000&h=667&crop=1",
 };
 
+function isPast(iso: string): boolean {
+  return new Date(iso).getTime() < Date.now();
+}
+
 export default async function PredictPage() {
   const { data: predictionRows } = await supabase
     .from("predictions")
     .select(
       "*, channel:channels(*), options:prediction_options!prediction_options_prediction_id_fkey(*)"
     )
-    .eq("status", "open")
+    .in("status", ["open", "locked"])
     .order("locks_at", { ascending: true });
+
+  // Lazy open->locked transition: no scheduled job flips this, so every
+  // page load self-heals any prediction whose locks_at has passed. A
+  // prediction with zero votes locks the same as any other — no
+  // vote-count check here at all.
+  const toLock = (predictionRows ?? []).filter(
+    (p) => p.status === "open" && p.locks_at && isPast(p.locks_at)
+  );
+  if (toLock.length) {
+    await Promise.all(
+      toLock.map((p) => supabase.rpc("lock_expired_prediction", { p_prediction_id: p.id }))
+    );
+    const toLockIds = new Set(toLock.map((p) => p.id));
+    for (const p of predictionRows ?? []) {
+      if (toLockIds.has(p.id)) p.status = "locked";
+    }
+  }
 
   const predictions: PredictionData[] = (predictionRows ?? [])
     .filter((p) => p.channel)
     .map((p) => ({
       id: p.id,
       question: p.question,
+      status: p.status as "open" | "locked",
       locksAt: p.locks_at,
       show: p.channel.name,
       poster: channelPosters[p.channel.slug] ?? "",

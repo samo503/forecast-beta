@@ -21,6 +21,7 @@ export type PredictionOption = {
 export type PredictionData = {
   id: string;
   question: string;
+  status: "open" | "locked";
   locksAt: string | null;
   show: string;
   poster: string;
@@ -84,7 +85,7 @@ export default function PredictClient({
   const liveQuestions = predictions;
 
   const openSheet = (card: PredictionData) => {
-    if (lockedPicks[card.id]) return;
+    if (lockedPicks[card.id] || card.status !== "open") return;
     setActiveCard(card);
     setSelectedOptionId(null);
     // Double rAF ensures the element is mounted before the CSS transition fires
@@ -249,7 +250,7 @@ export default function PredictClient({
                         </div>
                       </div>
 
-                      {/* CTA — locked or open */}
+                      {/* CTA — my pick locked, voting closed with no pick, or still open */}
                       {locked ? (
                         <div
                           className={`w-full rounded-lg border py-[5px] text-center text-[0.6rem] font-semibold tracking-[0.04em] ${
@@ -259,6 +260,10 @@ export default function PredictClient({
                           }`}
                         >
                           Locked: {lockedLabel} ✓
+                        </div>
+                      ) : card.status !== "open" ? (
+                        <div className="w-full rounded-lg border border-white/[0.06] bg-black/20 py-[5px] text-center text-[0.6rem] font-semibold tracking-[0.04em] text-white/40">
+                          Voting closed
                         </div>
                       ) : (
                         <button
@@ -293,10 +298,16 @@ export default function PredictClient({
                   <span className="text-[0.48rem] font-semibold uppercase tracking-[0.1em] text-slate-400">
                     {q.show}
                   </span>
-                  <span className="inline-flex items-center gap-[3px] rounded-full bg-rose-500/10 px-1.5 py-[2px] text-[0.38rem] font-semibold uppercase tracking-[0.06em] text-rose-400/80">
-                    <span className="h-[3px] w-[3px] rounded-full bg-rose-400/70 animate-pulse" />
-                    Open
-                  </span>
+                  {q.status === "open" ? (
+                    <span className="inline-flex items-center gap-[3px] rounded-full bg-rose-500/10 px-1.5 py-[2px] text-[0.38rem] font-semibold uppercase tracking-[0.06em] text-rose-400/80">
+                      <span className="h-[3px] w-[3px] rounded-full bg-rose-400/70 animate-pulse" />
+                      Open
+                    </span>
+                  ) : (
+                    <span className="rounded-full bg-white/[0.06] px-1.5 py-[2px] text-[0.38rem] font-semibold uppercase tracking-[0.06em] text-slate-500">
+                      Locked
+                    </span>
+                  )}
                   <span className="ml-auto text-[0.4rem] text-slate-500">
                     {(() => {
                       const total = totalVotes(q.options);
