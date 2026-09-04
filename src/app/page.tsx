@@ -1,68 +1,111 @@
-import { Search, Target, Tv, User, Zap } from "lucide-react";
 import {
   categories,
-  channelCards,
-  heroFeed,
   tonightsBrief,
+  type ChannelCard,
+  type HeroFeedShow,
 } from "../../lib/mock-data";
+import { supabase } from "../../lib/supabase/client";
+import { getCurrentUserBadge } from "../../lib/supabase/current-user";
 import BottomNav from "./components/BottomNav";
-import ForecastWordmark from "./components/ForecastWordmark";
+import PosterBackground from "./components/PosterBackground";
+import TopBar from "./components/TopBar";
 
-const briefTheme: Record<string, { color: string }> = {
-  "PREDICTION OPEN": { color: "#c4b5fd" },
-  "RETURNING":       { color: "#fb7185" },
-  "RECOMMENDED":     { color: "#fcd34d" },
-  "CASTING":         { color: "#fb923c" },
-  "RENEWED":         { color: "#34d399" },
-  "TV NEWS":         { color: "#94a3b8" },
-  "TRENDING":        { color: "#38bdf8" },
+// Channel art isn't in the schema yet — keyed by slug until channels gain a poster column.
+const channelPosters: Record<string, string> = {
+  "love-island-usa":
+    "https://deadline.com/wp-content/uploads/2025/06/love-island-usa-season-7-recoupling.jpg?w=1000&h=667&crop=1",
 };
 
-export default function Home() {
+const channelStatusLabel: Record<string, string> = {
+  live: "LIVE",
+  upcoming: "RETURNS",
+  off_air: "OFF-AIR",
+  off_season: "OFF-SEA",
+  pilot: "COMING SOON",
+};
+
+const episodeStatusLabel: Record<string, string> = {
+  live: "LIVE",
+  upcoming: "UPCOMING",
+  ended: "FINAL",
+};
+
+const briefTheme: Record<string, { color: string }> = {
+  "PREDICTION OPEN": { color: "#fb7185" }, // prediction mechanic — signal pink
+  "RETURNING":       { color: "#22d3ee" }, // editorial/news — cyan
+  "RECOMMENDED":     { color: "#fbbf24" }, // buzz/social — amber
+  "CASTING":         { color: "#fbbf24" }, // buzz/social — amber
+  "RENEWED":         { color: "#22d3ee" }, // editorial/news — cyan
+  "TV NEWS":         { color: "#22d3ee" }, // editorial/news — cyan
+  "TRENDING":        { color: "#22d3ee" }, // editorial/news — cyan
+};
+
+export default async function Home() {
+  const currentUserBadge = await getCurrentUserBadge();
+
+  const { data: channelRows } = await supabase
+    .from("channels")
+    .select("*")
+    .order("channel_number");
+
+  const { data: episodeRows } = await supabase
+    .from("episodes")
+    .select("*, channel:channels(*)")
+    .order("air_date", { ascending: false });
+
+  const channelCards: ChannelCard[] = (channelRows ?? []).map((c) => ({
+    id: c.channel_number,
+    channel: `CH ${String(c.channel_number).padStart(2, "0")}`,
+    title: c.name,
+    status: channelStatusLabel[c.status] ?? c.status.toUpperCase(),
+    note: c.description ?? c.genre ?? "",
+    poster: channelPosters[c.slug] ?? "",
+    mode: channelPosters[c.slug] ? "poster" : "typography",
+    visualWeight: channelPosters[c.slug] ? "bright" : "typography",
+  }));
+
+  const heroFeed: HeroFeedShow[] = (episodeRows ?? [])
+    .filter((e) => e.channel)
+    .map((e, idx) => {
+      const air = e.air_date ? new Date(e.air_date) : null;
+      return {
+        id: idx,
+        kind: "show",
+        channel: `CH ${String(e.channel.channel_number).padStart(2, "0")}`,
+        slot: "",
+        status: episodeStatusLabel[e.status] ?? e.status.toUpperCase(),
+        title: e.channel.name,
+        subtitle: "",
+        detail: [
+          e.episode_number ? `E${e.episode_number}` : null,
+          air
+            ? air.toLocaleString("en-US", {
+                weekday: "short",
+                hour: "numeric",
+                minute: "2-digit",
+              })
+            : null,
+        ]
+          .filter(Boolean)
+          .join(" · "),
+        viewers: "",
+        predicted: "",
+        action: "",
+        poster: channelPosters[e.channel.slug] ?? "",
+      };
+    });
+
   return (
     <main className="relative min-h-screen bg-[#020205] pb-28 text-white">
       <div className="mx-auto flex max-w-[640px] flex-col gap-3 px-4 pt-5">
-        <header className="-mx-4 px-4">
-          {/* Top row: avatar | wordmark | search */}
-          <div className="flex items-center justify-between pb-2.5">
-            {/* Left: avatar with streak */}
-            <div className="relative shrink-0">
-              <div className="h-[28px] w-[28px] overflow-hidden rounded-full border border-white/10 bg-slate-900">
-                <img
-                  src="https://images.unsplash.com/photo-1614023342667-6f060e9d1e04?auto=format&fit=crop&w=120&q=80"
-                  alt="Profile avatar"
-                  className="h-full w-full object-cover"
-                />
-              </div>
-              <div className="absolute -bottom-0.5 -right-1 flex items-center gap-px rounded-full border border-white/10 bg-[#020205] px-[3px] py-px">
-                <span className="text-[0.4rem] leading-none">🔥</span>
-                <span className="text-[0.42rem] font-bold leading-none text-amber-300">4</span>
-              </div>
-            </div>
-
-            {/* Center: brand wordmark */}
-            <ForecastWordmark />
-
-            {/* Right: search */}
-            <button className="flex h-[28px] w-[28px] items-center justify-center rounded-full text-slate-400 transition hover:text-slate-200">
-              <Search className="h-[15px] w-[15px]" strokeWidth={1.5} />
-            </button>
-          </div>
-
-          {/* Content mode switcher — centered, compact feed filter */}
-          <div className="flex items-end justify-center gap-6 border-b border-white/[0.05]">
-            <button className="relative pb-2 text-[0.62rem] font-semibold text-white">
-              For You
-              <span className="absolute inset-x-0 -bottom-px h-[1.5px] rounded-full bg-white/80" />
-            </button>
-            <button className="pb-2 text-[0.62rem] font-medium text-slate-500 transition hover:text-slate-300">
-              Following
-            </button>
-            <button className="pb-2 text-[0.62rem] font-medium text-slate-500 transition hover:text-slate-300">
-              Tonight
-            </button>
-          </div>
-        </header>
+        <TopBar
+          currentUser={currentUserBadge}
+          tabs={[
+            { label: "For You", active: true },
+            { label: "Following" },
+            { label: "Tonight" },
+          ]}
+        />
 
         <section className="space-y-2">
           <div className="flex items-center justify-between gap-3">
@@ -78,7 +121,8 @@ export default function Home() {
             <div className="flex gap-4">
               {heroFeed.map((item) => {
                 const tone = (() => {
-                  switch ((item as any).title) {
+                  const titleForTone = item.kind === "show" ? item.title : undefined;
+                  switch (titleForTone) {
                     case "Severance":
                       return {
                         gradient: "from-slate-900 via-slate-800",
@@ -105,6 +149,7 @@ export default function Home() {
                         titleColor: "text-amber-100",
                       };
                     case "Love Island":
+                    case "Love Island USA":
                       return {
                         gradient: "from-amber-600/65 via-pink-500/35",
                         titleColor: "text-white",
@@ -119,20 +164,14 @@ export default function Home() {
                     key={item.id}
                     className="w-[82vw] max-w-[480px] aspect-[16/10] shrink-0 overflow-hidden rounded-[1.25rem] border border-white/10 shadow-sm"
                   >
-                    <div
-                      className="relative h-full bg-slate-950"
-                      style={{
-                        backgroundImage: `url('${item.poster}')`,
-                        backgroundSize: "cover",
-                        backgroundPosition: "center",
-                      }}
-                    >
+                    <div className="relative h-full bg-slate-950">
+                      <PosterBackground src={item.poster} title={item.title} />
                       <div className={`absolute inset-0 bg-gradient-to-t ${tone.gradient} opacity-80`} />
                       <div className="relative flex h-full flex-col justify-between p-3">
                         {/* Top row: channel badge + LIVE NOW pill */}
                         <div className="flex items-center justify-between gap-2">
                           <span className="rounded-full border border-white/10 bg-slate-950/60 px-2 py-0.5 text-[0.56rem] text-slate-300">
-                            {item.kind === "show" ? item.channel : (item as any).show}
+                            {item.channel}
                           </span>
                           {item.status === "LIVE" ? (
                             <span className="inline-flex items-center gap-[5px] rounded-full bg-rose-500/10 px-2 py-[3px] text-[0.5rem] font-semibold uppercase tracking-[0.08em] text-rose-300">
@@ -149,43 +188,48 @@ export default function Home() {
                         {/* Bottom: title → episode/time → stats panel */}
                         <div>
                           <h2 className={`text-[1.85rem] font-extrabold leading-tight ${tone.titleColor}`}>
-                            {item.kind === "show" ? item.title : (item as any).question}
+                            {item.title}
                           </h2>
                           <p className="mt-0.5 text-[0.86rem] leading-snug text-slate-200/75">
-                            {item.kind === "show" ? item.detail : (item as any).detail}
+                            {item.detail}
                           </p>
 
-                          {/* Three-stat glass panel */}
-                          {item.kind === "show" && (
-                            <div className="mt-2 mx-0.5 flex divide-x divide-white/[0.06] overflow-hidden rounded-xl bg-black/28 backdrop-blur-md">
-                              <div className="flex flex-1 flex-col items-center gap-[2px] py-[6px]">
-                                <span className="text-[0.74rem] font-bold leading-none text-white">
-                                  {item.viewers.split(" ")[0]}
-                                </span>
-                                <span className="text-[0.42rem] uppercase tracking-[0.05em] text-slate-400/90">
-                                  watching
-                                </span>
+                          {/* Three-stat glass panel — only shown when at least one stat has real data */}
+                          {item.kind === "show" &&
+                            (item.viewers || item.predicted || item.liveChatCount) && (
+                              <div className="mt-2 mx-0.5 flex divide-x divide-white/[0.06] overflow-hidden rounded-xl bg-black/28 backdrop-blur-md">
+                                {item.viewers ? (
+                                  <div className="flex flex-1 flex-col items-center gap-[2px] py-[6px]">
+                                    <span className="text-[0.74rem] font-bold leading-none text-white">
+                                      {item.viewers.split(" ")[0]}
+                                    </span>
+                                    <span className="text-[0.42rem] uppercase tracking-[0.05em] text-slate-400/90">
+                                      watching
+                                    </span>
+                                  </div>
+                                ) : null}
+                                {item.predicted ? (
+                                  <div className="flex flex-1 flex-col items-center gap-[2px] py-[6px]">
+                                    <span className="text-[0.74rem] font-bold leading-none text-white">
+                                      {item.predicted.split(" ")[0]}
+                                    </span>
+                                    <span className="text-[0.42rem] uppercase tracking-[0.05em] text-slate-400/90">
+                                      predicted right
+                                    </span>
+                                  </div>
+                                ) : null}
+                                {item.liveChatCount ? (
+                                  <div className="flex flex-1 flex-col items-center gap-[2px] py-[6px]">
+                                    <span className="text-[0.74rem] font-bold leading-none text-white">
+                                      {(item.liveChatCount / 1000).toFixed(1)}k
+                                    </span>
+                                    <span className="text-[0.42rem] uppercase tracking-[0.05em] text-slate-400/90">
+                                      discussing
+                                    </span>
+                                  </div>
+                                ) : null}
                               </div>
-                              <div className="flex flex-1 flex-col items-center gap-[2px] py-[6px]">
-                                <span className="text-[0.74rem] font-bold leading-none text-white">
-                                  {item.predicted.split(" ")[0]}
-                                </span>
-                                <span className="text-[0.42rem] uppercase tracking-[0.05em] text-slate-400/90">
-                                  predicted right
-                                </span>
-                              </div>
-                              {item.liveChatCount ? (
-                                <div className="flex flex-1 flex-col items-center gap-[2px] py-[6px]">
-                                  <span className="text-[0.74rem] font-bold leading-none text-white">
-                                    {(item.liveChatCount / 1000).toFixed(1)}k
-                                  </span>
-                                  <span className="text-[0.42rem] uppercase tracking-[0.05em] text-slate-400/90">
-                                    discussing
-                                  </span>
-                                </div>
-                              ) : null}
-                            </div>
-                          )}
+                            )}
                         </div>
                       </div>
                     </div>
@@ -219,13 +263,13 @@ export default function Home() {
             {(() => {
               const curated = (() => {
                 // simple bucket interleave: bright/face/logo vs dark/typography
-                const bright: typeof channelCards = [] as any;
-                const dark: typeof channelCards = [] as any;
+                const bright: typeof channelCards = [];
+                const dark: typeof channelCards = [];
                 channelCards.forEach((c) => {
                   if (c.visualWeight === "dark" || c.visualWeight === "typography") dark.push(c);
                   else bright.push(c);
                 });
-                const out: typeof channelCards = [] as any;
+                const out: typeof channelCards = [];
                 while (bright.length || dark.length) {
                   if (bright.length) out.push(bright.shift()!);
                   if (dark.length) out.push(dark.shift()!);
@@ -244,7 +288,7 @@ export default function Home() {
                     logoFallback:
                       "https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/Placeholder_vertical_gradient.png/600px-Placeholder_vertical_gradient.png",
                     visualWeight: "logo",
-                  } as any);
+                  });
                 }
                 return out;
               })();
@@ -261,14 +305,9 @@ export default function Home() {
                   >
                     <div className="relative h-full">
                       {renderPoster ? (
-                        <div
-                          className="absolute inset-0 bg-cover bg-center"
-                          style={{ backgroundImage: `url('${channel.poster}')` }}
-                        />
+                        <PosterBackground src={channel.poster} title={channel.title} />
                       ) : renderLogo ? (
-                        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-slate-900 to-slate-800">
-                          <img src={renderLogo} alt={`${channel.title} logo`} className="h-20 object-contain" />
-                        </div>
+                        <PosterBackground src={renderLogo} title={channel.title} variant="logo" />
                       ) : renderTypography ? (
                         <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-slate-900 to-slate-800 px-4">
                           <h3 className="text-center text-lg font-bold tracking-tight text-white">
@@ -319,7 +358,7 @@ export default function Home() {
           {/* Section header */}
           <div className="flex items-center justify-between px-0.5">
             <p className="text-[0.6rem] font-bold uppercase tracking-[0.28em] text-slate-200">
-              Tonight's Brief
+              Tonight&apos;s Brief
             </p>
             <button className="rounded bg-white/[0.04] px-1.5 py-0.5 text-[0.44rem] font-medium uppercase tracking-[0.1em] text-slate-600 transition hover:text-slate-400">
               See all
@@ -331,10 +370,8 @@ export default function Home() {
             const f = tonightsBrief[0];
             const ft = briefTheme[f.category] ?? briefTheme["TV NEWS"];
             return (
-              <div
-                className="relative aspect-[16/9] overflow-hidden rounded-2xl"
-                style={{ backgroundImage: `url('${f.image}')`, backgroundSize: "cover", backgroundPosition: "center 42%" }}
-              >
+              <div className="relative aspect-[16/9] overflow-hidden rounded-2xl">
+                <PosterBackground src={f.image} title={f.headline} backgroundPosition="center 42%" titleClassName="text-base" />
                 {/* Subtle top vignette for cinematic frame */}
                 <div className="absolute inset-x-0 top-0 h-10 bg-gradient-to-b from-black/30 to-transparent" />
                 {/* Rich bottom gradient for text legibility */}
@@ -367,12 +404,13 @@ export default function Home() {
                 <div
                   key={card.id}
                   className={`relative h-[132px] overflow-hidden rounded-xl ${i === 0 ? "w-[54%]" : "flex-1"}`}
-                  style={{
-                    backgroundImage: `url('${card.image}')`,
-                    backgroundSize: "cover",
-                    backgroundPosition: i === 0 ? "center 15%" : "center 62%",
-                  }}
                 >
+                  <PosterBackground
+                    src={card.image}
+                    title={card.headline}
+                    backgroundPosition={i === 0 ? "center 15%" : "center 62%"}
+                    titleClassName="text-sm"
+                  />
                   {/* Subtle top scrim so pill stays legible */}
                   <div className="absolute inset-x-0 top-0 h-10 bg-gradient-to-b from-black/40 to-transparent" />
                   <div className="absolute inset-x-0 bottom-0 h-[60%] bg-gradient-to-t from-black/92 via-black/30 to-transparent" />
@@ -398,12 +436,12 @@ export default function Home() {
                 <div
                   key={card.id}
                   className="relative h-[72px] overflow-hidden rounded-xl"
-                  style={{
-                    backgroundImage: `url('${card.image}')`,
-                    backgroundSize: "cover",
-                    backgroundPosition: i === 0 ? "center top" : "center 25%",
-                  }}
                 >
+                  <PosterBackground
+                    src={card.image}
+                    title=""
+                    backgroundPosition={i === 0 ? "center top" : "center 25%"}
+                  />
                   <div className="absolute inset-0 bg-gradient-to-r from-black/84 via-black/42 to-black/5" />
                   <div className="relative flex h-full items-center gap-3 px-3.5">
                     <div

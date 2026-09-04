@@ -1,3 +1,14 @@
+// Single source of truth for the logged-in user's identity — used by the shared
+// TopBar (avatar + streak) on every page, and by the full profile hero.
+export const currentUser = {
+  name: "Samuel",
+  handle: "@samuelnw",
+  avatar:
+    "https://images.unsplash.com/photo-1614023342667-6f060e9d1e04?auto=format&fit=crop&w=120&q=80",
+  streak: 4,
+  identityLine: "Reality strategist · Prestige drama loyalist",
+};
+
 export type HeroFeedShow = {
   id: number;
   kind: "show";
@@ -429,7 +440,7 @@ export const topRoomComments: TopComment[] = [
   {
     id: 1,
     label: "Hot Take",
-    labelColor: "#fb923c",
+    labelColor: "#22d3ee",
     user: "Maya",
     avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=100&q=80",
     show: "Love Island USA",
@@ -439,7 +450,7 @@ export const topRoomComments: TopComment[] = [
   {
     id: 2,
     label: "Called It",
-    labelColor: "#34d399",
+    labelColor: "#fbbf24",
     user: "Cruz",
     avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&q=80",
     show: "RuPaul's Drag Race",
@@ -449,7 +460,7 @@ export const topRoomComments: TopComment[] = [
   {
     id: 3,
     label: "Most Agreed",
-    labelColor: "#c4b5fd",
+    labelColor: "#22d3ee",
     user: "Tess",
     avatar: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=100&q=80",
     show: "Survivor",

@@ -25,7 +25,7 @@ export default function BottomNav() {
               <span className="relative flex items-center justify-center">
                 <span
                   className={`absolute h-8 w-8 rounded-full blur-lg ${
-                    active ? "bg-rose-500/[0.08]" : "bg-blue-400/[0.08]"
+                    active ? "bg-rose-500/[0.08]" : "bg-white/[0.04]"
                   }`}
                 />
                 <Icon
