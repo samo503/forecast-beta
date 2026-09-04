@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient as createServerClient } from "../../../lib/supabase/server";
+import { computeStreak } from "../../../lib/streak";
 import ProfileClient, {
   type ProfileData,
   type ProfileStats,
@@ -26,14 +27,6 @@ export default async function ProfilePage() {
     .eq("id", user.id)
     .single();
 
-  const profile: ProfileData = {
-    name: profileRow?.display_name ?? profileRow?.username ?? "You",
-    handle: profileRow?.username ? `@${profileRow.username}` : "",
-    avatar: profileRow?.avatar_url ?? null,
-    identityLine: profileRow?.identity_line ?? null,
-    streak: profileRow?.streak_count ?? 0,
-  };
-
   const { data: pickRows } = await supabase
     .from("user_predictions")
     .select(
@@ -43,6 +36,14 @@ export default async function ProfilePage() {
     .order("created_at", { ascending: false });
 
   const allPicks = pickRows ?? [];
+
+  const profile: ProfileData = {
+    name: profileRow?.display_name ?? profileRow?.username ?? "You",
+    handle: profileRow?.username ? `@${profileRow.username}` : "",
+    avatar: profileRow?.avatar_url ?? null,
+    identityLine: profileRow?.identity_line ?? null,
+    streak: computeStreak(allPicks.map((p) => p.created_at)),
+  };
   const resolvedPicks = allPicks.filter((p) => p.is_correct !== null);
   const correctPicks = resolvedPicks.filter((p) => p.is_correct === true);
 

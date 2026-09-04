@@ -66,13 +66,16 @@ export default function PredictClient({
   myPicks,
   currentUser,
   accuracy,
+  streak,
 }: {
   predictions: PredictionData[];
   myPicks: Record<string, string>;
   currentUser: TopBarUser | null;
   /** Real computed accuracy, null when there are zero *resolved* picks
-   *  (rendered as "—"). Day streak and "this week" below are still mock. */
+   *  (rendered as "—"). "This week" below is still mock. */
   accuracy: number | null;
+  /** Real, live-computed day streak (participation-based). */
+  streak: number;
 }) {
   const router = useRouter();
   const [activeCard, setActiveCard] = useState<PredictionData | null>(null);
@@ -152,7 +155,7 @@ export default function PredictClient({
             <div className="flex flex-col items-center gap-1">
               <div className="flex items-baseline gap-1">
                 <span className="text-[1.15rem] font-black leading-none text-amber-300">
-                  {predictStats.streak}
+                  {streak}
                 </span>
                 <span className="text-[0.7rem] leading-none">🔥</span>
               </div>

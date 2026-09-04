@@ -1,4 +1,5 @@
 import { createClient as createServerClient } from "./server";
+import { computeStreak } from "../streak";
 
 export type CurrentUserBadge = {
   name: string;
@@ -20,13 +21,18 @@ export async function getCurrentUserBadge(): Promise<CurrentUserBadge | null> {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("username, display_name, avatar_url, streak_count")
+    .select("username, display_name, avatar_url")
     .eq("id", user.id)
     .single();
+
+  const { data: picks } = await supabase
+    .from("user_predictions")
+    .select("created_at")
+    .eq("user_id", user.id);
 
   return {
     name: profile?.display_name ?? profile?.username ?? "You",
     avatar: profile?.avatar_url ?? null,
-    streak: profile?.streak_count ?? 0,
+    streak: computeStreak((picks ?? []).map((p) => p.created_at)),
   };
 }

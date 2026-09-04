@@ -1,5 +1,6 @@
 import { supabase } from "../../../lib/supabase/client";
 import { createClient as createServerClient } from "../../../lib/supabase/server";
+import { computeStreak } from "../../../lib/streak";
 import type { TopBarUser } from "../components/TopBar";
 import PredictClient, { type PredictionData } from "./PredictClient";
 
@@ -72,26 +73,21 @@ export default async function PredictPage() {
   let currentUserBadge: TopBarUser | null = null;
   // "Your Forecast" accuracy — null (rendered as "—") until there's at
   // least one *resolved* pick, same fallback as profile's stats row.
-  // Day streak and "this week" in that section are still mock — only
-  // accuracy was in scope for this step.
+  // "This week" in that section is still mock — day streak and accuracy
+  // are the two real numbers now.
   let accuracy: number | null = null;
+  let streak = 0;
 
   if (user) {
     const { data: profileRow } = await authedSupabase
       .from("profiles")
-      .select("username, display_name, avatar_url, streak_count")
+      .select("username, display_name, avatar_url")
       .eq("id", user.id)
       .single();
 
-    currentUserBadge = {
-      name: profileRow?.display_name ?? profileRow?.username ?? "You",
-      avatar: profileRow?.avatar_url ?? null,
-      streak: profileRow?.streak_count ?? 0,
-    };
-
     const { data: pickResults } = await authedSupabase
       .from("user_predictions")
-      .select("is_correct")
+      .select("is_correct, created_at")
       .eq("user_id", user.id);
 
     const resolved = (pickResults ?? []).filter((p) => p.is_correct !== null);
@@ -99,6 +95,13 @@ export default async function PredictPage() {
     accuracy = resolved.length
       ? Math.round((correct.length / resolved.length) * 100)
       : null;
+    streak = computeStreak((pickResults ?? []).map((p) => p.created_at));
+
+    currentUserBadge = {
+      name: profileRow?.display_name ?? profileRow?.username ?? "You",
+      avatar: profileRow?.avatar_url ?? null,
+      streak,
+    };
 
     if (predictions.length) {
       const { data: pickRows } = await authedSupabase
@@ -120,6 +123,7 @@ export default async function PredictPage() {
       myPicks={myPicks}
       currentUser={currentUserBadge}
       accuracy={accuracy}
+      streak={streak}
     />
   );
 }
