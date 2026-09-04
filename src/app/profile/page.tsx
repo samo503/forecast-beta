@@ -47,9 +47,11 @@ export default async function ProfilePage() {
   const correctPicks = resolvedPicks.filter((p) => p.is_correct === true);
 
   const stats: ProfileStats = {
+    // null (not 0%) when nothing's been resolved yet — 0% would read as
+    // "you got this wrong" rather than "nothing scored yet".
     accuracy: resolvedPicks.length
       ? Math.round((correctPicks.length / resolvedPicks.length) * 100)
-      : 0,
+      : null,
     predictions: allPicks.length,
     thisWeek: allPicks.filter((p) => isWithinPastWeek(p.created_at)).length,
   };

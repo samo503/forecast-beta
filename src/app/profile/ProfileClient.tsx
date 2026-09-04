@@ -22,7 +22,8 @@ export type ProfileData = {
 };
 
 export type ProfileStats = {
-  accuracy: number;
+  /** null when there are zero *resolved* predictions to compute accuracy from. */
+  accuracy: number | null;
   predictions: number;
   thisWeek: number;
 };
@@ -147,7 +148,9 @@ export default function ProfileClient({
         {/* ── Stats Row ── */}
         <div className="flex items-center justify-between rounded-xl border border-white/[0.07] bg-white/[0.025] px-5 py-3">
           <div className="flex flex-col items-center gap-0.5">
-            <span className="text-[1.05rem] font-black leading-none text-white">{stats.accuracy}%</span>
+            <span className="text-[1.05rem] font-black leading-none text-white">
+              {stats.accuracy === null ? "—" : `${stats.accuracy}%`}
+            </span>
             <span className="text-[0.4rem] uppercase tracking-[0.1em] text-slate-500">Accuracy</span>
           </div>
           <div className="h-7 w-px bg-white/[0.06]" />
