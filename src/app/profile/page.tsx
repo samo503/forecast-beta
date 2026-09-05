@@ -68,6 +68,7 @@ export default async function ProfilePage() {
       question: p.prediction.question,
       pick: p.option.label,
       result: p.is_correct ? "correct" : "wrong",
+      points: p.points_awarded ?? 0,
     }));
 
   return (

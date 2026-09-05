@@ -34,6 +34,7 @@ export type RecordItem = {
   question: string;
   pick: string;
   result: "correct" | "wrong";
+  points: number;
 };
 
 // Single achievement hue (amber/gold). Brightness signals rarity, not identity —
@@ -280,13 +281,18 @@ export default function ProfileClient({
                       <span className="text-slate-400">{item.pick}</span>
                     </span>
                   </div>
-                  <span
-                    className={`shrink-0 pt-[3px] text-[0.42rem] font-semibold ${
-                      item.result === "correct" ? "text-emerald-400/75" : "text-rose-400/65"
-                    }`}
-                  >
-                    {item.result === "correct" ? "✓" : "✗"}
-                  </span>
+                  <div className="flex shrink-0 flex-col items-end gap-[2px] pt-[3px]">
+                    <span
+                      className={`text-[0.42rem] font-semibold ${
+                        item.result === "correct" ? "text-emerald-400/75" : "text-rose-400/65"
+                      }`}
+                    >
+                      {item.result === "correct" ? "✓" : "✗"}
+                    </span>
+                    <span className="text-[0.38rem] text-slate-600">
+                      +{item.points} pts
+                    </span>
+                  </div>
                 </div>
               ))
             )}
