@@ -7,11 +7,16 @@ import { createClient } from '../../../lib/supabase/browser'
 export default function AuthForm() {
   const searchParams = useSearchParams()
   const next = searchParams.get('next') ?? '/'
+  const callbackError = searchParams.get('error')
 
   const [email, setEmail] = useState('')
   const [sent, setSent] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(
+    callbackError === 'missing_code' || callbackError === 'auth_failed'
+      ? "That link didn't work — it may have been opened in a different browser than the one you requested it from, or it's expired. Request a new one below."
+      : null
+  )
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
