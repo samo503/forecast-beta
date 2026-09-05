@@ -20,6 +20,14 @@ letting it drift.
   a non-sandbox address and delivered successfully. This resolves what
   was the single most logical next step as of the previous version of
   this file.
+- **The app is deployed and live in production**: https://forecasttv.app
+  (Vercel, connected to this GitHub repo, auto-deploys on push to
+  `main`), DNS via a CNAME record at Cloudflare. The original Vercel
+  preview domain, `forecast-iota-pearl.vercel.app`, still works and is
+  kept in Supabase's Redirect URLs allow list as a fallback. Supabase
+  Auth's **Site URL is now `https://forecasttv.app`**, no longer
+  `localhost:3000` — this resolves the other half of what was the
+  previous version's single most logical next step.
 - The full prediction lifecycle works and has been tested live, not just
   read from code: **create → vote → auto-lock at `locks_at` → resolve via
   admin SQL → accuracy/streak/prediction-record all update correctly.**
@@ -42,6 +50,20 @@ letting it drift.
   applies now that the sending domain is verified — this note is stale,
   not a live limitation. Optional future cleanup: point `test-login.ts`
   at a dedicated test identity instead of a real, evolving account.
+- `points_awarded` (10/0 flat score) is now surfaced in profile's
+  Prediction Record, next to each resolved pick's correct/wrong mark —
+  previously scored on resolution but never shown anywhere.
+- The seven dead mock exports superseded by real data (`heroFeed`,
+  `channelCards`, `topRoomComments`, `chatterFeed`, `predictStats`,
+  `closingCards`, `liveQuestions`) have been removed from
+  `lib/mock-data.ts`.
+- The wordmark's signal-pink pill now matches the app's real pink
+  (rose-400 / `#fb7185`) — it previously hardcoded a different, unrelated
+  hex (`#FF2D55`).
+- **`resolve_prediction()` now requires `locked` status in production.**
+  `supabase/migrations/0006_tighten_resolve_prediction_status.sql` has
+  been run against the live Supabase database via the SQL editor and
+  confirmed working — no longer just a file sitting in the repo.
 
 ## Deliberately still mock — not overlooked, no schema for it yet
 
@@ -57,28 +79,9 @@ letting it drift.
 None of these have backing tables. Wiring any of them is a schema/product
 conversation, not a data-wiring task — see `docs/decisions.md`.
 
-## Known gaps, not bugs
-
-- `resolve_prediction()` accepts `open` or `locked` status, not just
-  `locked` — there's no automatic status check tightening this back down
-  after the lazy lock-transition was added.
-- `points_awarded` is scored on resolution (10/0) but never displayed
-  anywhere in the UI — real data, no surface for it yet.
-- Several now-dead mock exports remain in `lib/mock-data.ts`
-  (`heroFeed`, `channelCards`, `topRoomComments`, `chatterFeed`,
-  `predictStats`, `closingCards`, `liveQuestions`) — superseded by real
-  data, flagged but not removed pending a decision to clean them up.
-- **Supabase's Auth Site URL is still `http://localhost:3000`.** This is
-  correct/intentional, not a bug — there's no production deployment yet.
-  Auth/invite links will only resolve on whatever machine is running the
-  dev server until that changes.
-
 ## Single most logical next step
 
-**Deploy to a real URL (Vercel) and point Supabase's Auth Site URL at
-it.** Email delivery is no longer the blocker — domain verification and
-Custom SMTP are done and confirmed working end to end. The next thing
-standing between this app and real users is that `Site URL` is still
-`http://localhost:3000`, so there's nowhere for auth/invite links to
-resolve to outside a dev machine. Once a deployment exists, update
-`Site URL` and add it to the Redirect URLs allow list.
+No known concrete blocker is outstanding as of this update — deployment,
+email delivery, Site URL, and migration 0006 are all done and confirmed.
+Remaining work (rooms, friends, trophies, follows) is product/schema
+scoped, not a blocker fix — see `docs/decisions.md`.

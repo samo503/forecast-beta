@@ -117,13 +117,50 @@ configured in Supabase Auth (Host `smtp.resend.com`, Port `465`, sender
 (`onboarding@resend.dev`) that could only reach the Resend account
 owner's own address.
 
-Tested via Supabase's own Auth > Users > Invite user flow, not the app's
-`signInWithOtp` magic-link form — there's no deployment yet to actually
-click through that path, so the invite-user flow was the closest
-available proxy for "does a real address outside the sandbox receive
-mail." It sent and delivered successfully to a non-sandbox address.
-Confirming the app's own magic-link flow end to end is still pending a
-real deployment.
+Tested via Supabase's own Auth > Users > Invite user flow initially, not
+the app's `signInWithOtp` magic-link form — there was no deployment yet
+at the time to actually click through that path, so the invite-user flow
+was the closest available proxy for "does a real address outside the
+sandbox receive mail." It sent and delivered successfully to a
+non-sandbox address.
+
+**Update — the app is now deployed**, to `https://forecasttv.app`
+(Vercel, auto-deploying from this repo's `main` branch; DNS via a
+Cloudflare CNAME). Supabase Auth's **Site URL is now
+`https://forecasttv.app`**, replacing `http://localhost:3000` — the
+Redirect URLs allow list also still includes the original Vercel preview
+domain, `forecast-iota-pearl.vercel.app`, as a fallback. With a real
+deployment in place, the app's own `signInWithOtp` magic-link flow has
+since been exercised directly rather than only via the invite-user
+proxy — see the cross-browser PKCE issue that surfaced below.
+
+## Auth bug: cross-browser magic-link failure was silent (now surfaced, not eliminated)
+
+**Found and partially fixed today**: opening a magic-link email in a
+different browser (or browser profile/incognito window) than the one
+that requested it makes `exchangeCodeForSession()` in
+`src/app/auth/callback/route.ts` fail. Supabase's magic-link flow uses
+PKCE, where the code verifier is generated and stored in the requesting
+browser; a different browser context has no matching verifier, so the
+exchange fails and the route redirects to `/auth?error=auth_failed`.
+
+Before today, `AuthForm.tsx` never read that `error` param — a failed
+exchange landed the user on a completely empty sign-in form with no
+indication anything had gone wrong, indistinguishable from having never
+clicked anything. `AuthForm.tsx` now reads `error` from the URL
+(`missing_code` or `auth_failed`) and surfaces a real message reusing
+the existing `text-rose-400` error styling already used for
+`signInWithOtp` errors: "That link didn't work — it may have been opened
+in a different browser than the one you requested it from, or it's
+expired. Request a new one below."
+
+**This makes the failure visible and actionable — it does not eliminate
+the underlying cross-browser mismatch.** The PKCE
+code-verifier-must-match-the-requesting-browser behavior is structural
+to this auth pattern, not a bug in this app's code. A user who opens
+their magic link in a different browser than they requested it from will
+still hit this failure every time; they just see why now instead of a
+blank form.
 
 ## Poster images: local map + graceful fallback, never self-hosted
 
