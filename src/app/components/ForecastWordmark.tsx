@@ -5,8 +5,8 @@ export default function ForecastWordmark() {
       <span
         className="h-[18px] w-[3.5px] shrink-0 rounded-full"
         style={{
-          background: "linear-gradient(to bottom, #FF2D55, #B8082E)",
-          boxShadow: "0 0 8px rgba(255,45,85,0.65), 0 0 3px rgba(255,45,85,0.40)",
+          background: "linear-gradient(to bottom, #fb7185, #B8082E)",
+          boxShadow: "0 0 8px rgba(251,113,133,0.65), 0 0 3px rgba(251,113,133,0.40)",
         }}
       />
       {/* Wordmark */}
