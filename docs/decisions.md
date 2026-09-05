@@ -108,19 +108,22 @@ every request (Server Components can't write cookies, so a needed token
 refresh there silently drops the rotated cookie and kills the session —
 this is why proxy.ts exists at all, not for route gating).
 
-## Email delivery: Resend sandbox sender, domain verification not done yet
+## Email delivery: Resend domain verified, Custom SMTP wired into Supabase
 
-**Before beta, Resend's sending domain needs to be verified** — this was
-not solved tonight, just worked around for one test account. As configured
-now, outbound auth email goes through Resend's shared sandbox sender
-(`onboarding@resend.dev`), which — per Resend's own docs — can only
-deliver to the email address tied to the Resend account itself, not to
-arbitrary recipients. That's fine for the one dedicated test account
-(`TEST_USER_EMAIL` in `.env.local`, set to the Resend account's own
-address for exactly this reason), but it means **magic-link sign-in
-currently cannot reach any real user's inbox** other than that one
-address. Verifying a real sending domain in Resend (SPF/DKIM records,
-etc.) is required before this app can onboard actual users.
+**Resend's sending domain (`forecasttv.app`) is verified**, via Cloudflare
+DNS records — DKIM TXT, MX, SPF TXT, and DMARC TXT. Custom SMTP is
+configured in Supabase Auth (Host `smtp.resend.com`, Port `465`, sender
+`noreply@forecasttv.app`), replacing the shared sandbox sender
+(`onboarding@resend.dev`) that could only reach the Resend account
+owner's own address.
+
+Tested via Supabase's own Auth > Users > Invite user flow, not the app's
+`signInWithOtp` magic-link form — there's no deployment yet to actually
+click through that path, so the invite-user flow was the closest
+available proxy for "does a real address outside the sandbox receive
+mail." It sent and delivered successfully to a non-sandbox address.
+Confirming the app's own magic-link flow end to end is still pending a
+real deployment.
 
 ## Poster images: local map + graceful fallback, never self-hosted
 

@@ -14,6 +14,12 @@ letting it drift.
 - Magic-link auth works (including the redirect-back-to-where-you-came-
   from `?next=` param), scoped to just what needs it — locking in a pick,
   and `/profile` — not a global login wall.
+- **Resend's sending domain (`forecasttv.app`) is now verified**, and
+  Custom SMTP is configured in Supabase (Host: `smtp.resend.com`, Port
+  `465`) — confirmed working end to end: a real invite email was sent to
+  a non-sandbox address and delivered successfully. This resolves what
+  was the single most logical next step as of the previous version of
+  this file.
 - The full prediction lifecycle works and has been tested live, not just
   read from code: **create → vote → auto-lock at `locks_at` → resolve via
   admin SQL → accuracy/streak/prediction-record all update correctly.**
@@ -29,12 +35,13 @@ letting it drift.
 - A dedicated test login exists (`scripts/test-login.ts` +
   `TEST_USER_EMAIL`/`TEST_USER_PASSWORD` in `.env.local`) so a future
   session can get an authenticated browser session without relaying a
-  magic-link email. **Caveat**: it currently authenticates as the real
-  account used for tonight's manual testing (`user_72ad8a77`), not a
-  separate clean-slate identity — Resend's sandbox sender can only
-  deliver to one specific real address (see the email-delivery section
-  below), which forced this compromise. It's a live, evolving identity
-  with real history, not a blank slate to test against.
+  magic-link email. It currently authenticates as the real account used
+  for tonight's manual testing (`user_72ad8a77`), not a separate
+  clean-slate identity. **Update**: the constraint that forced this
+  (Resend's sandbox sender could only reach one real address) no longer
+  applies now that the sending domain is verified — this note is stale,
+  not a live limitation. Optional future cleanup: point `test-login.ts`
+  at a dedicated test identity instead of a real, evolving account.
 
 ## Deliberately still mock — not overlooked, no schema for it yet
 
@@ -52,11 +59,6 @@ conversation, not a data-wiring task — see `docs/decisions.md`.
 
 ## Known gaps, not bugs
 
-- **Resend's sending domain isn't verified.** Outbound auth email only
-  reaches one address (the Resend account owner's own). Real users can't
-  receive magic links until a real sending domain is verified. This is
-  the actual blocker behind most of tonight's test-account friction —
-  fix this before onboarding anyone else.
 - `resolve_prediction()` accepts `open` or `locked` status, not just
   `locked` — there's no automatic status check tightening this back down
   after the lazy lock-transition was added.
@@ -66,11 +68,17 @@ conversation, not a data-wiring task — see `docs/decisions.md`.
   (`heroFeed`, `channelCards`, `topRoomComments`, `chatterFeed`,
   `predictStats`, `closingCards`, `liveQuestions`) — superseded by real
   data, flagged but not removed pending a decision to clean them up.
+- **Supabase's Auth Site URL is still `http://localhost:3000`.** This is
+  correct/intentional, not a bug — there's no production deployment yet.
+  Auth/invite links will only resolve on whatever machine is running the
+  dev server until that changes.
 
 ## Single most logical next step
 
-**Verify a real sending domain in Resend.** Almost everything else
-tonight — the test-account saga, the inability to onboard a second real
-user, the general fragility around auth email — traces back to this one
-unresolved piece. It's infrastructure, not a feature, and it unblocks
-real user testing (not just this one account) once it's done.
+**Deploy to a real URL (Vercel) and point Supabase's Auth Site URL at
+it.** Email delivery is no longer the blocker — domain verification and
+Custom SMTP are done and confirmed working end to end. The next thing
+standing between this app and real users is that `Site URL` is still
+`http://localhost:3000`, so there's nowhere for auth/invite links to
+resolve to outside a dev machine. Once a deployment exists, update
+`Site URL` and add it to the Redirect URLs allow list.
