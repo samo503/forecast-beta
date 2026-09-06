@@ -396,23 +396,36 @@ export default function PredictClient({
                     {q.options.map((opt) => {
                       const pct = percentFor(opt, q.options);
                       const isLeading = leadingId === opt.id;
+                      const isPicked = lockedPicks[q.id] === opt.id;
                       return (
                         <div
                           key={opt.id}
-                          className={`relative overflow-hidden rounded-full border px-2.5 py-[4px] ${
-                            isLeading ? "border-rose-400/35" : "border-white/[0.1]"
+                          className={`relative min-w-[62px] overflow-hidden rounded-full border px-3 py-[5px] ${
+                            isPicked
+                              ? "border-rose-400"
+                              : isLeading
+                              ? "border-rose-400/35"
+                              : "border-white/[0.1]"
                           }`}
                         >
                           <div
                             className={`absolute inset-y-0 left-0 transition-[width] duration-700 ease-out ${
-                              isLeading ? "bg-rose-400/20" : "bg-white/[0.05]"
+                              isPicked
+                                ? "bg-rose-400/[0.12]"
+                                : isLeading
+                                ? "bg-rose-400/20"
+                                : "bg-white/[0.05]"
                             }`}
                             style={{ width: barsMounted ? `${pct}%` : "0%" }}
                           />
-                          <div className="relative flex items-center gap-1.5">
+                          <div className="relative flex items-center justify-center gap-1.5">
                             <span
                               className={`text-[0.58rem] font-medium ${
-                                isLeading ? "text-white" : "text-slate-300"
+                                isPicked
+                                  ? "text-rose-300"
+                                  : isLeading
+                                  ? "text-white"
+                                  : "text-slate-300"
                               }`}
                             >
                               {opt.label}
@@ -420,7 +433,7 @@ export default function PredictClient({
                             {total > 0 && (
                               <span
                                 className={`text-[0.44rem] font-semibold ${
-                                  isLeading ? "text-rose-300" : "text-slate-500"
+                                  isPicked || isLeading ? "text-rose-300" : "text-slate-500"
                                 }`}
                               >
                                 {pct}%
