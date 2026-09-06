@@ -9,7 +9,7 @@ const channelPosters: Record<string, string> = {
   "love-island-usa":
     "https://deadline.com/wp-content/uploads/2025/08/love-island-usa-season-7-reunion-trailer-photos.jpg?w=1000&h=667&crop=1",
   "emmys":
-    "https://images.unsplash.com/photo-1514306191717-452ec28c7814?fm=jpg&q=80&w=1200&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1770482228588-270b08d2d376?fm=jpg&q=80&w=1200&auto=format&fit=crop",
 };
 
 function isPast(iso: string): boolean {
