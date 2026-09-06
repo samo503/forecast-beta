@@ -93,6 +93,7 @@ export default async function Home() {
           e.episode_number ? `E${e.episode_number}` : null,
           air
             ? air.toLocaleString("en-US", {
+                timeZone: "America/New_York",
                 weekday: "short",
                 hour: "numeric",
                 minute: "2-digit",
