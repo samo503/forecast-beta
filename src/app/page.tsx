@@ -179,7 +179,8 @@ export default async function Home() {
                     className="w-[82vw] max-w-[480px] aspect-[16/10] shrink-0 overflow-hidden rounded-[1.25rem] border border-white/10 shadow-sm"
                   >
                     <div className="relative h-full bg-slate-950">
-                      <PosterBackground src={item.poster} title={item.title} />
+                      {/* title="" — the title is already shown below as the h2 */}
+                      <PosterBackground src={item.poster} title="" />
                       <div className={`absolute inset-0 bg-gradient-to-t ${tone.gradient} opacity-80`} />
                       <div className="relative flex h-full flex-col justify-between p-3">
                         {/* Top row: channel badge + LIVE NOW pill */}
@@ -318,16 +319,13 @@ export default async function Home() {
                     className="aspect-[4/5] overflow-hidden rounded-[1.1rem] border border-white/10 bg-slate-950/10 shadow-sm transition duration-200 hover:-translate-y-0.5"
                   >
                     <div className="relative h-full">
+                      {/* title="" on all three — channel.title is already shown below in the info panel */}
                       {renderPoster ? (
-                        <PosterBackground src={channel.poster} title={channel.title} />
+                        <PosterBackground src={channel.poster} title="" />
                       ) : renderLogo ? (
-                        <PosterBackground src={renderLogo} title={channel.title} variant="logo" />
+                        <PosterBackground src={renderLogo} title="" variant="logo" />
                       ) : renderTypography ? (
-                        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-slate-900 to-slate-800 px-4">
-                          <h3 className="text-center text-lg font-bold tracking-tight text-white">
-                            {channel.title}
-                          </h3>
-                        </div>
+                        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-slate-900 to-slate-800 px-4" />
                       ) : null}
 
                       <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-transparent to-transparent" />

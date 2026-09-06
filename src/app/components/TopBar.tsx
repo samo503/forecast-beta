@@ -40,7 +40,7 @@ export default function TopBar({ tabs, rightIcon = "search", onRightIconClick, c
   const streak = signedInUser ? signedInUser.streak : currentUser.streak;
 
   return (
-    <header className="-mx-4 px-4">
+    <header className="-mx-4 px-4 pt-[env(safe-area-inset-top)]">
       <div className="flex items-center justify-between pb-2.5">
         <div className="relative shrink-0">
           <div className="flex h-[28px] w-[28px] items-center justify-center overflow-hidden rounded-full border border-white/10 bg-slate-900">

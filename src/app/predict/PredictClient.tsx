@@ -284,7 +284,8 @@ export default function PredictClient({
                   key={card.id}
                   className="relative overflow-hidden rounded-2xl"
                 >
-                  <PosterBackground src={card.poster} title={card.show} titleClassName="text-base" />
+                  {/* title="" — card.show is already shown above as the badge */}
+                  <PosterBackground src={card.poster} title="" />
                   <div className="absolute inset-x-0 top-0 h-14 bg-gradient-to-b from-black/45 to-transparent" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/55 to-transparent" />
 
