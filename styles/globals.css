@@ -36,9 +36,17 @@ body {
   box-sizing: border-box;
 }
 
-button,
-input,
-textarea,
-select {
-  font: inherit;
+/* @layer base always loses to Tailwind's utilities layer regardless of
+   source order, so this reset can no longer clobber a button's own
+   text-size utility class the way a bare (unlayered) rule did — a plain
+   rule here had equal specificity to a utility class and, appearing
+   later in the compiled CSS, was silently overriding font-size on every
+   sized button in the app. */
+@layer base {
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+  }
 }
