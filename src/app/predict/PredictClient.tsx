@@ -347,58 +347,88 @@ export default function PredictClient({
           </p>
 
           <div className="space-y-2">
-            {liveQuestions.map((q) => (
-              <div
-                key={q.id}
-                className="rounded-xl border border-white/[0.07] bg-white/[0.02] px-3 py-2.5"
-              >
-                {/* Show + live badge + vote count */}
-                <div className="mb-1.5 flex items-center gap-1.5">
-                  <span className="text-[0.48rem] font-semibold uppercase tracking-[0.1em] text-slate-400">
-                    {q.show}
-                  </span>
-                  {q.status === "open" ? (
-                    <span className="inline-flex items-center gap-[3px] rounded-full bg-rose-500/10 px-1.5 py-[2px] text-[0.38rem] font-semibold uppercase tracking-[0.06em] text-rose-400/80">
-                      <span className="h-[3px] w-[3px] rounded-full bg-rose-400/70 animate-pulse" />
-                      Open
-                    </span>
-                  ) : (
-                    <span className="rounded-full bg-white/[0.06] px-1.5 py-[2px] text-[0.38rem] font-semibold uppercase tracking-[0.06em] text-slate-500">
-                      Locked
-                    </span>
-                  )}
-                  <span className="ml-auto text-[0.4rem] text-slate-500">
-                    {(() => {
-                      const total = totalVotes(q.options);
-                      return total >= 1000 ? `${(total / 1000).toFixed(1)}k` : total;
-                    })()}{" "}
-                    votes
-                  </span>
-                </div>
+            {liveQuestions.map((q) => {
+              const total = totalVotes(q.options);
+              const leadingId =
+                total > 0
+                  ? q.options.reduce((lead, o) => (o.voteCount > lead.voteCount ? o : lead), q.options[0]).id
+                  : null;
 
-                {/* Question */}
-                <p className="mb-2 text-[0.82rem] font-bold leading-snug text-white">
-                  {q.question}
-                </p>
+              return (
+                <div
+                  key={q.id}
+                  className="rounded-xl border border-white/[0.07] bg-white/[0.02] px-3 py-2.5"
+                >
+                  {/* Show + live badge + vote count */}
+                  <div className="mb-1.5 flex items-center gap-1.5">
+                    <span className="text-[0.48rem] font-semibold uppercase tracking-[0.1em] text-slate-400">
+                      {q.show}
+                    </span>
+                    {q.status === "open" ? (
+                      <span className="inline-flex items-center gap-[3px] rounded-full bg-rose-500/10 px-1.5 py-[2px] text-[0.38rem] font-semibold uppercase tracking-[0.06em] text-rose-400/80">
+                        <span className="h-[3px] w-[3px] rounded-full bg-rose-400/70 animate-pulse" />
+                        Open
+                      </span>
+                    ) : (
+                      <span className="rounded-full bg-white/[0.06] px-1.5 py-[2px] text-[0.38rem] font-semibold uppercase tracking-[0.06em] text-slate-500">
+                        Locked
+                      </span>
+                    )}
+                    <span className="ml-auto text-[0.4rem] text-slate-500">
+                      {total >= 1000 ? `${(total / 1000).toFixed(1)}k` : total} votes
+                    </span>
+                  </div>
 
-                {/* Answer pills with crowd split */}
-                <div className="flex flex-wrap gap-1.5">
-                  {q.options.map((opt) => (
-                    <div
-                      key={opt.id}
-                      className="flex items-center gap-1.5 rounded-full border border-white/[0.1] bg-white/[0.03] px-2.5 py-[4px]"
-                    >
-                      <span className="text-[0.58rem] font-medium text-slate-300">
-                        {opt.label}
-                      </span>
-                      <span className="text-[0.44rem] font-semibold text-slate-500">
-                        {percentFor(opt, q.options)}%
-                      </span>
-                    </div>
-                  ))}
+                  {/* Question */}
+                  <p className="mb-2 text-[0.82rem] font-bold leading-snug text-white">
+                    {q.question}
+                  </p>
+
+                  {/* Answer pills — each filled proportional to its real vote
+                      share, same underlying idea as the Yes/No crowd-split
+                      bar, adapted to N options instead of 2. The option
+                      currently in the lead gets the same signal-pink
+                      emphasis used for the prediction mechanic elsewhere. */}
+                  <div className="flex flex-wrap gap-1.5">
+                    {q.options.map((opt) => {
+                      const pct = percentFor(opt, q.options);
+                      const isLeading = leadingId === opt.id;
+                      return (
+                        <div
+                          key={opt.id}
+                          className={`relative overflow-hidden rounded-full border px-2.5 py-[4px] ${
+                            isLeading ? "border-rose-400/35" : "border-white/[0.1]"
+                          }`}
+                        >
+                          <div
+                            className={`absolute inset-y-0 left-0 transition-[width] duration-700 ease-out ${
+                              isLeading ? "bg-rose-400/20" : "bg-white/[0.05]"
+                            }`}
+                            style={{ width: barsMounted ? `${pct}%` : "0%" }}
+                          />
+                          <div className="relative flex items-center gap-1.5">
+                            <span
+                              className={`text-[0.58rem] font-medium ${
+                                isLeading ? "text-white" : "text-slate-300"
+                              }`}
+                            >
+                              {opt.label}
+                            </span>
+                            <span
+                              className={`text-[0.44rem] font-semibold ${
+                                isLeading ? "text-rose-300" : "text-slate-500"
+                              }`}
+                            >
+                              {pct}%
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </section>
 
