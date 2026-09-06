@@ -1,14 +1,3 @@
-// Single source of truth for the logged-in user's identity — used by the shared
-// TopBar (avatar + streak) on every page, and by the full profile hero.
-export const currentUser = {
-  name: "Samuel",
-  handle: "@samuelnw",
-  avatar:
-    "https://images.unsplash.com/photo-1614023342667-6f060e9d1e04?auto=format&fit=crop&w=120&q=80",
-  streak: 4,
-  identityLine: "Reality strategist · Prestige drama loyalist",
-};
-
 export type HeroFeedShow = {
   id: number;
   kind: "show";

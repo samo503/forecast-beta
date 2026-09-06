@@ -1,8 +1,7 @@
 'use client'
 
-import { Search, Settings } from "lucide-react";
+import { Search, Settings, User } from "lucide-react";
 import ForecastWordmark from "./ForecastWordmark";
-import { currentUser } from "../../../lib/mock-data";
 
 export type TopBarTab = {
   label: string;
@@ -23,9 +22,9 @@ type TopBarProps = {
   onRightIconClick?: () => void;
   /**
    * The real signed-in user's avatar/streak. Pass `null` for a logged-out
-   * visitor — falls back to the mock identity. Pages should always pass
-   * their actual auth state rather than omitting this, so a signed-in
-   * user never sees the mock user's face in the header.
+   * visitor — renders a neutral, generic placeholder with no streak badge
+   * rather than fabricating an identity. Pages should always pass their
+   * actual auth state rather than omitting this.
    */
   currentUser?: TopBarUser | null;
 };
@@ -35,33 +34,34 @@ type TopBarProps = {
 // URL, which meant three of four places wouldn't update if it ever changed.
 export default function TopBar({ tabs, rightIcon = "search", onRightIconClick, currentUser: signedInUser }: TopBarProps) {
   const RightIcon = rightIcon === "settings" ? Settings : Search;
-  const name = signedInUser ? signedInUser.name : currentUser.name;
-  const avatar = signedInUser ? signedInUser.avatar : currentUser.avatar;
-  const streak = signedInUser ? signedInUser.streak : currentUser.streak;
 
   return (
     <header className="-mx-4 px-4 pt-[env(safe-area-inset-top)]">
       <div className="flex items-center justify-between pb-2.5">
         <div className="relative shrink-0">
           <div className="flex h-[28px] w-[28px] items-center justify-center overflow-hidden rounded-full border border-white/10 bg-slate-900">
-            {avatar ? (
+            {signedInUser?.avatar ? (
               <img
-                src={avatar}
+                src={signedInUser.avatar}
                 alt="Profile avatar"
                 className="h-full w-full object-cover"
               />
-            ) : (
+            ) : signedInUser ? (
               <span className="text-[0.62rem] font-semibold text-slate-500">
-                {name.charAt(0).toUpperCase()}
+                {signedInUser.name.charAt(0).toUpperCase()}
               </span>
+            ) : (
+              <User className="h-[14px] w-[14px] text-slate-600" strokeWidth={1.75} />
             )}
           </div>
-          <div className="absolute -bottom-0.5 -right-1 flex items-center gap-px rounded-full border border-white/10 bg-[#020205] px-[3px] py-px">
-            <span className="text-[0.4rem] leading-none">🔥</span>
-            <span className="text-[0.42rem] font-bold leading-none text-amber-300">
-              {streak}
-            </span>
-          </div>
+          {signedInUser && (
+            <div className="absolute -bottom-0.5 -right-1 flex items-center gap-px rounded-full border border-white/10 bg-[#020205] px-[3px] py-px">
+              <span className="text-[0.4rem] leading-none">🔥</span>
+              <span className="text-[0.42rem] font-bold leading-none text-amber-300">
+                {signedInUser.streak}
+              </span>
+            </div>
+          )}
         </div>
 
         <ForecastWordmark />
