@@ -352,7 +352,7 @@ export default async function Home() {
                           <p className="text-[0.9rem] font-bold tracking-tight text-white">
                             {channel.title}
                           </p>
-                          <p className="text-[0.62rem] text-slate-500">{channel.note}</p>
+                          <p className="line-clamp-2 text-[0.62rem] text-slate-500">{channel.note}</p>
                         </div>
                       </div>
                     </div>
