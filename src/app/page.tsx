@@ -30,6 +30,18 @@ const episodeStatusLabel: Record<string, string> = {
   ended: "FINAL",
 };
 
+// Mirrors lock_expired_prediction()'s lazy self-healing for predictions,
+// but purely at display time — no DB write. An episode stays 'upcoming'
+// in storage until someone manually marks it otherwise (same as Love
+// Island's status fix), so a page load has to compute whether it should
+// *read* as live now that its air_date has passed.
+function displayEpisodeStatus(status: string, airDate: string | null): string {
+  if (status === "upcoming" && airDate && new Date(airDate).getTime() <= Date.now()) {
+    return "live";
+  }
+  return status;
+}
+
 const briefTheme: Record<string, { color: string }> = {
   "PREDICTION OPEN": { color: "#fb7185" }, // prediction mechanic — signal pink
   "RETURNING":       { color: "#22d3ee" }, // editorial/news — cyan
@@ -68,12 +80,13 @@ export default async function Home() {
     .filter((e) => e.channel)
     .map((e, idx) => {
       const air = e.air_date ? new Date(e.air_date) : null;
+      const status = displayEpisodeStatus(e.status, e.air_date);
       return {
         id: idx,
         kind: "show",
         channel: `CH ${String(e.channel.channel_number).padStart(2, "0")}`,
         slot: "",
-        status: episodeStatusLabel[e.status] ?? e.status.toUpperCase(),
+        status: episodeStatusLabel[status] ?? status.toUpperCase(),
         title: e.channel.name,
         subtitle: "",
         detail: [
