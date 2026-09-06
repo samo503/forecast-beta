@@ -376,7 +376,9 @@ export default function PredictClient({
                       </span>
                     )}
                     <span className="ml-auto text-[0.4rem] text-slate-500">
-                      {total >= 1000 ? `${(total / 1000).toFixed(1)}k` : total} votes
+                      {total > 0
+                        ? `${total >= 1000 ? `${(total / 1000).toFixed(1)}k` : total} votes`
+                        : "Be the first to predict"}
                     </span>
                   </div>
 
@@ -415,13 +417,15 @@ export default function PredictClient({
                             >
                               {opt.label}
                             </span>
-                            <span
-                              className={`text-[0.44rem] font-semibold ${
-                                isLeading ? "text-rose-300" : "text-slate-500"
-                              }`}
-                            >
-                              {pct}%
-                            </span>
+                            {total > 0 && (
+                              <span
+                                className={`text-[0.44rem] font-semibold ${
+                                  isLeading ? "text-rose-300" : "text-slate-500"
+                                }`}
+                              >
+                                {pct}%
+                              </span>
+                            )}
                           </div>
                         </div>
                       );
