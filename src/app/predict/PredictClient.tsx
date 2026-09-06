@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import BottomNav from "../components/BottomNav";
 import PosterBackground from "../components/PosterBackground";
@@ -60,6 +60,66 @@ function closesInLabel(locksAt: string | null): string {
   return `${Math.round(hours / 24)}d`;
 }
 
+// Yes/No crowd split, rendered as one bar in two colors (like a poll
+// result) instead of a flat neutral progress bar — the split itself is
+// the point, so a landslide should look like one and a toss-up should
+// feel tense. `mounted` drives a one-time fill-in transition on load.
+function CrowdSplitBar({
+  yesPercent,
+  noPercent,
+  mounted,
+}: {
+  yesPercent: number;
+  noPercent: number;
+  mounted: boolean;
+}) {
+  const hasVotes = yesPercent + noPercent > 0;
+  const yesLeading = yesPercent >= noPercent;
+
+  return (
+    <div className="space-y-[4px]">
+      {hasVotes ? (
+        <div className="flex items-center justify-between">
+          <span
+            className={
+              yesLeading
+                ? "text-[0.46rem] font-bold text-emerald-300"
+                : "text-[0.42rem] text-slate-500"
+            }
+          >
+            {yesPercent}% Yes
+          </span>
+          <span
+            className={
+              !yesLeading
+                ? "text-[0.46rem] font-bold text-rose-300"
+                : "text-[0.42rem] text-slate-500"
+            }
+          >
+            {noPercent}% No
+          </span>
+        </div>
+      ) : (
+        <p className="text-[0.42rem] text-slate-600">Be the first to predict</p>
+      )}
+      <div className="flex h-[3px] overflow-hidden rounded-full bg-white/[0.07]">
+        {hasVotes && (
+          <>
+            <div
+              className="h-full bg-emerald-400/80 transition-[width] duration-700 ease-out"
+              style={{ width: mounted ? `${yesPercent}%` : "0%" }}
+            />
+            <div
+              className="h-full bg-rose-400/80 transition-[width] duration-700 ease-out"
+              style={{ width: mounted ? `${noPercent}%` : "0%" }}
+            />
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function PredictClient({
   predictions,
   myPicks,
@@ -85,6 +145,11 @@ export default function PredictClient({
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
   const [lockedPicks, setLockedPicks] = useState<Record<string, string>>(myPicks);
   const [toast, setToast] = useState<string | null>(null);
+  const [barsMounted, setBarsMounted] = useState(false);
+
+  useEffect(() => {
+    setBarsMounted(true);
+  }, []);
 
   const closingCards = predictions.filter((p) => p.locksAt).slice(0, 2);
   const liveQuestions = predictions;
@@ -241,19 +306,8 @@ export default function PredictClient({
                         {card.question}
                       </p>
 
-                      {/* Crowd split + bar inline */}
-                      <div className="space-y-[4px]">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[0.42rem] text-slate-400">{yesPercent}% Yes</span>
-                          <span className="text-[0.42rem] text-slate-400">{noPercent}% No</span>
-                        </div>
-                        <div className="h-[2px] overflow-hidden rounded-full bg-white/[0.07]">
-                          <div
-                            className="h-full rounded-full bg-white/30"
-                            style={{ width: `${yesPercent}%` }}
-                          />
-                        </div>
-                      </div>
+                      {/* Crowd split */}
+                      <CrowdSplitBar yesPercent={yesPercent} noPercent={noPercent} mounted={barsMounted} />
 
                       {/* CTA — my pick locked, voting closed with no pick, or still open */}
                       {locked ? (
@@ -499,18 +553,13 @@ export default function PredictClient({
                 })}
               </div>
 
-              {/* Crowd split bar */}
-              <div className="mb-5 space-y-[5px]">
-                <div className="flex justify-between">
-                  <span className="text-[0.38rem] text-slate-600">{yesPercentFor(activeCard)}% Yes</span>
-                  <span className="text-[0.38rem] text-slate-600">{noPercentFor(activeCard)}% No</span>
-                </div>
-                <div className="h-[2px] overflow-hidden rounded-full bg-white/[0.05]">
-                  <div
-                    className="h-full rounded-full bg-white/30"
-                    style={{ width: `${yesPercentFor(activeCard)}%` }}
-                  />
-                </div>
+              {/* Crowd split */}
+              <div className="mb-5">
+                <CrowdSplitBar
+                  yesPercent={yesPercentFor(activeCard)}
+                  noPercent={noPercentFor(activeCard)}
+                  mounted={barsMounted}
+                />
               </div>
 
               {/* Lock button */}
