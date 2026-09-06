@@ -1,0 +1,14 @@
+-- Enables Supabase Realtime (Postgres Changes) for the comments table, so
+-- /live's Room Highlights feed can append new comments as they're inserted
+-- without a page reload. A table only emits change events once it's added
+-- to the supabase_realtime publication — this isn't a client-library
+-- setting, it's a Postgres-level publication membership, and it defaults
+-- to empty on a new project. Written as a migration rather than a
+-- dashboard toggle so it's reproducible, same as every other schema change
+-- in this project.
+--
+-- comments' existing RLS ("comments are publicly readable", using (true))
+-- already covers who can receive these broadcasts — Realtime enforces the
+-- table's own SELECT policy per connecting client, so this doesn't change
+-- who can see what, only that inserts are now pushed live.
+alter publication supabase_realtime add table comments;
