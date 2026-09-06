@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { createClient } from '../../../lib/supabase/browser'
+import ForecastWordmark from '../components/ForecastWordmark'
 
 export default function AuthForm() {
   const searchParams = useSearchParams()
@@ -54,13 +55,9 @@ export default function AuthForm() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#020205] px-4">
       <div className="w-full max-w-[320px] space-y-8">
-        {/* Wordmark */}
+        {/* Wordmark — shared component, same as every other page */}
         <div className="flex justify-center">
-          <div className="flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-white/[0.03] px-4 py-2">
-            <span className="bg-gradient-to-r from-rose-400 to-violet-400 bg-clip-text text-[0.8rem] font-black tracking-[0.06em] text-transparent">
-              FORECAST
-            </span>
-          </div>
+          <ForecastWordmark />
         </div>
 
         {sent ? (
