@@ -193,6 +193,10 @@ export default function PredictClient({
         router.push("/auth?next=/predict");
         return;
       }
+      if (err instanceof Error && err.message === "duplicate_pick") {
+        showToast("You've already locked in a pick for this category");
+        return;
+      }
       showToast("Something went wrong — try again");
     }
   };

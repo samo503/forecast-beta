@@ -17,7 +17,13 @@ export async function lockPrediction(predictionId: string, optionId: string) {
     option_id: optionId,
   })
 
-  if (error) throw error
+  if (error) {
+    // unique_violation on (prediction_id, user_id) — the user already has
+    // a pick locked in for this prediction. Distinct from every other
+    // insert failure (RLS rejection, bad ids, etc), which stay generic.
+    if (error.code === '23505') throw new Error('duplicate_pick')
+    throw error
+  }
 
   revalidatePath('/predict')
 }
