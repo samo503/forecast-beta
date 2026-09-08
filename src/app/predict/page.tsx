@@ -26,7 +26,7 @@ export default async function PredictPage() {
     .select(
       "*, channel:channels(*), options:prediction_options!prediction_options_prediction_id_fkey(*)"
     )
-    .in("status", ["open", "locked"])
+    .in("status", ["open", "locked", "resolved"])
     .order("locks_at", { ascending: true });
 
   // Lazy open->locked transition: no scheduled job flips this, so every
@@ -51,8 +51,9 @@ export default async function PredictPage() {
     .map((p) => ({
       id: p.id,
       question: p.question,
-      status: p.status as "open" | "locked",
+      status: p.status as "open" | "locked" | "resolved",
       locksAt: p.locks_at,
+      correctOptionId: p.correct_option_id as string | null,
       show: p.channel.name,
       poster: channelPosters[p.channel.slug] ?? "",
       options: (p.options ?? [])
@@ -73,6 +74,10 @@ export default async function PredictPage() {
   // My own picks — RLS only ever returns rows I own (or ones no longer
   // 'open'), so this is safe to run even when nobody is signed in.
   let myPicks: Record<string, string> = {};
+  // Resolution outcome for the signed-in user's own picks, keyed by
+  // prediction id — same source of truth profile's Prediction Record
+  // trusts (stored is_correct/points_awarded, not re-derived client-side).
+  let myResults: Record<string, { isCorrect: boolean; points: number }> = {};
   // TopBar badge — same shape as lib/supabase/current-user.ts's
   // getCurrentUserBadge(), built from data already fetched here instead of
   // querying auth/profiles a second time.
@@ -115,13 +120,21 @@ export default async function PredictPage() {
     if (predictions.length) {
       const { data: pickRows } = await authedSupabase
         .from("user_predictions")
-        .select("prediction_id, option_id")
+        .select("prediction_id, option_id, is_correct, points_awarded")
         .in(
           "prediction_id",
           predictions.map((p) => p.id)
         );
       myPicks = Object.fromEntries(
         (pickRows ?? []).map((r) => [r.prediction_id, r.option_id])
+      );
+      myResults = Object.fromEntries(
+        (pickRows ?? [])
+          .filter((r) => r.is_correct !== null)
+          .map((r) => [
+            r.prediction_id,
+            { isCorrect: r.is_correct as boolean, points: r.points_awarded ?? 0 },
+          ])
       );
     }
   }
@@ -130,6 +143,7 @@ export default async function PredictPage() {
     <PredictClient
       predictions={predictions}
       myPicks={myPicks}
+      myResults={myResults}
       currentUser={currentUserBadge}
       accuracy={accuracy}
       streak={streak}

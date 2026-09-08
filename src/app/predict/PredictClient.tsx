@@ -20,8 +20,9 @@ export type PredictionOption = {
 export type PredictionData = {
   id: string;
   question: string;
-  status: "open" | "locked";
+  status: "open" | "locked" | "resolved";
   locksAt: string | null;
+  correctOptionId: string | null;
   show: string;
   poster: string;
   options: PredictionOption[];
@@ -123,6 +124,7 @@ function CrowdSplitBar({
 export default function PredictClient({
   predictions,
   myPicks,
+  myResults,
   currentUser,
   accuracy,
   streak,
@@ -130,6 +132,10 @@ export default function PredictClient({
 }: {
   predictions: PredictionData[];
   myPicks: Record<string, string>;
+  /** Resolution outcome for the signed-in user's own picks, keyed by
+   *  prediction id. Absent entries mean either not resolved yet, or
+   *  resolved but the user never picked. */
+  myResults: Record<string, { isCorrect: boolean; points: number }>;
   currentUser: TopBarUser | null;
   /** Real computed accuracy, null when there are zero *resolved* picks
    *  (rendered as "—"). */
@@ -283,6 +289,10 @@ export default function PredictClient({
                 : undefined;
               const yesPercent = yesPercentFor(card);
               const noPercent = noPercentFor(card);
+              const myResult = myResults[card.id];
+              const correctLabel = card.correctOptionId
+                ? card.options.find((o) => o.id === card.correctOptionId)?.label
+                : undefined;
               return (
                 <article
                   key={card.id}
@@ -314,8 +324,25 @@ export default function PredictClient({
                       {/* Crowd split */}
                       <CrowdSplitBar yesPercent={yesPercent} noPercent={noPercent} mounted={barsMounted} />
 
-                      {/* CTA — my pick locked, voting closed with no pick, or still open */}
-                      {locked ? (
+                      {/* CTA — resolved outcome, my pick locked, voting closed with no pick, or still open */}
+                      {card.status === "resolved" ? (
+                        <div className="space-y-1">
+                          <div className="w-full rounded-lg border border-white/[0.06] bg-black/20 py-[5px] text-center text-[0.6rem] font-semibold tracking-[0.04em] text-slate-300">
+                            Correct answer: {correctLabel ?? "—"}
+                          </div>
+                          {locked && myResult && (
+                            <div
+                              className={`w-full rounded-lg border py-[5px] text-center text-[0.6rem] font-semibold tracking-[0.04em] ${
+                                myResult.isCorrect
+                                  ? "border-emerald-400/30 bg-emerald-400/[0.08] text-emerald-300"
+                                  : "border-rose-400/30 bg-rose-400/[0.08] text-rose-300"
+                              }`}
+                            >
+                              {myResult.isCorrect ? "✓" : "✗"} Picked: {lockedLabel} · +{myResult.points} pts
+                            </div>
+                          )}
+                        </div>
+                      ) : locked ? (
                         <div
                           className={`w-full rounded-lg border py-[5px] text-center text-[0.6rem] font-semibold tracking-[0.04em] ${
                             lockedLabel === "Yes"
