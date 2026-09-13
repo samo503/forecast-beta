@@ -157,7 +157,11 @@ export default function PredictClient({
     setBarsMounted(true);
   }, []);
 
-  const closingCards = predictions.filter((p) => p.locksAt).slice(0, 2);
+  // No cap: this is the only working entry point into the Lock Pick sheet
+  // anywhere in the app (the Live/Closing Soon/Upcoming/Past tabs are
+  // non-functional decoration). Resolved predictions are excluded so an
+  // already-decided one can't take a slot from one still open to pick.
+  const closingCards = predictions.filter((p) => p.locksAt && p.status !== "resolved");
   const liveQuestions = predictions;
 
   const openSheet = (card: PredictionData) => {
