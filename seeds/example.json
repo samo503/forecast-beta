@@ -1,0 +1,16 @@
+{
+  "channelSlug": "love-island-usa",
+  "episode": {
+    "title": "Episode 12",
+    "episodeNumber": 12,
+    "airDate": "2026-09-20T17:00:00-07:00",
+    "status": "upcoming"
+  },
+  "predictions": [
+    {
+      "question": "Who gets dumped from the island?",
+      "locksAt": "2026-09-20T17:00:00-07:00",
+      "options": ["Name A", "Name B", "Name C"]
+    }
+  ]
+}
