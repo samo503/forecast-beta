@@ -58,115 +58,240 @@ function closesInLabel(locksAt: string | null): string {
   return `${Math.round(hours / 24)}d`;
 }
 
-// Crowd split. hasVotes comes from the real total vote count across all
-// options, not from Yes/No labels, so a prediction with real votes never
-// shows "Be the first to predict" just because it isn't binary. Two-option
-// Yes/No predictions still get the two-color bar (a landslide should look
-// like one and a toss-up should feel tense); anything else reuses the same
-// per-option pill treatment Live Questions already uses below, just sized
-// for this smaller slot. `mounted` drives a one-time fill-in transition.
-function CrowdSplitBar({
-  options,
-  mounted,
+// Vote pills, shared by every card regardless of size. A pill is only
+// interactive when the prediction is open and the user hasn't picked yet.
+// Tapping an unselected pill just selects it (`pendingSelection`); tapping
+// the same pill again confirms and locks it. Tapping a different pill moves
+// the selection instead of locking anything. This two-tap flow (rather than
+// locking on the first tap) exists because a mis-tap here has no undo.
+function VotePills({
+  card,
+  lockedPicks,
+  pendingSelection,
+  barsMounted,
+  onPillTap,
 }: {
-  options: PredictionOption[];
-  mounted: boolean;
+  card: PredictionData;
+  lockedPicks: Record<string, string>;
+  pendingSelection: Record<string, string>;
+  barsMounted: boolean;
+  onPillTap: (card: PredictionData, optionId: string) => void;
 }) {
-  const total = totalVotes(options);
-  const hasVotes = total > 0;
-
-  if (!hasVotes) {
-    return (
-      <div className="space-y-[4px]">
-        <p className="text-[0.42rem] text-slate-600">Be the first to predict</p>
-        <div className="flex h-[3px] overflow-hidden rounded-full bg-white/[0.07]" />
-      </div>
-    );
-  }
-
-  const yes = options.find((o) => o.label === "Yes");
-  const no = options.find((o) => o.label === "No");
-
-  if (options.length === 2 && yes && no) {
-    const yesPercent = percentFor(yes, options);
-    const noPercent = percentFor(no, options);
-    const yesLeading = yesPercent >= noPercent;
-
-    return (
-      <div className="space-y-[4px]">
-        <div className="flex items-center justify-between">
-          <span
-            className={
-              yesLeading
-                ? "text-[0.46rem] font-bold text-emerald-300"
-                : "text-[0.42rem] text-slate-500"
-            }
-          >
-            {yesPercent}% Yes
-          </span>
-          <span
-            className={
-              !yesLeading
-                ? "text-[0.46rem] font-bold text-rose-300"
-                : "text-[0.42rem] text-slate-500"
-            }
-          >
-            {noPercent}% No
-          </span>
-        </div>
-        <div className="flex h-[3px] overflow-hidden rounded-full bg-white/[0.07]">
-          <div
-            className="h-full bg-emerald-400/80 transition-[width] duration-700 ease-out"
-            style={{ width: mounted ? `${yesPercent}%` : "0%" }}
-          />
-          <div
-            className="h-full bg-rose-400/80 transition-[width] duration-700 ease-out"
-            style={{ width: mounted ? `${noPercent}%` : "0%" }}
-          />
-        </div>
-      </div>
-    );
-  }
-
-  const leading = options.reduce((lead, o) => (o.voteCount > lead.voteCount ? o : lead), options[0]);
+  const total = totalVotes(card.options);
+  const leadingId =
+    total > 0
+      ? card.options.reduce((lead, o) => (o.voteCount > lead.voteCount ? o : lead), card.options[0]).id
+      : null;
+  const myPick = lockedPicks[card.id];
+  const pending = pendingSelection[card.id];
+  const votable = card.status === "open" && !myPick;
 
   return (
-    <div className="flex flex-wrap gap-1">
-      {options.map((option) => {
-        const pct = percentFor(option, options);
-        const isLeading = leading.id === option.id;
-        return (
-          <div
-            key={option.id}
-            className={`relative min-w-[48px] overflow-hidden rounded-full border px-2 py-[3px] ${
-              isLeading ? "border-rose-400/35" : "border-white/[0.1]"
-            }`}
-          >
-            <div
-              className={`absolute inset-y-0 left-0 transition-[width] duration-700 ease-out ${
-                isLeading ? "bg-rose-400/20" : "bg-white/[0.05]"
-              }`}
-              style={{ width: mounted ? `${pct}%` : "0%" }}
-            />
-            <div className="relative flex items-center justify-center gap-1">
-              <span
-                className={`text-[0.42rem] font-medium ${
-                  isLeading ? "text-white" : "text-slate-300"
-                }`}
-              >
-                {option.label}
-              </span>
-              <span
-                className={`text-[0.38rem] font-semibold ${
-                  isLeading ? "text-rose-300" : "text-slate-500"
-                }`}
-              >
-                {pct}%
-              </span>
+    <div className="flex flex-wrap gap-1.5">
+      {card.options.map((opt) => {
+        const pct = percentFor(opt, card.options);
+        const isPicked = myPick === opt.id;
+        const isPending = votable && pending === opt.id;
+        const isLeading = leadingId === opt.id;
+
+        const pillClassName = `relative min-w-[62px] overflow-hidden rounded-full border px-3 py-[5px] ${
+          isPicked
+            ? "border-rose-400"
+            : isPending
+            ? "border-white"
+            : isLeading
+            ? "border-rose-400/35"
+            : "border-white/[0.1]"
+        } ${votable ? "cursor-pointer" : ""}`;
+
+        const fillClassName = `absolute inset-y-0 left-0 transition-[width] duration-700 ease-out ${
+          isPicked
+            ? "bg-rose-400/[0.12]"
+            : isPending
+            ? "bg-white/[0.14]"
+            : isLeading
+            ? "bg-rose-400/20"
+            : "bg-white/[0.05]"
+        }`;
+
+        const labelClassName = `text-[0.58rem] font-medium ${
+          isPicked
+            ? "text-rose-300"
+            : isPending
+            ? "text-white"
+            : isLeading
+            ? "text-white"
+            : "text-slate-300"
+        }`;
+
+        const inner = (
+          <>
+            <div className={fillClassName} style={{ width: barsMounted ? `${pct}%` : "0%" }} />
+            <div className="relative flex items-center justify-center gap-1.5">
+              <span className={labelClassName}>{opt.label}</span>
+              {isPending ? (
+                <span className="text-[0.44rem] font-semibold text-white/80">Tap to confirm</span>
+              ) : (
+                total > 0 && (
+                  <span
+                    className={`text-[0.44rem] font-semibold ${
+                      isPicked || isLeading ? "text-rose-300" : "text-slate-500"
+                    }`}
+                  >
+                    {pct}%
+                  </span>
+                )
+              )}
             </div>
+          </>
+        );
+
+        return votable ? (
+          <button
+            key={opt.id}
+            type="button"
+            onClick={() => onPillTap(card, opt.id)}
+            className={pillClassName}
+          >
+            {inner}
+          </button>
+        ) : (
+          <div key={opt.id} className={pillClassName}>
+            {inner}
           </div>
         );
       })}
+    </div>
+  );
+}
+
+// One card component for the whole list. `variant` controls size only
+// (poster + fixed height for "large", plain compact row otherwise) — the
+// vote pills and the locked/resolved receipts below them read the same at
+// both sizes, since hierarchy here comes from position, not from a
+// different vote-visualization language.
+function PredictionCard({
+  card,
+  variant,
+  lockedPicks,
+  pendingSelection,
+  myResults,
+  barsMounted,
+  onPillTap,
+}: {
+  card: PredictionData;
+  variant: "large" | "compact";
+  lockedPicks: Record<string, string>;
+  pendingSelection: Record<string, string>;
+  myResults: Record<string, { isCorrect: boolean; points: number }>;
+  barsMounted: boolean;
+  onPillTap: (card: PredictionData, optionId: string) => void;
+}) {
+  const locked = lockedPicks[card.id];
+  const lockedLabel = locked ? card.options.find((o) => o.id === locked)?.label : undefined;
+  const myResult = myResults[card.id];
+  const correctLabel = card.correctOptionId
+    ? card.options.find((o) => o.id === card.correctOptionId)?.label
+    : undefined;
+
+  const showBadgeClassName =
+    variant === "large"
+      ? "rounded-full border border-white/10 bg-slate-950/60 px-2 py-[3px] text-[0.5rem] font-medium text-slate-300"
+      : "text-[0.48rem] font-semibold uppercase tracking-[0.1em] text-slate-400";
+
+  const content = (
+    <>
+      <div className="flex items-center justify-between">
+        <span className={showBadgeClassName}>{card.show}</span>
+        {card.locksAt && (
+          <span className="inline-flex items-center gap-[4px] rounded-full bg-rose-500/15 px-2 py-[3px] text-[0.44rem] font-bold uppercase tracking-[0.08em] text-rose-300">
+            <span className="h-[4px] w-[4px] rounded-full bg-rose-400 animate-pulse" />
+            Closes {closesInLabel(card.locksAt)}
+          </span>
+        )}
+      </div>
+
+      <div className={variant === "large" ? "mt-auto space-y-1.5" : "mt-1.5 space-y-1.5"}>
+        <p
+          className={
+            variant === "large"
+              ? "text-[0.88rem] font-extrabold leading-snug text-white"
+              : "text-[0.82rem] font-bold leading-snug text-white"
+          }
+        >
+          {card.question}
+        </p>
+
+        <VotePills
+          card={card}
+          lockedPicks={lockedPicks}
+          pendingSelection={pendingSelection}
+          barsMounted={barsMounted}
+          onPillTap={onPillTap}
+        />
+
+        {/* Receipt — resolved outcome, my pick locked, or voting closed with no pick.
+            An open, unpicked prediction shows nothing extra; the pills are the input. */}
+        {card.status === "resolved" ? (
+          <div className="space-y-1">
+            <div className="w-full rounded-lg border border-white/[0.06] bg-black/20 py-[5px] text-center text-[0.6rem] font-semibold tracking-[0.04em] text-slate-300">
+              Correct answer: {correctLabel ?? "—"}
+            </div>
+            {locked && myResult && (
+              <div
+                className={`w-full rounded-lg border py-[5px] text-center text-[0.6rem] font-semibold tracking-[0.04em] ${
+                  myResult.isCorrect
+                    ? "border-emerald-400/30 bg-emerald-400/[0.08] text-emerald-300"
+                    : "border-rose-400/30 bg-rose-400/[0.08] text-rose-300"
+                }`}
+              >
+                {myResult.isCorrect ? "✓" : "✗"} Picked: {lockedLabel} · +{myResult.points} pts
+              </div>
+            )}
+          </div>
+        ) : locked ? (
+          <div
+            className={`w-full rounded-lg border py-[5px] text-center text-[0.6rem] font-semibold tracking-[0.04em] ${
+              lockedLabel === "Yes"
+                ? "border-emerald-400/30 bg-emerald-400/[0.08] text-emerald-300"
+                : "border-rose-400/30 bg-rose-400/[0.08] text-rose-300"
+            }`}
+          >
+            Locked: {lockedLabel} ✓
+          </div>
+        ) : card.status !== "open" ? (
+          <div className="w-full rounded-lg border border-white/[0.06] bg-black/20 py-[5px] text-center text-[0.6rem] font-semibold tracking-[0.04em] text-white/40">
+            Voting closed
+          </div>
+        ) : null}
+      </div>
+    </>
+  );
+
+  if (variant === "large") {
+    if (card.poster) {
+      return (
+        <article className="relative overflow-hidden rounded-2xl">
+          {/* title="" — card.show is already shown above as the badge */}
+          <PosterBackground src={card.poster} title="" />
+          <div className="absolute inset-x-0 top-0 h-14 bg-gradient-to-b from-black/45 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/55 to-transparent" />
+          <div className="relative flex h-[160px] flex-col p-3.5">{content}</div>
+        </article>
+      );
+    }
+    // No poster art for this channel yet — a plain card sized to its
+    // content instead of the fixed-height poster band with nothing in it.
+    return (
+      <article className="flex flex-col gap-1.5 rounded-2xl border border-white/[0.07] bg-white/[0.025] p-3.5">
+        {content}
+      </article>
+    );
+  }
+
+  return (
+    <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] px-3 py-2.5">
+      {content}
     </div>
   );
 }
@@ -196,10 +321,8 @@ export default function PredictClient({
   correctThisWeek: number;
 }) {
   const router = useRouter();
-  const [activeCard, setActiveCard] = useState<PredictionData | null>(null);
-  const [sheetVisible, setSheetVisible] = useState(false);
-  const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
   const [lockedPicks, setLockedPicks] = useState<Record<string, string>>(myPicks);
+  const [pendingSelection, setPendingSelection] = useState<Record<string, string>>({});
   const [toast, setToast] = useState<string | null>(null);
   const [barsMounted, setBarsMounted] = useState(false);
 
@@ -207,46 +330,31 @@ export default function PredictClient({
     setBarsMounted(true);
   }, []);
 
-  // No cap: this is the only working entry point into the Lock Pick sheet
-  // anywhere in the app (the Live/Closing Soon/Upcoming/Past tabs are
-  // non-functional decoration). Resolved predictions are excluded so an
-  // already-decided one can't take a slot from one still open to pick.
-  const closingCards = predictions.filter((p) => p.locksAt && p.status !== "resolved");
-  const liveQuestions = predictions;
-
-  const openSheet = (card: PredictionData) => {
-    if (lockedPicks[card.id] || card.status !== "open") return;
-    setActiveCard(card);
-    setSelectedOptionId(null);
-    // Double rAF ensures the element is mounted before the CSS transition fires
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => setSheetVisible(true));
-    });
-  };
-
-  const closeSheet = () => {
-    setSheetVisible(false);
-    setTimeout(() => {
-      setActiveCard(null);
-      setSelectedOptionId(null);
-    }, 300);
-  };
+  // Single list, most urgent first. Nothing is dropped: predictions with no
+  // locks_at sort last instead of being excluded.
+  const sortedPredictions = [...predictions].sort((a, b) => {
+    if (!a.locksAt && !b.locksAt) return 0;
+    if (!a.locksAt) return 1;
+    if (!b.locksAt) return -1;
+    return new Date(a.locksAt).getTime() - new Date(b.locksAt).getTime();
+  });
 
   const showToast = (message: string) => {
     setToast(message);
     setTimeout(() => setToast(null), 2500);
   };
 
-  const lockPick = async () => {
-    if (!activeCard || !selectedOptionId) return;
-    const predictionId = activeCard.id;
-    const optionId = selectedOptionId;
-    const label = activeCard.options.find((o) => o.id === optionId)?.label ?? "";
-    closeSheet();
+  const confirmVote = async (card: PredictionData, optionId: string) => {
+    setPendingSelection((prev) => {
+      const next = { ...prev };
+      delete next[card.id];
+      return next;
+    });
+    const label = card.options.find((o) => o.id === optionId)?.label ?? "";
 
     try {
-      await lockPrediction(predictionId, optionId);
-      setLockedPicks((prev) => ({ ...prev, [predictionId]: optionId }));
+      await lockPrediction(card.id, optionId);
+      setLockedPicks((prev) => ({ ...prev, [card.id]: optionId }));
       showToast(`Pick locked · ${label}`);
     } catch (err) {
       if (err instanceof Error && err.message === "not_authenticated") {
@@ -257,7 +365,17 @@ export default function PredictClient({
         showToast("You've already locked in a pick for this category");
         return;
       }
-      showToast("Something went wrong — try again");
+      showToast("Something went wrong. Try again.");
+    }
+  };
+
+  // Tap once to select, tap the same pill again to confirm and lock.
+  // Tapping a different pill just moves the selection.
+  const handlePillTap = (card: PredictionData, optionId: string) => {
+    if (pendingSelection[card.id] === optionId) {
+      confirmVote(card, optionId);
+    } else {
+      setPendingSelection((prev) => ({ ...prev, [card.id]: optionId }));
     }
   };
 
@@ -321,219 +439,29 @@ export default function PredictClient({
           </div>
         </section>
 
-        {/* ── Section 2: Closing Soon ── */}
-        <section className="space-y-2">
-          <div className="flex items-center justify-between px-0.5">
-            <div className="flex items-center gap-1.5">
-              <span className="h-[5px] w-[5px] rounded-full bg-rose-400 animate-pulse" />
-              <p className="text-[0.6rem] font-bold uppercase tracking-[0.28em] text-slate-200">
-                Closing Soon
-              </p>
-            </div>
-            <button className="text-[0.42rem] text-slate-600 transition hover:text-slate-400">
-              See all ›
-            </button>
-          </div>
-
-          <div className="space-y-2">
-            {closingCards.map((card) => {
-              const locked = lockedPicks[card.id];
-              const lockedLabel = locked
-                ? card.options.find((o) => o.id === locked)?.label
-                : undefined;
-              const myResult = myResults[card.id];
-              const correctLabel = card.correctOptionId
-                ? card.options.find((o) => o.id === card.correctOptionId)?.label
-                : undefined;
-              return (
-                <article
-                  key={card.id}
-                  className="relative overflow-hidden rounded-2xl"
-                >
-                  {/* title="" — card.show is already shown above as the badge */}
-                  <PosterBackground src={card.poster} title="" />
-                  <div className="absolute inset-x-0 top-0 h-14 bg-gradient-to-b from-black/45 to-transparent" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/55 to-transparent" />
-
-                  <div className="relative flex h-[160px] flex-col p-3.5">
-                    {/* Top row: show badge + countdown */}
-                    <div className="flex items-center justify-between">
-                      <span className="rounded-full border border-white/10 bg-slate-950/60 px-2 py-[3px] text-[0.5rem] font-medium text-slate-300">
-                        {card.show}
-                      </span>
-                      <span className="inline-flex items-center gap-[4px] rounded-full bg-rose-500/15 px-2 py-[3px] text-[0.44rem] font-bold uppercase tracking-[0.08em] text-rose-300">
-                        <span className="h-[4px] w-[4px] rounded-full bg-rose-400 animate-pulse" />
-                        Closes {closesInLabel(card.locksAt)}
-                      </span>
-                    </div>
-
-                    {/* Bottom block */}
-                    <div className="mt-auto space-y-1.5">
-                      <p className="text-[0.88rem] font-extrabold leading-snug text-white">
-                        {card.question}
-                      </p>
-
-                      {/* Crowd split */}
-                      <CrowdSplitBar options={card.options} mounted={barsMounted} />
-
-                      {/* CTA — resolved outcome, my pick locked, voting closed with no pick, or still open */}
-                      {card.status === "resolved" ? (
-                        <div className="space-y-1">
-                          <div className="w-full rounded-lg border border-white/[0.06] bg-black/20 py-[5px] text-center text-[0.6rem] font-semibold tracking-[0.04em] text-slate-300">
-                            Correct answer: {correctLabel ?? "—"}
-                          </div>
-                          {locked && myResult && (
-                            <div
-                              className={`w-full rounded-lg border py-[5px] text-center text-[0.6rem] font-semibold tracking-[0.04em] ${
-                                myResult.isCorrect
-                                  ? "border-emerald-400/30 bg-emerald-400/[0.08] text-emerald-300"
-                                  : "border-rose-400/30 bg-rose-400/[0.08] text-rose-300"
-                              }`}
-                            >
-                              {myResult.isCorrect ? "✓" : "✗"} Picked: {lockedLabel} · +{myResult.points} pts
-                            </div>
-                          )}
-                        </div>
-                      ) : locked ? (
-                        <div
-                          className={`w-full rounded-lg border py-[5px] text-center text-[0.6rem] font-semibold tracking-[0.04em] ${
-                            lockedLabel === "Yes"
-                              ? "border-emerald-400/30 bg-emerald-400/[0.08] text-emerald-300"
-                              : "border-rose-400/30 bg-rose-400/[0.08] text-rose-300"
-                          }`}
-                        >
-                          Locked: {lockedLabel} ✓
-                        </div>
-                      ) : card.status !== "open" ? (
-                        <div className="w-full rounded-lg border border-white/[0.06] bg-black/20 py-[5px] text-center text-[0.6rem] font-semibold tracking-[0.04em] text-white/40">
-                          Voting closed
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => openSheet(card)}
-                          className="w-full rounded-lg border border-white/[0.1] bg-black/25 py-[5px] text-center text-[0.6rem] font-semibold tracking-[0.04em] text-white/80 backdrop-blur-sm transition hover:bg-black/35 hover:text-white/95"
-                        >
-                          Predict →
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-        </section>
-
-        {/* ── Section 3: Live Questions ── */}
+        {/* ── Section 2: Predictions ── */}
         <section className="space-y-2">
           <p className="px-0.5 text-[0.6rem] font-bold uppercase tracking-[0.28em] text-slate-200">
-            Live Questions
+            Predictions
           </p>
 
           <div className="space-y-2">
-            {liveQuestions.map((q) => {
-              const total = totalVotes(q.options);
-              const leadingId =
-                total > 0
-                  ? q.options.reduce((lead, o) => (o.voteCount > lead.voteCount ? o : lead), q.options[0]).id
-                  : null;
-
-              return (
-                <div
-                  key={q.id}
-                  className="rounded-xl border border-white/[0.07] bg-white/[0.02] px-3 py-2.5"
-                >
-                  {/* Show + live badge + vote count */}
-                  <div className="mb-1.5 flex items-center gap-1.5">
-                    <span className="text-[0.48rem] font-semibold uppercase tracking-[0.1em] text-slate-400">
-                      {q.show}
-                    </span>
-                    {q.status === "open" ? (
-                      <span className="inline-flex items-center gap-[3px] rounded-full bg-rose-500/10 px-1.5 py-[2px] text-[0.38rem] font-semibold uppercase tracking-[0.06em] text-rose-400/80">
-                        <span className="h-[3px] w-[3px] rounded-full bg-rose-400/70 animate-pulse" />
-                        Open
-                      </span>
-                    ) : (
-                      <span className="rounded-full bg-white/[0.06] px-1.5 py-[2px] text-[0.38rem] font-semibold uppercase tracking-[0.06em] text-slate-500">
-                        Locked
-                      </span>
-                    )}
-                    <span className="ml-auto text-[0.4rem] text-slate-500">
-                      {total > 0
-                        ? `${total >= 1000 ? `${(total / 1000).toFixed(1)}k` : total} votes`
-                        : "Be the first to predict"}
-                    </span>
-                  </div>
-
-                  {/* Question */}
-                  <p className="mb-2 text-[0.82rem] font-bold leading-snug text-white">
-                    {q.question}
-                  </p>
-
-                  {/* Answer pills — each filled proportional to its real vote
-                      share, same underlying idea as the Yes/No crowd-split
-                      bar, adapted to N options instead of 2. The option
-                      currently in the lead gets the same signal-pink
-                      emphasis used for the prediction mechanic elsewhere. */}
-                  <div className="flex flex-wrap gap-1.5">
-                    {q.options.map((opt) => {
-                      const pct = percentFor(opt, q.options);
-                      const isLeading = leadingId === opt.id;
-                      const isPicked = lockedPicks[q.id] === opt.id;
-                      return (
-                        <div
-                          key={opt.id}
-                          className={`relative min-w-[62px] overflow-hidden rounded-full border px-3 py-[5px] ${
-                            isPicked
-                              ? "border-rose-400"
-                              : isLeading
-                              ? "border-rose-400/35"
-                              : "border-white/[0.1]"
-                          }`}
-                        >
-                          <div
-                            className={`absolute inset-y-0 left-0 transition-[width] duration-700 ease-out ${
-                              isPicked
-                                ? "bg-rose-400/[0.12]"
-                                : isLeading
-                                ? "bg-rose-400/20"
-                                : "bg-white/[0.05]"
-                            }`}
-                            style={{ width: barsMounted ? `${pct}%` : "0%" }}
-                          />
-                          <div className="relative flex items-center justify-center gap-1.5">
-                            <span
-                              className={`text-[0.58rem] font-medium ${
-                                isPicked
-                                  ? "text-rose-300"
-                                  : isLeading
-                                  ? "text-white"
-                                  : "text-slate-300"
-                              }`}
-                            >
-                              {opt.label}
-                            </span>
-                            {total > 0 && (
-                              <span
-                                className={`text-[0.44rem] font-semibold ${
-                                  isPicked || isLeading ? "text-rose-300" : "text-slate-500"
-                                }`}
-                              >
-                                {pct}%
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })}
+            {sortedPredictions.map((card, i) => (
+              <PredictionCard
+                key={card.id}
+                card={card}
+                variant={i === 0 ? "large" : "compact"}
+                lockedPicks={lockedPicks}
+                pendingSelection={pendingSelection}
+                myResults={myResults}
+                barsMounted={barsMounted}
+                onPillTap={handlePillTap}
+              />
+            ))}
           </div>
         </section>
 
-        {/* ── Section 4: Upcoming (preview) ── */}
+        {/* ── Section 3: Upcoming (preview) ── */}
         {SHOW_UPCOMING_PREVIEW && (
         <section className="space-y-1.5">
           <div className="flex items-center justify-between px-0.5">
@@ -558,7 +486,7 @@ export default function PredictClient({
         </section>
         )}
 
-        {/* ── Section 5: Past Picks (preview) ── */}
+        {/* ── Section 4: Past Picks (preview) ── */}
         {SHOW_PAST_PICKS_PREVIEW && (
         <section className="space-y-1.5">
           <div className="flex items-center justify-between px-0.5">
@@ -611,115 +539,6 @@ export default function PredictClient({
             </span>
           </div>
         </div>
-      )}
-
-      {/* ── Pick Sheet ── */}
-      {activeCard && (
-        <>
-          {/* Backdrop */}
-          <div
-            className={`fixed inset-0 z-40 bg-black/55 transition-opacity duration-300 ${
-              sheetVisible ? "opacity-100" : "opacity-0"
-            }`}
-            onClick={closeSheet}
-          />
-
-          {/* Sheet */}
-          <div
-            className={`fixed inset-x-0 bottom-0 z-50 rounded-t-[1.25rem] border-t border-white/[0.07] bg-[#0b0b12] transition-transform duration-300 ${
-              sheetVisible ? "translate-y-0" : "translate-y-full"
-            }`}
-          >
-            {/* Drag handle */}
-            <div className="flex justify-center pb-1 pt-3">
-              <div className="h-[3px] w-8 rounded-full bg-white/[0.1]" />
-            </div>
-
-            <div className="px-5 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-3">
-
-              {/* Show name + countdown */}
-              <div className="mb-3 flex items-center justify-between">
-                <span className="text-[0.52rem] font-semibold uppercase tracking-[0.1em] text-slate-400">
-                  {activeCard.show}
-                </span>
-                <span className="inline-flex items-center gap-[4px] rounded-full bg-rose-500/10 px-2 py-[3px] text-[0.42rem] font-bold uppercase tracking-[0.06em] text-rose-300">
-                  <span className="h-[4px] w-[4px] rounded-full bg-rose-400 animate-pulse" />
-                  Closes {closesInLabel(activeCard.locksAt)}
-                </span>
-              </div>
-
-              {/* Question */}
-              <p className="mb-5 text-[0.92rem] font-bold leading-snug text-white">
-                {activeCard.question}
-              </p>
-
-              {/* Answer choices */}
-              <div className="mb-4 flex gap-2.5">
-                {activeCard.options.map((option) => {
-                  const pct = percentFor(option, activeCard.options);
-                  const isSelected = selectedOptionId === option.id;
-                  const isNegative = option.label === "No";
-                  return (
-                    <button
-                      key={option.id}
-                      onClick={() => setSelectedOptionId(option.id)}
-                      className={`flex flex-1 flex-col items-center gap-1 rounded-xl border py-3.5 transition-all duration-200 active:scale-[0.97] ${
-                        isSelected
-                          ? isNegative
-                            ? "border-rose-400/35 bg-rose-400/[0.07] text-rose-300"
-                            : "border-emerald-400/35 bg-emerald-400/[0.07] text-emerald-300"
-                          : "border-white/[0.07] bg-white/[0.025] text-slate-300"
-                      }`}
-                    >
-                      <span className="text-[0.9rem] font-bold leading-none">{option.label}</span>
-                      <span
-                        className={`text-[0.42rem] font-medium leading-none ${
-                          isSelected
-                            ? isNegative
-                              ? "text-rose-400/70"
-                              : "text-emerald-400/70"
-                            : "text-slate-500"
-                        }`}
-                      >
-                        {pct}% crowd
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Crowd split */}
-              <div className="mb-5">
-                <CrowdSplitBar
-                  options={activeCard.options}
-                  mounted={barsMounted}
-                />
-              </div>
-
-              {/* Lock button */}
-              <button
-                onClick={lockPick}
-                disabled={!selectedOptionId}
-                className={`mb-2.5 w-full rounded-xl py-3.5 text-center text-[0.7rem] font-bold tracking-[0.05em] transition-all duration-200 ${
-                  selectedOptionId
-                    ? "border border-white/[0.18] bg-white/[0.08] text-white hover:bg-white/[0.12] active:scale-[0.98]"
-                    : "cursor-not-allowed border border-white/[0.04] bg-white/[0.02] text-slate-600"
-                }`}
-              >
-                Lock Pick
-              </button>
-
-              {/* Cancel */}
-              <button
-                onClick={closeSheet}
-                className="w-full py-2 text-center text-[0.58rem] font-medium text-slate-500 transition hover:text-slate-300"
-              >
-                Cancel
-              </button>
-
-            </div>
-          </div>
-        </>
       )}
 
       <BottomNav />
