@@ -11,6 +11,15 @@ import {
   upcomingItems,
 } from "../../../lib/mock-data";
 
+// Both preview sections below are entirely mock (lib/mock-data.ts) — none
+// of their items correspond to a real channel/prediction (The Bachelor,
+// House of the Dragon, Big Brother, RuPaul's Drag Race; even the Love
+// Island item's question doesn't match the real resolved prediction).
+// Hidden until there's real content to back them; data intentionally
+// left in place.
+const SHOW_UPCOMING_PREVIEW = false;
+const SHOW_PAST_PICKS_PREVIEW = false;
+
 export type PredictionOption = {
   id: string;
   label: string;
@@ -486,6 +495,7 @@ export default function PredictClient({
         </section>
 
         {/* ── Section 4: Upcoming (preview) ── */}
+        {SHOW_UPCOMING_PREVIEW && (
         <section className="space-y-1.5">
           <div className="flex items-center justify-between px-0.5">
             <p className="text-[0.54rem] font-bold uppercase tracking-[0.22em] text-slate-500">Upcoming</p>
@@ -507,8 +517,10 @@ export default function PredictClient({
             ))}
           </div>
         </section>
+        )}
 
         {/* ── Section 5: Past Picks (preview) ── */}
+        {SHOW_PAST_PICKS_PREVIEW && (
         <section className="space-y-1.5">
           <div className="flex items-center justify-between px-0.5">
             <p className="text-[0.54rem] font-bold uppercase tracking-[0.22em] text-slate-500">Past Picks</p>
@@ -546,6 +558,7 @@ export default function PredictClient({
             ))}
           </div>
         </section>
+        )}
 
       </div>
 

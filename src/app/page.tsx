@@ -44,6 +44,12 @@ function displayEpisodeStatus(status: string, airDate: string | null): string {
   return status;
 }
 
+// "Tonight's Brief" is entirely mock (lib/mock-data.ts's tonightsBrief) —
+// none of its 5 items correspond to a real channel/prediction (Survivor,
+// Big Brother, Love Is Blind, The Bachelor, House of the Dragon). Hidden
+// until there's real content to back it; data intentionally left in place.
+const SHOW_TONIGHTS_BRIEF = false;
+
 const briefTheme: Record<string, { color: string }> = {
   "PREDICTION OPEN": { color: "#fb7185" }, // prediction mechanic — signal pink
   "RETURNING":       { color: "#22d3ee" }, // editorial/news — cyan
@@ -368,6 +374,7 @@ export default async function Home() {
           <span>→</span>
         </button>
 
+        {SHOW_TONIGHTS_BRIEF && (
         <section className="space-y-2.5">
           {/* Section header */}
           <div className="flex items-center justify-between px-0.5">
@@ -477,6 +484,7 @@ export default async function Home() {
             })}
           </div>
         </section>
+        )}
       </div>
 
       <BottomNav />
