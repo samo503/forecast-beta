@@ -181,9 +181,12 @@ technical one. Instead:
 
 ## Still intentionally mock — no schema for these yet
 
-Rooms, friends/social graph, trophies/achievements, and follows have
-**no backing tables at all** in the current schema. These stay on
-`lib/mock-data.ts` deliberately, not because wiring was skipped:
+Rooms, friends/social graph, and trophies/achievements have **no
+backing tables at all** in the current schema. Follows is a partial
+exception: `channel_follows`/`user_follows` exist as of migration
+0010, but no UI or application code reads or writes them yet — the
+follow features below remain mocked at the product level. These stay
+on `lib/mock-data.ts` deliberately, not because wiring was skipped:
 - `live/page.tsx`: "Live Rooms," "Friends Are Talking," and "Active
   Discussions" (the last is structurally just predictions again, not a
   distinct real feature). Only "Room Highlights" is real (`comments` +
@@ -221,3 +224,15 @@ No `PROJECT_CONTEXT.md` exists in this repo despite being referenced in
 early task instructions — this document's color-system section is
 reconstructed from the actual inline comments in the code, not from a
 file that was never actually present.
+
+## Migration numbering: file order doesn't reflect production state
+
+**Migration numbering is intentionally non-sequential right now.**
+`0009_comments_realtime.sql` exists in the repo but has never been
+applied to production — it's parked and inert, pending the `/live`
+Realtime work. `0010_follows_and_comment_delete.sql` was applied to
+production on 2026-09-14 (commit `467e2c5`), out of order relative to
+0009. The two are independent and nothing is broken, but the
+migrations directory no longer reflects production state in file
+order. Before assuming a migration has been applied, verify against
+the database rather than against the file list.
