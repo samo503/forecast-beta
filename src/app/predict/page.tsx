@@ -9,7 +9,21 @@ const channelPosters: Record<string, string> = {
   "love-island-usa":
     "https://deadline.com/wp-content/uploads/2025/08/love-island-usa-season-7-reunion-trailer-photos.jpg?w=1000&h=667&crop=1",
   "emmys":
-    "https://images.unsplash.com/photo-1770482228588-270b08d2d376?fm=jpg&q=80&w=1200&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1713514116766-d9be318edaf8?fm=jpg&q=80&w=1200&auto=format&fit=crop",
+};
+
+// Per-category art for the 4 real Emmy predictions, keyed by prediction id
+// since they all share one channel (so channelPosters alone can't tell them
+// apart). Falls back to channelPosters for any prediction not listed here.
+const predictionPosters: Record<string, string> = {
+  "eeeeeeee-3333-3333-3333-000000000001": // Outstanding Drama Series
+    "https://images.unsplash.com/photo-1713514116766-d9be318edaf8?fm=jpg&q=80&w=1200&auto=format&fit=crop",
+  "eeeeeeee-3333-3333-3333-000000000002": // Outstanding Comedy Series
+    "https://images.unsplash.com/photo-1760437429636-2e280cf3726f?fm=jpg&q=80&w=1200&auto=format&fit=crop",
+  "eeeeeeee-3333-3333-3333-000000000003": // Outstanding Lead Actor in a Drama Series
+    "https://images.unsplash.com/photo-1784542471030-043371709e27?fm=jpg&q=80&w=1200&auto=format&fit=crop",
+  "eeeeeeee-3333-3333-3333-000000000004": // Outstanding Lead Actress in a Drama Series
+    "https://images.unsplash.com/photo-1761925116230-d24410fbe1a0?fm=jpg&q=80&w=1200&auto=format&fit=crop",
 };
 
 function isPast(iso: string): boolean {
@@ -55,7 +69,7 @@ export default async function PredictPage() {
       locksAt: p.locks_at,
       correctOptionId: p.correct_option_id as string | null,
       show: p.channel.name,
-      poster: channelPosters[p.channel.slug] ?? "",
+      poster: predictionPosters[p.id] ?? channelPosters[p.channel.slug] ?? "",
       options: (p.options ?? [])
         .slice()
         .sort((a: { sort_order: number }, b: { sort_order: number }) => a.sort_order - b.sort_order)
