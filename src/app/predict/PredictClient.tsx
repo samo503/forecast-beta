@@ -47,18 +47,6 @@ function percentFor(option: PredictionOption, options: PredictionOption[]): numb
   return Math.round((option.voteCount / total) * 100);
 }
 
-function yesPercentFor(prediction: PredictionData): number {
-  const yes = prediction.options.find((o) => o.label === "Yes");
-  if (!yes) return 0;
-  return percentFor(yes, prediction.options);
-}
-
-function noPercentFor(prediction: PredictionData): number {
-  const no = prediction.options.find((o) => o.label === "No");
-  if (!no) return 0;
-  return percentFor(no, prediction.options);
-}
-
 function closesInLabel(locksAt: string | null): string {
   if (!locksAt) return "";
   const diffMs = new Date(locksAt).getTime() - Date.now();
@@ -70,25 +58,42 @@ function closesInLabel(locksAt: string | null): string {
   return `${Math.round(hours / 24)}d`;
 }
 
-// Yes/No crowd split, rendered as one bar in two colors (like a poll
-// result) instead of a flat neutral progress bar — the split itself is
-// the point, so a landslide should look like one and a toss-up should
-// feel tense. `mounted` drives a one-time fill-in transition on load.
+// Crowd split. hasVotes comes from the real total vote count across all
+// options, not from Yes/No labels, so a prediction with real votes never
+// shows "Be the first to predict" just because it isn't binary. Two-option
+// Yes/No predictions still get the two-color bar (a landslide should look
+// like one and a toss-up should feel tense); anything else reuses the same
+// per-option pill treatment Live Questions already uses below, just sized
+// for this smaller slot. `mounted` drives a one-time fill-in transition.
 function CrowdSplitBar({
-  yesPercent,
-  noPercent,
+  options,
   mounted,
 }: {
-  yesPercent: number;
-  noPercent: number;
+  options: PredictionOption[];
   mounted: boolean;
 }) {
-  const hasVotes = yesPercent + noPercent > 0;
-  const yesLeading = yesPercent >= noPercent;
+  const total = totalVotes(options);
+  const hasVotes = total > 0;
 
-  return (
-    <div className="space-y-[4px]">
-      {hasVotes ? (
+  if (!hasVotes) {
+    return (
+      <div className="space-y-[4px]">
+        <p className="text-[0.42rem] text-slate-600">Be the first to predict</p>
+        <div className="flex h-[3px] overflow-hidden rounded-full bg-white/[0.07]" />
+      </div>
+    );
+  }
+
+  const yes = options.find((o) => o.label === "Yes");
+  const no = options.find((o) => o.label === "No");
+
+  if (options.length === 2 && yes && no) {
+    const yesPercent = percentFor(yes, options);
+    const noPercent = percentFor(no, options);
+    const yesLeading = yesPercent >= noPercent;
+
+    return (
+      <div className="space-y-[4px]">
         <div className="flex items-center justify-between">
           <span
             className={
@@ -109,23 +114,59 @@ function CrowdSplitBar({
             {noPercent}% No
           </span>
         </div>
-      ) : (
-        <p className="text-[0.42rem] text-slate-600">Be the first to predict</p>
-      )}
-      <div className="flex h-[3px] overflow-hidden rounded-full bg-white/[0.07]">
-        {hasVotes && (
-          <>
-            <div
-              className="h-full bg-emerald-400/80 transition-[width] duration-700 ease-out"
-              style={{ width: mounted ? `${yesPercent}%` : "0%" }}
-            />
-            <div
-              className="h-full bg-rose-400/80 transition-[width] duration-700 ease-out"
-              style={{ width: mounted ? `${noPercent}%` : "0%" }}
-            />
-          </>
-        )}
+        <div className="flex h-[3px] overflow-hidden rounded-full bg-white/[0.07]">
+          <div
+            className="h-full bg-emerald-400/80 transition-[width] duration-700 ease-out"
+            style={{ width: mounted ? `${yesPercent}%` : "0%" }}
+          />
+          <div
+            className="h-full bg-rose-400/80 transition-[width] duration-700 ease-out"
+            style={{ width: mounted ? `${noPercent}%` : "0%" }}
+          />
+        </div>
       </div>
+    );
+  }
+
+  const leading = options.reduce((lead, o) => (o.voteCount > lead.voteCount ? o : lead), options[0]);
+
+  return (
+    <div className="flex flex-wrap gap-1">
+      {options.map((option) => {
+        const pct = percentFor(option, options);
+        const isLeading = leading.id === option.id;
+        return (
+          <div
+            key={option.id}
+            className={`relative min-w-[48px] overflow-hidden rounded-full border px-2 py-[3px] ${
+              isLeading ? "border-rose-400/35" : "border-white/[0.1]"
+            }`}
+          >
+            <div
+              className={`absolute inset-y-0 left-0 transition-[width] duration-700 ease-out ${
+                isLeading ? "bg-rose-400/20" : "bg-white/[0.05]"
+              }`}
+              style={{ width: mounted ? `${pct}%` : "0%" }}
+            />
+            <div className="relative flex items-center justify-center gap-1">
+              <span
+                className={`text-[0.42rem] font-medium ${
+                  isLeading ? "text-white" : "text-slate-300"
+                }`}
+              >
+                {option.label}
+              </span>
+              <span
+                className={`text-[0.38rem] font-semibold ${
+                  isLeading ? "text-rose-300" : "text-slate-500"
+                }`}
+              >
+                {pct}%
+              </span>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -300,8 +341,6 @@ export default function PredictClient({
               const lockedLabel = locked
                 ? card.options.find((o) => o.id === locked)?.label
                 : undefined;
-              const yesPercent = yesPercentFor(card);
-              const noPercent = noPercentFor(card);
               const myResult = myResults[card.id];
               const correctLabel = card.correctOptionId
                 ? card.options.find((o) => o.id === card.correctOptionId)?.label
@@ -335,7 +374,7 @@ export default function PredictClient({
                       </p>
 
                       {/* Crowd split */}
-                      <CrowdSplitBar yesPercent={yesPercent} noPercent={noPercent} mounted={barsMounted} />
+                      <CrowdSplitBar options={card.options} mounted={barsMounted} />
 
                       {/* CTA — resolved outcome, my pick locked, voting closed with no pick, or still open */}
                       {card.status === "resolved" ? (
@@ -652,8 +691,7 @@ export default function PredictClient({
               {/* Crowd split */}
               <div className="mb-5">
                 <CrowdSplitBar
-                  yesPercent={yesPercentFor(activeCard)}
-                  noPercent={noPercentFor(activeCard)}
+                  options={activeCard.options}
                   mounted={barsMounted}
                 />
               </div>
