@@ -254,8 +254,8 @@ function PredictionCard({
   onPillTap: (card: PredictionData, optionId: string) => void;
   showToast: (message: string) => void;
 }) {
-  const locked = lockedPicks[card.id];
-  const lockedLabel = locked ? card.options.find((o) => o.id === locked)?.label : undefined;
+  const myPickId = lockedPicks[card.id];
+  const myPickLabel = myPickId ? card.options.find((o) => o.id === myPickId)?.label : undefined;
   const myResult = myResults[card.id];
   const correctLabel = card.correctOptionId
     ? card.options.find((o) => o.id === card.correctOptionId)?.label
@@ -306,12 +306,13 @@ function PredictionCard({
           showToast={showToast}
         />
 
-        {/* Receipt — resolved outcome, my pick locked, or voting closed with no pick.
-            An open, unpicked prediction shows nothing extra; the pills are the input.
-            Resolved is one bar, not two: the outcome, the pick, and the correct
-            answer only get named once each, never twice. */}
+        {/* Receipt — every branch keys off card.status explicitly, never off
+            merely having a pick, so a picked-but-still-open prediction can't
+            fall into the same branch as a picked-and-locked one.
+            Resolved is one bar, not two: the outcome, the pick, and the
+            correct answer only get named once each, never twice. */}
         {card.status === "resolved" ? (
-          locked && myResult ? (
+          myPickId && myResult ? (
             <div
               className={`w-full rounded-lg border py-[5px] text-center text-[0.6rem] font-semibold tracking-[0.04em] ${
                 myResult.isCorrect
@@ -320,24 +321,34 @@ function PredictionCard({
               }`}
             >
               {myResult.isCorrect
-                ? `✓ ${lockedLabel} · +${myResult.points}`
-                : `✗ ${lockedLabel} · Correct: ${correctLabel ?? "—"} · +${myResult.points}`}
+                ? `✓ ${myPickLabel} · +${myResult.points}`
+                : `✗ ${myPickLabel} · Correct: ${correctLabel ?? "—"} · +${myResult.points}`}
             </div>
           ) : (
             <div className="w-full rounded-lg border border-white/[0.06] bg-black/20 py-[5px] text-center text-[0.6rem] font-semibold tracking-[0.04em] text-slate-300">
               Correct answer: {correctLabel ?? "—"}
             </div>
           )
-        ) : locked ? (
-          // Amber, never keyed off the option label: this state has no
-          // outcome yet, correct or wrong, regardless of what the pick is
-          // called. Matches the pill's amber treatment for the same state.
-          <div className="w-full rounded-lg border border-amber-400/30 bg-amber-400/[0.08] py-[5px] text-center text-[0.6rem] font-semibold tracking-[0.04em] text-amber-300">
-            Locked: {lockedLabel} ✓
-          </div>
-        ) : card.status !== "open" ? (
-          <div className="w-full rounded-lg border border-white/[0.06] bg-black/20 py-[5px] text-center text-[0.6rem] font-semibold tracking-[0.04em] text-white/40">
-            Voting closed
+        ) : card.status === "locked" ? (
+          myPickId ? (
+            // Amber, never keyed off the option label: this state has no
+            // outcome yet, correct or wrong, regardless of what the pick is
+            // called. Matches the pill's amber treatment for the same state.
+            <div className="w-full rounded-lg border border-amber-400/30 bg-amber-400/[0.08] py-[5px] text-center text-[0.6rem] font-semibold tracking-[0.04em] text-amber-300">
+              Locked: {myPickLabel} ✓
+            </div>
+          ) : (
+            <div className="w-full rounded-lg border border-white/[0.06] bg-black/20 py-[5px] text-center text-[0.6rem] font-semibold tracking-[0.04em] text-white/40">
+              Voting closed
+            </div>
+          )
+        ) : card.status === "open" && myPickId ? (
+          // Committed and can't be changed, but the prediction itself is
+          // still open — other people can still vote. Neutral, matching the
+          // pill's own neutral "this is what I chose" treatment; not amber,
+          // since nothing has locked yet.
+          <div className="w-full rounded-lg border border-white/[0.06] bg-black/20 py-[5px] text-center text-[0.6rem] font-semibold tracking-[0.04em] text-slate-300">
+            Picked: {myPickLabel}
           </div>
         ) : null}
       </div>
