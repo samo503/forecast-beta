@@ -1,0 +1,31 @@
+{
+  "channelSlug": "lanterns",
+  "episode": {
+    "title": "Bad Optics",
+    "episodeNumber": 6,
+    "airDate": "2026-09-20T18:00:00-07:00",
+    "status": "upcoming"
+  },
+  "predictions": [
+    {
+      "question": "Does John Stewart wear a Green Lantern ring at any point in Episode 6?",
+      "locksAt": "2026-09-20T18:00:00-07:00",
+      "options": ["Yes", "No"]
+    },
+    {
+      "question": "Does Episode 6 contain any scene set in the 2016 timeline?",
+      "locksAt": "2026-09-20T18:00:00-07:00",
+      "options": ["Yes", "No"]
+    },
+    {
+      "question": "Is it revealed who has Hal Jordan's missing ring?",
+      "locksAt": "2026-09-20T18:00:00-07:00",
+      "options": ["Yes", "No"]
+    },
+    {
+      "question": "Does Episode 6 include any scene set on Oa?",
+      "locksAt": "2026-09-20T18:00:00-07:00",
+      "options": ["Yes", "No"]
+    }
+  ]
+}
