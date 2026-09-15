@@ -37,6 +37,8 @@ export type PredictionData = {
   options: PredictionOption[];
 };
 
+type Tab = "open" | "locked" | "past";
+
 function totalVotes(options: PredictionOption[]): number {
   return options.reduce((sum, o) => sum + o.voteCount, 0);
 }
@@ -344,15 +346,12 @@ export default function PredictClient({
   const [pendingSelection, setPendingSelection] = useState<Record<string, string>>({});
   const [toast, setToast] = useState<string | null>(null);
   const [barsMounted, setBarsMounted] = useState(false);
+  const [activeTab, setActiveTab] = useState<Tab>("open");
 
   useEffect(() => {
     setBarsMounted(true);
   }, []);
 
-  // Two tiers, nothing dropped. Not-resolved predictions come first (most
-  // urgent, i.e. soonest locks_at, at the top; no locks_at sorts last within
-  // this group). Resolved predictions come after all of those, most recently
-  // locked first, so a resolved receipt never outranks a still-open question.
   const byLocksAtAscNullsLast = (a: PredictionData, b: PredictionData) => {
     if (!a.locksAt && !b.locksAt) return 0;
     if (!a.locksAt) return 1;
@@ -365,13 +364,20 @@ export default function PredictClient({
     if (!b.locksAt) return -1;
     return new Date(b.locksAt).getTime() - new Date(a.locksAt).getTime();
   };
-  const notResolved = predictions
-    .filter((p) => p.status !== "resolved")
-    .sort(byLocksAtAscNullsLast);
-  const resolved = predictions
-    .filter((p) => p.status === "resolved")
-    .sort(byLocksAtDescNullsLast);
-  const sortedPredictions = [...notResolved, ...resolved];
+
+  // Three tabs, one status each. Nothing dropped across all three combined,
+  // just split by which bucket a prediction is currently in.
+  const tabPredictions: Record<Tab, PredictionData[]> = {
+    open: predictions.filter((p) => p.status === "open").sort(byLocksAtAscNullsLast),
+    locked: predictions.filter((p) => p.status === "locked").sort(byLocksAtDescNullsLast),
+    past: predictions.filter((p) => p.status === "resolved").sort(byLocksAtDescNullsLast),
+  };
+  const tabEmptyMessage: Record<Tab, string> = {
+    open: "No open predictions right now.",
+    locked: "No locked predictions waiting on a result.",
+    past: "No resolved predictions yet.",
+  };
+  const sortedPredictions = tabPredictions[activeTab];
 
   const showToast = (message: string) => {
     setToast(message);
@@ -430,10 +436,9 @@ export default function PredictClient({
         <TopBar
           currentUser={currentUser}
           tabs={[
-            { label: "Live", active: true },
-            { label: "Closing Soon" },
-            { label: "Upcoming" },
-            { label: "Past" },
+            { label: "Open", active: activeTab === "open", onClick: () => setActiveTab("open") },
+            { label: "Locked", active: activeTab === "locked", onClick: () => setActiveTab("locked") },
+            { label: "Past", active: activeTab === "past", onClick: () => setActiveTab("past") },
           ]}
         />
 
@@ -490,19 +495,25 @@ export default function PredictClient({
           </p>
 
           <div className="space-y-2">
-            {sortedPredictions.map((card, i) => (
-              <PredictionCard
-                key={card.id}
-                card={card}
-                variant={i === 0 ? "large" : "compact"}
-                lockedPicks={lockedPicks}
-                pendingSelection={pendingSelection}
-                myResults={myResults}
-                barsMounted={barsMounted}
-                onPillTap={handlePillTap}
-                showToast={showToast}
-              />
-            ))}
+            {sortedPredictions.length === 0 ? (
+              <div className="rounded-xl border border-white/[0.05] bg-white/[0.015] px-3 py-3">
+                <p className="text-[0.6rem] text-slate-600">{tabEmptyMessage[activeTab]}</p>
+              </div>
+            ) : (
+              sortedPredictions.map((card, i) => (
+                <PredictionCard
+                  key={card.id}
+                  card={card}
+                  variant={i === 0 ? "large" : "compact"}
+                  lockedPicks={lockedPicks}
+                  pendingSelection={pendingSelection}
+                  myResults={myResults}
+                  barsMounted={barsMounted}
+                  onPillTap={handlePillTap}
+                  showToast={showToast}
+                />
+              ))
+            )}
           </div>
         </section>
 

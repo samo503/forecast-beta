@@ -6,6 +6,8 @@ import ForecastWordmark from "./ForecastWordmark";
 export type TopBarTab = {
   label: string;
   active?: boolean;
+  /** Omit for a decorative, non-functional tab (e.g. homepage, /live today). */
+  onClick?: () => void;
 };
 
 export type TopBarUser = {
@@ -86,6 +88,7 @@ export default function TopBar({ tabs, rightIcon = "search", onRightIconClick, c
           {tabs.map((tab) => (
             <button
               key={tab.label}
+              onClick={tab.onClick}
               className={
                 tab.active
                   ? "relative pb-2 text-[0.62rem] font-semibold text-white"
