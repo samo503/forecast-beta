@@ -368,18 +368,28 @@ export default function PredictClient({
     const label = card.options.find((o) => o.id === optionId)?.label ?? "";
 
     try {
-      await lockPrediction(card.id, optionId);
-      setLockedPicks((prev) => ({ ...prev, [card.id]: optionId }));
-      showToast(`Pick locked · ${label}`);
+      const result = await lockPrediction(card.id, optionId);
+      if (result.ok) {
+        setLockedPicks((prev) => ({ ...prev, [card.id]: optionId }));
+        showToast(`Pick locked · ${label}`);
+        return;
+      }
+      switch (result.reason) {
+        case "not_authenticated":
+          router.push("/auth?next=/predict");
+          return;
+        case "duplicate_pick":
+          showToast("You've already locked in a pick for this category");
+          return;
+        default: {
+          const exhaustiveCheck: never = result;
+          return exhaustiveCheck;
+        }
+      }
     } catch (err) {
-      if (err instanceof Error && err.message === "not_authenticated") {
-        router.push("/auth?next=/predict");
-        return;
-      }
-      if (err instanceof Error && err.message === "duplicate_pick") {
-        showToast("You've already locked in a pick for this category");
-        return;
-      }
+      // Genuine unexpected failure (RLS rejection, bad ids, etc), not one
+      // of lockPrediction's expected outcomes above.
+      console.error("lockPrediction failed", { predictionId: card.id, optionId }, err);
       showToast("Something went wrong. Try again.");
     }
   };
