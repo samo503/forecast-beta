@@ -277,16 +277,17 @@ export default function ProfileClient({
         </section>
         )}
 
-        {/* ── My Picks ── */}
+        {/* ── My Picks ──
+            Pending is uncapped. Resolved is capped at 5 most recent
+            (see profile/page.tsx). No "See all" link yet: with today's
+            pick counts nothing exceeds the cap, so a link to a full
+            history route would have nowhere to point and nothing to
+            reveal. Add one, pointing at a new /profile/picks route, once
+            resolved history actually grows past 5. */}
         <section className="space-y-1.5">
-          <div className="flex items-center justify-between px-0.5">
-            <p className="text-[0.54rem] font-bold uppercase tracking-[0.22em] text-slate-500">
-              My Picks
-            </p>
-            <button className="text-[0.42rem] text-slate-600 transition hover:text-slate-400">
-              See all ›
-            </button>
-          </div>
+          <p className="px-0.5 text-[0.54rem] font-bold uppercase tracking-[0.22em] text-slate-500">
+            My Picks
+          </p>
           <div className="divide-y divide-white/[0.04] rounded-xl border border-white/[0.05] bg-white/[0.015] px-3">
             {predictionRecord.length === 0 ? (
               <p className="py-2 text-[0.6rem] text-slate-600">No picks yet.</p>

@@ -60,28 +60,46 @@ export default async function ProfilePage() {
     thisWeek: allPicks.filter((p) => isWithinPastWeek(p.created_at)).length,
   };
 
-  const predictionRecord: RecordItem[] = allPicks
-    .filter((p) => p.prediction && p.option)
-    .map((p) =>
-      p.is_correct === null
-        ? {
-            id: p.id,
-            show: p.prediction.channel?.name ?? "",
-            question: p.prediction.question,
-            pick: p.option.label,
-            status: "pending" as const,
-            locksAt: p.prediction.locks_at,
-          }
-        : {
-            id: p.id,
-            show: p.prediction.channel?.name ?? "",
-            question: p.prediction.question,
-            pick: p.option.label,
-            status: "resolved" as const,
-            result: p.is_correct ? "correct" : "wrong",
-            points: p.points_awarded ?? 0,
-          }
-    );
+  const validPicks = allPicks.filter((p) => p.prediction && p.option);
+
+  // Pending is uncapped: it's the only place a user's open commitments show
+  // up at all (Predict > Past is resolved-only), and it's naturally bounded
+  // by how many predictions are open. Resolved history grows forever, so it
+  // gets capped.
+  const pendingPicks: RecordItem[] = validPicks
+    .filter((p) => p.is_correct === null)
+    .map((p) => ({
+      id: p.id,
+      show: p.prediction.channel?.name ?? "",
+      question: p.prediction.question,
+      pick: p.option.label,
+      status: "pending" as const,
+      locksAt: p.prediction.locks_at,
+    }));
+
+  const resolvedRecordItems: RecordItem[] = validPicks
+    .filter((p) => p.is_correct !== null)
+    .map((p) => ({
+      id: p.id,
+      show: p.prediction.channel?.name ?? "",
+      question: p.prediction.question,
+      pick: p.option.label,
+      status: "resolved" as const,
+      result: p.is_correct ? "correct" : "wrong",
+      points: p.points_awarded ?? 0,
+    }));
+
+  const RESOLVED_PICKS_LIMIT = 5;
+  const resolvedPicksCapped = resolvedRecordItems.slice(0, RESOLVED_PICKS_LIMIT);
+  // Not surfaced anywhere yet — there's no /profile/picks route to send a
+  // "See all" link to, and with today's pick counts nothing exceeds the cap
+  // regardless. Kept so the cap's effect stays visible to whoever builds
+  // that route once resolved history actually grows past it.
+  const hasMoreResolvedPicks = resolvedRecordItems.length > RESOLVED_PICKS_LIMIT;
+  void hasMoreResolvedPicks;
+
+  // Newest first within each group; pending as a block before resolved.
+  const predictionRecord: RecordItem[] = [...pendingPicks, ...resolvedPicksCapped];
 
   return (
     <ProfileClient
