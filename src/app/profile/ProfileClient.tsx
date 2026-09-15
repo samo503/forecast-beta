@@ -2,7 +2,6 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { Edit3, Lock, Target, Flame, Crown, Mic, Sparkles, Zap } from "lucide-react";
 import BottomNav from "../components/BottomNav";
 import PosterBackground from "../components/PosterBackground";
@@ -247,11 +246,11 @@ export default function ProfileClient({
             {LOCKED_TROPHIES.map((trophy) => (
               <div
                 key={trophy.name}
-                className="flex flex-col items-center gap-1.5 rounded-xl border border-white/[0.07] bg-white/[0.02] px-3 py-3.5 text-center"
+                className="flex flex-col items-center gap-1 rounded-xl border border-white/[0.07] bg-white/[0.02] px-3 py-2 text-center"
               >
                 <Lock className="h-4 w-4 text-slate-600" strokeWidth={1.75} />
                 <span className="text-[0.58rem] font-semibold text-slate-300">{trophy.name}</span>
-                <span className="text-[0.44rem] leading-snug text-slate-500">{trophy.criterion}</span>
+                <span className="text-[0.44rem] leading-snug text-slate-400">{trophy.criterion}</span>
               </div>
             ))}
           </div>
@@ -493,14 +492,10 @@ export default function ProfileClient({
         </section>
         )}
 
-        {/* ── Footer ── */}
-        <div className="flex items-center justify-between px-0.5">
-          <Link
-            href="/settings"
-            className="text-[0.42rem] text-slate-600 transition hover:text-slate-400"
-          >
-            Settings
-          </Link>
+        {/* ── Footer ──
+            Settings lives in the gear icon in the header now, not
+            duplicated here. */}
+        <div className="flex items-center justify-end px-0.5">
           <button
             onClick={handleSignOutTap}
             className={`text-[0.42rem] transition ${
