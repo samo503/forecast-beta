@@ -323,7 +323,7 @@ export default async function Home() {
                 return (
                   <article
                     key={channel.id}
-                    className="aspect-[4/5] overflow-hidden rounded-[1.1rem] border border-white/10 bg-slate-950/10 shadow-sm transition duration-200 hover:-translate-y-0.5"
+                    className="aspect-[9/10] overflow-hidden rounded-[1.1rem] border border-white/10 bg-slate-950/10 shadow-sm transition duration-200 hover:-translate-y-0.5"
                   >
                     <div className="relative h-full">
                       {/* title="" on all three — channel.title is already shown below in the info panel */}
