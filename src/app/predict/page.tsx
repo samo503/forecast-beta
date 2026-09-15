@@ -110,7 +110,7 @@ export default async function PredictPage() {
   // least one *resolved* pick, same fallback as profile's stats row.
   let accuracy: number | null = null;
   let streak = 0;
-  let correctThisWeek = 0;
+  let picksThisWeek = 0;
 
   if (user) {
     const { data: profileRow } = await authedSupabase
@@ -133,7 +133,10 @@ export default async function PredictPage() {
       (pickResults ?? []).map((p) => p.created_at),
       profileRow?.timezone ?? "UTC"
     );
-    correctThisWeek = correct.filter((p) => isWithinPastWeek(p.created_at)).length;
+    // Same metric as /profile's "This week": every pick locked in the last
+    // 7 days, regardless of status or outcome. Accuracy already covers
+    // whether picks are landing, so this slot doesn't need to.
+    picksThisWeek = (pickResults ?? []).filter((p) => isWithinPastWeek(p.created_at)).length;
 
     currentUserBadge = {
       name: profileRow?.display_name ?? profileRow?.username ?? "You",
@@ -171,7 +174,7 @@ export default async function PredictPage() {
       currentUser={currentUserBadge}
       accuracy={accuracy}
       streak={streak}
-      correctThisWeek={correctThisWeek}
+      picksThisWeek={picksThisWeek}
     />
   );
 }

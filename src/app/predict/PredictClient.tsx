@@ -358,7 +358,7 @@ export default function PredictClient({
   currentUser,
   accuracy,
   streak,
-  correctThisWeek,
+  picksThisWeek,
 }: {
   predictions: PredictionData[];
   myPicks: Record<string, string>;
@@ -372,8 +372,9 @@ export default function PredictClient({
   accuracy: number | null;
   /** Real, live-computed day streak (participation-based). */
   streak: number;
-  /** Real count of correct, resolved picks made in the past 7 days. */
-  correctThisWeek: number;
+  /** Count of all picks locked in the past 7 days, regardless of status or
+   *  outcome. Same metric as /profile's "This week" stat. */
+  picksThisWeek: number;
 }) {
   const router = useRouter();
   const [lockedPicks, setLockedPicks] = useState<Record<string, string>>(myPicks);
@@ -513,7 +514,7 @@ export default function PredictClient({
             {/* This week */}
             <div className="flex flex-col items-center gap-1">
               <span className="text-[1.15rem] font-black leading-none text-white">
-                {correctThisWeek}
+                {picksThisWeek}
               </span>
               <span className="text-[0.42rem] uppercase tracking-[0.12em] text-slate-500">
                 This week
