@@ -330,14 +330,29 @@ export default function PredictClient({
     setBarsMounted(true);
   }, []);
 
-  // Single list, most urgent first. Nothing is dropped: predictions with no
-  // locks_at sort last instead of being excluded.
-  const sortedPredictions = [...predictions].sort((a, b) => {
+  // Two tiers, nothing dropped. Not-resolved predictions come first (most
+  // urgent, i.e. soonest locks_at, at the top; no locks_at sorts last within
+  // this group). Resolved predictions come after all of those, most recently
+  // locked first, so a resolved receipt never outranks a still-open question.
+  const byLocksAtAscNullsLast = (a: PredictionData, b: PredictionData) => {
     if (!a.locksAt && !b.locksAt) return 0;
     if (!a.locksAt) return 1;
     if (!b.locksAt) return -1;
     return new Date(a.locksAt).getTime() - new Date(b.locksAt).getTime();
-  });
+  };
+  const byLocksAtDescNullsLast = (a: PredictionData, b: PredictionData) => {
+    if (!a.locksAt && !b.locksAt) return 0;
+    if (!a.locksAt) return 1;
+    if (!b.locksAt) return -1;
+    return new Date(b.locksAt).getTime() - new Date(a.locksAt).getTime();
+  };
+  const notResolved = predictions
+    .filter((p) => p.status !== "resolved")
+    .sort(byLocksAtAscNullsLast);
+  const resolved = predictions
+    .filter((p) => p.status === "resolved")
+    .sort(byLocksAtDescNullsLast);
+  const sortedPredictions = [...notResolved, ...resolved];
 
   const showToast = (message: string) => {
     setToast(message);
