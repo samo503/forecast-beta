@@ -66,12 +66,19 @@ export default function TopBar({ tabs, rightIcon = "search", onRightIconClick, c
 
         <ForecastWordmark />
 
-        <button
-          onClick={onRightIconClick}
-          className="flex h-[28px] w-[28px] items-center justify-center rounded-full text-slate-400 transition hover:text-slate-200"
-        >
-          <RightIcon className="h-[15px] w-[15px]" strokeWidth={1.5} />
-        </button>
+        {onRightIconClick ? (
+          <button
+            onClick={onRightIconClick}
+            className="flex h-[28px] w-[28px] items-center justify-center rounded-full text-slate-400 transition hover:text-slate-200"
+          >
+            <RightIcon className="h-[15px] w-[15px]" strokeWidth={1.5} />
+          </button>
+        ) : (
+          // No handler, no icon — a clickable-looking button with nothing
+          // behind it reads as broken. Same size, so the wordmark stays
+          // centered on pages that had this dead button before.
+          <div className="h-[28px] w-[28px]" />
+        )}
       </div>
 
       {tabs && tabs.length > 0 && (

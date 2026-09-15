@@ -1,5 +1,6 @@
 'use client'
 
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Edit3, Target, Flame, Crown, Mic, Sparkles, Zap } from "lucide-react";
 import BottomNav from "../components/BottomNav";
@@ -79,6 +80,8 @@ export default function ProfileClient({
   predictionRecord: RecordItem[];
 }) {
   const router = useRouter();
+  const [confirmingSignOut, setConfirmingSignOut] = useState(false);
+  const signOutResetRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleSignOut = async () => {
     const supabase = createClient();
@@ -87,13 +90,25 @@ export default function ProfileClient({
     router.refresh();
   };
 
+  // Tap once to arm, tap the same button again to actually sign out. Auth is
+  // magic-link only, so an accidental sign-out costs an email round trip to
+  // recover from. Same two-tap shape as the /predict vote pills, for the
+  // same reason: no undo, so no single-tap commit.
+  const handleSignOutTap = () => {
+    if (confirmingSignOut) {
+      if (signOutResetRef.current) clearTimeout(signOutResetRef.current);
+      handleSignOut();
+      return;
+    }
+    setConfirmingSignOut(true);
+    signOutResetRef.current = setTimeout(() => setConfirmingSignOut(false), 3000);
+  };
+
   return (
     <main className="relative min-h-screen bg-[#020205] pb-32 text-white">
       <div className="mx-auto flex max-w-[640px] flex-col gap-6 px-4 pt-5">
 
         <TopBar
-          rightIcon="settings"
-          onRightIconClick={handleSignOut}
           currentUser={{ name: profile.name, avatar: profile.avatar, streak: profile.streak }}
         />
 
@@ -389,6 +404,18 @@ export default function ProfileClient({
           </div>
         </section>
         )}
+
+        {/* ── Sign Out ── */}
+        <button
+          onClick={handleSignOutTap}
+          className={`w-full rounded-xl border py-3 text-center text-[0.62rem] font-semibold tracking-[0.04em] transition ${
+            confirmingSignOut
+              ? "border-rose-400/40 bg-rose-400/[0.08] text-rose-300"
+              : "border-white/[0.07] bg-white/[0.025] text-slate-400 hover:text-slate-200"
+          }`}
+        >
+          {confirmingSignOut ? "Tap again to sign out" : "Sign out"}
+        </button>
 
       </div>
 
