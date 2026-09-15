@@ -283,24 +283,27 @@ function PredictionCard({
         />
 
         {/* Receipt — resolved outcome, my pick locked, or voting closed with no pick.
-            An open, unpicked prediction shows nothing extra; the pills are the input. */}
+            An open, unpicked prediction shows nothing extra; the pills are the input.
+            Resolved is one bar, not two: the outcome, the pick, and the correct
+            answer only get named once each, never twice. */}
         {card.status === "resolved" ? (
-          <div className="space-y-1">
+          locked && myResult ? (
+            <div
+              className={`w-full rounded-lg border py-[5px] text-center text-[0.6rem] font-semibold tracking-[0.04em] ${
+                myResult.isCorrect
+                  ? "border-emerald-400/30 bg-emerald-400/[0.08] text-emerald-300"
+                  : "border-rose-400/30 bg-rose-400/[0.08] text-rose-300"
+              }`}
+            >
+              {myResult.isCorrect
+                ? `✓ ${lockedLabel} · +${myResult.points}`
+                : `✗ ${lockedLabel} · Correct: ${correctLabel ?? "—"} · +${myResult.points}`}
+            </div>
+          ) : (
             <div className="w-full rounded-lg border border-white/[0.06] bg-black/20 py-[5px] text-center text-[0.6rem] font-semibold tracking-[0.04em] text-slate-300">
               Correct answer: {correctLabel ?? "—"}
             </div>
-            {locked && myResult && (
-              <div
-                className={`w-full rounded-lg border py-[5px] text-center text-[0.6rem] font-semibold tracking-[0.04em] ${
-                  myResult.isCorrect
-                    ? "border-emerald-400/30 bg-emerald-400/[0.08] text-emerald-300"
-                    : "border-rose-400/30 bg-rose-400/[0.08] text-rose-300"
-                }`}
-              >
-                {myResult.isCorrect ? "✓" : "✗"} Picked: {lockedLabel} · +{myResult.points} pts
-              </div>
-            )}
-          </div>
+          )
         ) : locked ? (
           <div
             className={`w-full rounded-lg border py-[5px] text-center text-[0.6rem] font-semibold tracking-[0.04em] ${
