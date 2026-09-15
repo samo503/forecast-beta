@@ -64,18 +64,25 @@ function closesInLabel(locksAt: string | null): string {
 // the same pill again confirms and locks it. Tapping a different pill moves
 // the selection instead of locking anything. This two-tap flow (rather than
 // locking on the first tap) exists because a mis-tap here has no undo.
+//
+// Non-votable pills stay non-interactive divs (no cursor change, no hover
+// state, no invitation to tap) but still respond to a tap with a toast
+// explaining why, rather than doing nothing. Same message no matter which
+// pill is tapped, including the user's own pick — there's no special case.
 function VotePills({
   card,
   lockedPicks,
   pendingSelection,
   barsMounted,
   onPillTap,
+  showToast,
 }: {
   card: PredictionData;
   lockedPicks: Record<string, string>;
   pendingSelection: Record<string, string>;
   barsMounted: boolean;
   onPillTap: (card: PredictionData, optionId: string) => void;
+  showToast: (message: string) => void;
 }) {
   const total = totalVotes(card.options);
   const leadingId =
@@ -85,6 +92,11 @@ function VotePills({
   const myPick = lockedPicks[card.id];
   const pending = pendingSelection[card.id];
   const votable = card.status === "open" && !myPick;
+  const lockedMessage = myPick
+    ? "Your pick is locked in and can't be changed."
+    : card.status !== "open"
+    ? "Voting is closed for this one."
+    : null;
 
   return (
     <div className="flex flex-wrap gap-1.5">
@@ -156,7 +168,11 @@ function VotePills({
             {inner}
           </button>
         ) : (
-          <div key={opt.id} className={pillClassName}>
+          <div
+            key={opt.id}
+            onClick={() => lockedMessage && showToast(lockedMessage)}
+            className={pillClassName}
+          >
             {inner}
           </div>
         );
@@ -178,6 +194,7 @@ function PredictionCard({
   myResults,
   barsMounted,
   onPillTap,
+  showToast,
 }: {
   card: PredictionData;
   variant: "large" | "compact";
@@ -186,6 +203,7 @@ function PredictionCard({
   myResults: Record<string, { isCorrect: boolean; points: number }>;
   barsMounted: boolean;
   onPillTap: (card: PredictionData, optionId: string) => void;
+  showToast: (message: string) => void;
 }) {
   const locked = lockedPicks[card.id];
   const lockedLabel = locked ? card.options.find((o) => o.id === locked)?.label : undefined;
@@ -228,6 +246,7 @@ function PredictionCard({
           pendingSelection={pendingSelection}
           barsMounted={barsMounted}
           onPillTap={onPillTap}
+          showToast={showToast}
         />
 
         {/* Receipt — resolved outcome, my pick locked, or voting closed with no pick.
@@ -481,6 +500,7 @@ export default function PredictClient({
                 myResults={myResults}
                 barsMounted={barsMounted}
                 onPillTap={handlePillTap}
+                showToast={showToast}
               />
             ))}
           </div>
