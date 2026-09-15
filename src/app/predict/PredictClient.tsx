@@ -123,7 +123,7 @@ function VotePills({
           missing percentages read as "nobody has voted yet", which may not
           be true. Says nothing about how many people actually voted. */}
       {card.status === "open" && (
-        <p className="text-[0.42rem] text-slate-500">Votes hidden until this closes.</p>
+        <p className="text-[0.42rem] text-slate-400">Votes hidden until this closes.</p>
       )}
       <div className="flex flex-wrap gap-1.5">
       {card.options.map((opt) => {
@@ -271,10 +271,13 @@ function PredictionCard({
     ? card.options.find((o) => o.id === card.correctOptionId)?.label
     : undefined;
 
+  // Same quiet pill on every card, large or compact — a plain-text badge on
+  // one size and an outlined pill on the other read as accidental, not
+  // deliberate. Dark, subtle border, small text, no accent-color fill: the
+  // card's own left-edge accent already carries the stronger identity, this
+  // just names which show.
   const showBadgeClassName =
-    variant === "large"
-      ? "rounded-full border border-white/10 bg-slate-950/60 px-2 py-[3px] text-[0.5rem] font-medium text-slate-300"
-      : "text-[0.48rem] font-semibold uppercase tracking-[0.1em] text-slate-400";
+    "rounded-full border border-white/10 bg-slate-950/60 px-2 py-[3px] text-[0.5rem] font-medium text-slate-300";
 
   const closeBadge = closeBadgeFor(card);
 
@@ -425,17 +428,23 @@ export default function PredictClient({
     setBarsMounted(true);
   }, []);
 
+  // id as a stable secondary key: several Lanterns predictions share the
+  // same locks_at, so locksAt alone leaves ties unresolved and order can
+  // shuffle between loads. Any deterministic tiebreaker works; id needs no
+  // extra data plumbing beyond what's already on every card.
   const byLocksAtAscNullsLast = (a: PredictionData, b: PredictionData) => {
-    if (!a.locksAt && !b.locksAt) return 0;
+    if (!a.locksAt && !b.locksAt) return a.id.localeCompare(b.id);
     if (!a.locksAt) return 1;
     if (!b.locksAt) return -1;
-    return new Date(a.locksAt).getTime() - new Date(b.locksAt).getTime();
+    const diff = new Date(a.locksAt).getTime() - new Date(b.locksAt).getTime();
+    return diff !== 0 ? diff : a.id.localeCompare(b.id);
   };
   const byLocksAtDescNullsLast = (a: PredictionData, b: PredictionData) => {
-    if (!a.locksAt && !b.locksAt) return 0;
+    if (!a.locksAt && !b.locksAt) return a.id.localeCompare(b.id);
     if (!a.locksAt) return 1;
     if (!b.locksAt) return -1;
-    return new Date(b.locksAt).getTime() - new Date(a.locksAt).getTime();
+    const diff = new Date(b.locksAt).getTime() - new Date(a.locksAt).getTime();
+    return diff !== 0 ? diff : a.id.localeCompare(b.id);
   };
 
   // Three tabs, one status each. Nothing dropped across all three combined,
@@ -521,9 +530,9 @@ export default function PredictClient({
             Your Forecast
           </p>
 
-          <div className="flex items-center justify-between rounded-xl border border-white/[0.07] bg-white/[0.025] px-5 py-3.5">
+          <div className="flex items-center justify-between rounded-xl border border-white/[0.07] bg-white/[0.025] px-5 py-2.5">
             {/* Streak */}
-            <div className="flex flex-col items-center gap-1">
+            <div className="flex flex-col items-center gap-0.5">
               <div className="flex items-baseline gap-1">
                 <span className="text-[1.15rem] font-black leading-none text-amber-300">
                   {streak}
@@ -535,10 +544,10 @@ export default function PredictClient({
               </span>
             </div>
 
-            <div className="h-8 w-px bg-white/[0.06]" />
+            <div className="h-7 w-px bg-white/[0.06]" />
 
             {/* Accuracy */}
-            <div className="flex flex-col items-center gap-1">
+            <div className="flex flex-col items-center gap-0.5">
               <span className="text-[1.15rem] font-black leading-none text-white">
                 {accuracy === null ? "—" : `${accuracy}%`}
               </span>
@@ -547,10 +556,10 @@ export default function PredictClient({
               </span>
             </div>
 
-            <div className="h-8 w-px bg-white/[0.06]" />
+            <div className="h-7 w-px bg-white/[0.06]" />
 
             {/* This week */}
-            <div className="flex flex-col items-center gap-1">
+            <div className="flex flex-col items-center gap-0.5">
               <span className="text-[1.15rem] font-black leading-none text-white">
                 {picksThisWeek}
               </span>
@@ -567,7 +576,7 @@ export default function PredictClient({
             Predictions
           </p>
 
-          <div className="space-y-1.5">
+          <div className="space-y-1">
             {sortedPredictions.length === 0 ? (
               <div className="rounded-xl border border-white/[0.05] bg-white/[0.015] px-3 py-3">
                 <p className="text-[0.6rem] text-slate-600">{tabEmptyMessage[activeTab]}</p>
