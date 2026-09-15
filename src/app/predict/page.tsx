@@ -75,7 +75,18 @@ export default async function PredictPage() {
         .map((o: { id: string; label: string; vote_count: number | null }) => ({
           id: o.id,
           label: o.label,
-          voteCount: o.vote_count ?? 0,
+          // Client-side redaction only: the query still fetches the real
+          // vote_count (RLS on prediction_options is still `using (true)`),
+          // we just zero it here before it reaches the page for any option
+          // on a still-open prediction. Anyone querying the anon key
+          // directly still sees real counts for open predictions — this
+          // does not close that gap. Deliberately deferred: today's
+          // exposure is two test accounts, and rewriting this feed query
+          // into a redacting RPC is more work than the leak is worth right
+          // now. Do the real fix (an RPC that redacts server-side, plus
+          // revoking public select on this column) before the leaderboard
+          // ships, when there's real standing to game.
+          voteCount: p.status === "open" ? 0 : o.vote_count ?? 0,
         })),
     }));
 

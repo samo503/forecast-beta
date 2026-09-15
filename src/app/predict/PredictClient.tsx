@@ -115,7 +115,15 @@ function VotePills({
     : null;
 
   return (
-    <div className="flex flex-wrap gap-1.5">
+    <div className="space-y-1">
+      {/* Crowd counts are redacted for open predictions (client-side only,
+          see predict/page.tsx) — say so explicitly rather than letting the
+          missing percentages read as "nobody has voted yet", which may not
+          be true. Says nothing about how many people actually voted. */}
+      {card.status === "open" && (
+        <p className="text-[0.42rem] text-slate-600">Votes hidden until this closes.</p>
+      )}
+      <div className="flex flex-wrap gap-1.5">
       {card.options.map((opt) => {
         const pct = percentFor(opt, card.options);
         const isPicked = myPick === opt.id;
@@ -193,6 +201,7 @@ function VotePills({
           </div>
         );
       })}
+      </div>
     </div>
   );
 }
