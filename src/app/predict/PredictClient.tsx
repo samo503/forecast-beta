@@ -60,6 +60,20 @@ function closesInLabel(locksAt: string | null): string {
   return `${Math.round(hours / 24)}d`;
 }
 
+// No badge without a deadline to report. Resolved always reads as
+// "Resolved", regardless of when it locked. Otherwise: a future locksAt is
+// the existing "Closes 6d" countdown (urgent, rose); a past locksAt (or, in
+// principle, a status other than "resolved" whose locksAt has already
+// passed) reads as the neutral "Closed" instead of repeating "Closes soon"
+// forever.
+function closeBadgeFor(card: PredictionData): { text: string; urgent: boolean } | null {
+  if (card.status === "resolved") return { text: "Resolved", urgent: false };
+  if (!card.locksAt) return null;
+  const diffMs = new Date(card.locksAt).getTime() - Date.now();
+  if (diffMs <= 0) return { text: "Closed", urgent: false };
+  return { text: `Closes ${closesInLabel(card.locksAt)}`, urgent: true };
+}
+
 // Vote pills, shared by every card regardless of size. A pill is only
 // interactive when the prediction is open and the user hasn't picked yet.
 // Tapping an unselected pill just selects it (`pendingSelection`); tapping
@@ -219,14 +233,22 @@ function PredictionCard({
       ? "rounded-full border border-white/10 bg-slate-950/60 px-2 py-[3px] text-[0.5rem] font-medium text-slate-300"
       : "text-[0.48rem] font-semibold uppercase tracking-[0.1em] text-slate-400";
 
+  const closeBadge = closeBadgeFor(card);
+
   const content = (
     <>
       <div className="flex items-center justify-between">
         <span className={showBadgeClassName}>{card.show}</span>
-        {card.locksAt && (
-          <span className="inline-flex items-center gap-[4px] rounded-full bg-rose-500/15 px-2 py-[3px] text-[0.44rem] font-bold uppercase tracking-[0.08em] text-rose-300">
-            <span className="h-[4px] w-[4px] rounded-full bg-rose-400 animate-pulse" />
-            Closes {closesInLabel(card.locksAt)}
+        {closeBadge && (
+          <span
+            className={`inline-flex items-center gap-[4px] rounded-full px-2 py-[3px] text-[0.44rem] font-bold uppercase tracking-[0.08em] ${
+              closeBadge.urgent ? "bg-rose-500/15 text-rose-300" : "bg-white/[0.06] text-slate-400"
+            }`}
+          >
+            {closeBadge.urgent && (
+              <span className="h-[4px] w-[4px] rounded-full bg-rose-400 animate-pulse" />
+            )}
+            {closeBadge.text}
           </span>
         )}
       </div>
