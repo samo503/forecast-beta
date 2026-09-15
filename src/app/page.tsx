@@ -12,8 +12,7 @@ import TopBar from "./components/TopBar";
 
 // Channel art isn't in the schema yet — keyed by slug until channels gain a poster column.
 const channelPosters: Record<string, string> = {
-  "love-island-usa":
-    "https://deadline.com/wp-content/uploads/2025/06/love-island-usa-season-7-recoupling.jpg?w=1000&h=667&crop=1",
+  "love-island-usa": "",
   "emmys":
     "https://images.unsplash.com/photo-1713514116766-d9be318edaf8?fm=jpg&q=80&w=1200&auto=format&fit=crop",
 };

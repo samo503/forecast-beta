@@ -13,6 +13,15 @@ import {
   profileFriends,
 } from "../../../lib/mock-data";
 
+// Trophies, Following, Activity, and Friends below are entirely mock
+// (lib/mock-data.ts) — same pattern as SHOW_TONIGHTS_BRIEF on the homepage
+// and SHOW_UPCOMING_PREVIEW / SHOW_PAST_PICKS_PREVIEW on /predict. Hidden
+// until there's real data to back them; data intentionally left in place.
+const SHOW_TROPHIES = false;
+const SHOW_FOLLOWING = false;
+const SHOW_ACTIVITY = false;
+const SHOW_FRIENDS = false;
+
 export type ProfileData = {
   name: string;
   handle: string;
@@ -164,14 +173,10 @@ export default function ProfileClient({
             <span className="text-[1.05rem] font-black leading-none text-white">{stats.thisWeek}</span>
             <span className="text-[0.4rem] uppercase tracking-[0.1em] text-slate-500">This week</span>
           </div>
-          <div className="h-7 w-px bg-white/[0.06]" />
-          <div className="flex flex-col items-center gap-0.5">
-            <span className="text-[1.05rem] font-black leading-none text-amber-300">6</span>
-            <span className="text-[0.4rem] uppercase tracking-[0.1em] text-slate-500">Trophies</span>
-          </div>
         </div>
 
         {/* ── Trophy Shelf ── */}
+        {SHOW_TROPHIES && (
         <section className="space-y-2">
           <p className="px-0.5 text-[0.6rem] font-bold uppercase tracking-[0.28em] text-slate-200">
             Trophies
@@ -210,8 +215,10 @@ export default function ProfileClient({
             </div>
           </div>
         </section>
+        )}
 
         {/* ── Following Shows ── */}
+        {SHOW_FOLLOWING && (
         <section className="space-y-2">
           <div className="flex items-center justify-between px-0.5">
             <p className="text-[0.6rem] font-bold uppercase tracking-[0.28em] text-slate-200">
@@ -251,6 +258,7 @@ export default function ProfileClient({
             </div>
           </div>
         </section>
+        )}
 
         {/* ── Prediction Record ── */}
         <section className="space-y-1.5">
@@ -300,6 +308,7 @@ export default function ProfileClient({
         </section>
 
         {/* ── Activity ── */}
+        {SHOW_ACTIVITY && (
         <section className="space-y-1.5">
           <p className="px-0.5 text-[0.54rem] font-bold uppercase tracking-[0.22em] text-slate-500">
             Activity
@@ -334,8 +343,10 @@ export default function ProfileClient({
             ))}
           </div>
         </section>
+        )}
 
         {/* ── Friends ── */}
+        {SHOW_FRIENDS && (
         <section className="space-y-1.5">
           <div className="flex items-center justify-between px-0.5">
             <p className="text-[0.54rem] font-bold uppercase tracking-[0.22em] text-slate-500">
@@ -377,6 +388,7 @@ export default function ProfileClient({
             ))}
           </div>
         </section>
+        )}
 
       </div>
 
