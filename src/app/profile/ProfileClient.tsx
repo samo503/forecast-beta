@@ -1,10 +1,13 @@
 'use client'
 
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Edit3, Target, Flame, Crown, Mic, Sparkles, Zap } from "lucide-react";
+import Link from "next/link";
+import { Edit3, Lock, Target, Flame, Crown, Mic, Sparkles, Zap } from "lucide-react";
 import BottomNav from "../components/BottomNav";
 import PosterBackground from "../components/PosterBackground";
 import TopBar from "../components/TopBar";
+import { createClient } from "../../../lib/supabase/browser";
 import {
   trophies,
   followedShows,
@@ -12,14 +15,28 @@ import {
   profileFriends,
 } from "../../../lib/mock-data";
 
-// Trophies, Following, Activity, and Friends below are entirely mock
-// (lib/mock-data.ts) — same pattern as SHOW_TONIGHTS_BRIEF on the homepage
-// and SHOW_UPCOMING_PREVIEW / SHOW_PAST_PICKS_PREVIEW on /predict. Hidden
-// until there's real data to back them; data intentionally left in place.
+// Trophies (the mock shelf below), Following, Activity, and Friends are
+// entirely mock (lib/mock-data.ts) — same pattern as SHOW_TONIGHTS_BRIEF on
+// the homepage and SHOW_UPCOMING_PREVIEW / SHOW_PAST_PICKS_PREVIEW on
+// /predict. Hidden until there's real data to back them; data intentionally
+// left in place. Distinct from LOCKED_TROPHIES below, which is real (if
+// locked) content, not mock earned-trophy data.
 const SHOW_TROPHIES = false;
 const SHOW_FOLLOWING = false;
 const SHOW_ACTIVITY = false;
 const SHOW_FRIENDS = false;
+
+// Hardcoded and all locked. There's no trophy-awarding logic or schema for
+// any of these yet, so this is a fixed list of goals, not progress pulled
+// from data. "Called It" has no percentage threshold on purpose: the exact
+// bar for "most people missed" can't be set until there's real voting data
+// to set it against.
+const LOCKED_TROPHIES = [
+  { name: "Called It", criterion: "correctly predict an outcome that most people missed" },
+  { name: "5 Pick Streak", criterion: "get five predictions right in a row" },
+  { name: "Drama Expert", criterion: "reach 70 percent accuracy on a drama channel" },
+  { name: "Perfect Night", criterion: "get every prediction right for a single episode or event" },
+];
 
 export type ProfileData = {
   name: string;
@@ -103,6 +120,29 @@ export default function ProfileClient({
   predictionRecord: RecordItem[];
 }) {
   const router = useRouter();
+  const [confirmingSignOut, setConfirmingSignOut] = useState(false);
+  const signOutResetRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleSignOut = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push("/auth");
+    router.refresh();
+  };
+
+  // Tap once to arm, tap the same button again to actually sign out. Auth is
+  // magic-link only, so an accidental sign-out costs an email round trip to
+  // recover from. Same two-tap shape as the /predict vote pills, for the
+  // same reason: no undo, so no single-tap commit.
+  const handleSignOutTap = () => {
+    if (confirmingSignOut) {
+      if (signOutResetRef.current) clearTimeout(signOutResetRef.current);
+      handleSignOut();
+      return;
+    }
+    setConfirmingSignOut(true);
+    signOutResetRef.current = setTimeout(() => setConfirmingSignOut(false), 3000);
+  };
 
   return (
     <main className="relative min-h-screen bg-[#020205] pb-32 text-white">
@@ -164,9 +204,12 @@ export default function ProfileClient({
             )}
           </div>
 
-          {/* Identity line */}
+          {/* Identity line / bio. Visual constraint only (line-clamp-2) —
+              there's no editor for this field yet, so there's no input to
+              cap; truncating existing content server-side would risk
+              cutting it mid-word for no reason. */}
           {profile.identityLine && (
-            <p className="relative z-10 text-center text-[0.58rem] leading-relaxed text-slate-400">
+            <p className="relative z-10 mx-auto line-clamp-2 max-w-[280px] text-center text-[0.58rem] leading-relaxed text-slate-400">
               {profile.identityLine}
             </p>
           )}
@@ -192,7 +235,29 @@ export default function ProfileClient({
           </div>
         </div>
 
-        {/* ── Trophy Shelf ── */}
+        {/* ── Trophies (real, locked) ──
+            A grid, not a list: four fixed slots read as a shelf with empty
+            spaces, which is the point. A vertical checklist would read as
+            a to-do list instead of a shelf. */}
+        <section className="space-y-2">
+          <p className="px-0.5 text-[0.6rem] font-bold uppercase tracking-[0.28em] text-slate-200">
+            Trophies
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            {LOCKED_TROPHIES.map((trophy) => (
+              <div
+                key={trophy.name}
+                className="flex flex-col items-center gap-1.5 rounded-xl border border-white/[0.07] bg-white/[0.02] px-3 py-3.5 text-center"
+              >
+                <Lock className="h-4 w-4 text-slate-600" strokeWidth={1.75} />
+                <span className="text-[0.58rem] font-semibold text-slate-300">{trophy.name}</span>
+                <span className="text-[0.44rem] leading-snug text-slate-500">{trophy.criterion}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ── Trophy Shelf (mock) ── */}
         {SHOW_TROPHIES && (
         <section className="space-y-2">
           <p className="px-0.5 text-[0.6rem] font-bold uppercase tracking-[0.28em] text-slate-200">
@@ -427,6 +492,24 @@ export default function ProfileClient({
           </div>
         </section>
         )}
+
+        {/* ── Footer ── */}
+        <div className="flex items-center justify-between px-0.5">
+          <Link
+            href="/settings"
+            className="text-[0.42rem] text-slate-600 transition hover:text-slate-400"
+          >
+            Settings
+          </Link>
+          <button
+            onClick={handleSignOutTap}
+            className={`text-[0.42rem] transition ${
+              confirmingSignOut ? "text-rose-400" : "text-slate-600 hover:text-slate-400"
+            }`}
+          >
+            {confirmingSignOut ? "Tap again to sign out" : "Sign out"}
+          </button>
+        </div>
 
       </div>
 
