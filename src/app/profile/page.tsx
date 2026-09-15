@@ -30,7 +30,7 @@ export default async function ProfilePage() {
   const { data: pickRows } = await supabase
     .from("user_predictions")
     .select(
-      "*, prediction:predictions(question, channel:channels(name)), option:prediction_options(label)"
+      "*, prediction:predictions(question, locks_at, channel:channels(name)), option:prediction_options(label)"
     )
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
@@ -60,16 +60,28 @@ export default async function ProfilePage() {
     thisWeek: allPicks.filter((p) => isWithinPastWeek(p.created_at)).length,
   };
 
-  const predictionRecord: RecordItem[] = resolvedPicks
+  const predictionRecord: RecordItem[] = allPicks
     .filter((p) => p.prediction && p.option)
-    .map((p) => ({
-      id: p.id,
-      show: p.prediction.channel?.name ?? "",
-      question: p.prediction.question,
-      pick: p.option.label,
-      result: p.is_correct ? "correct" : "wrong",
-      points: p.points_awarded ?? 0,
-    }));
+    .map((p) =>
+      p.is_correct === null
+        ? {
+            id: p.id,
+            show: p.prediction.channel?.name ?? "",
+            question: p.prediction.question,
+            pick: p.option.label,
+            status: "pending" as const,
+            locksAt: p.prediction.locks_at,
+          }
+        : {
+            id: p.id,
+            show: p.prediction.channel?.name ?? "",
+            question: p.prediction.question,
+            pick: p.option.label,
+            status: "resolved" as const,
+            result: p.is_correct ? "correct" : "wrong",
+            points: p.points_awarded ?? 0,
+          }
+    );
 
   return (
     <ProfileClient

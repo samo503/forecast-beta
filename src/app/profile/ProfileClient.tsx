@@ -38,14 +38,39 @@ export type ProfileStats = {
   thisWeek: number;
 };
 
-export type RecordItem = {
-  id: string;
-  show: string;
-  question: string;
-  pick: string;
-  result: "correct" | "wrong";
-  points: number;
-};
+export type RecordItem =
+  | {
+      id: string;
+      show: string;
+      question: string;
+      pick: string;
+      status: "resolved";
+      result: "correct" | "wrong";
+      points: number;
+    }
+  | {
+      id: string;
+      show: string;
+      question: string;
+      pick: string;
+      status: "pending";
+      locksAt: string | null;
+    };
+
+// Mirrors the closes-countdown formatting on /predict (closesInLabel in
+// PredictClient.tsx), reimplemented locally rather than imported across
+// route trees for a handful of lines. A pick with no locksAt, or one whose
+// window has already passed, has nothing left to count down to.
+function pendingStatusLabel(locksAt: string | null): string {
+  if (!locksAt) return "Awaiting result";
+  const diffMs = new Date(locksAt).getTime() - Date.now();
+  if (diffMs <= 0) return "Awaiting result";
+  const mins = Math.round(diffMs / 60000);
+  if (mins < 60) return `Closes ${mins}m`;
+  const hours = Math.round(mins / 60);
+  if (hours < 24) return `Closes ${hours}h`;
+  return `Closes ${Math.round(hours / 24)}d`;
+}
 
 // Single achievement hue (amber/gold). Brightness signals rarity, not identity —
 // harder-to-earn trophies glow brighter instead of each getting an arbitrary color.
@@ -275,11 +300,11 @@ export default function ProfileClient({
         </section>
         )}
 
-        {/* ── Prediction Record ── */}
+        {/* ── My Picks ── */}
         <section className="space-y-1.5">
           <div className="flex items-center justify-between px-0.5">
             <p className="text-[0.54rem] font-bold uppercase tracking-[0.22em] text-slate-500">
-              Prediction Record
+              My Picks
             </p>
             <button className="text-[0.42rem] text-slate-600 transition hover:text-slate-400">
               See all ›
@@ -287,37 +312,57 @@ export default function ProfileClient({
           </div>
           <div className="divide-y divide-white/[0.04] rounded-xl border border-white/[0.05] bg-white/[0.015] px-3">
             {predictionRecord.length === 0 ? (
-              <p className="py-2 text-[0.6rem] text-slate-600">No resolved predictions yet.</p>
+              <p className="py-2 text-[0.6rem] text-slate-600">No picks yet.</p>
             ) : (
-              predictionRecord.map((item) => (
-                <div key={item.id} className="flex items-start gap-2.5 py-2">
-                  <div
-                    className={`mt-[4px] h-[5px] w-[5px] shrink-0 rounded-full ${
-                      item.result === "correct" ? "bg-emerald-400/75" : "bg-rose-400/70"
-                    }`}
-                  />
-                  <div className="flex min-w-0 flex-1 flex-col gap-[2px]">
-                    <span className="text-[0.42rem] text-slate-500">{item.show}</span>
-                    <p className="text-[0.6rem] leading-snug text-slate-400">{item.question}</p>
-                    <span className="text-[0.42rem] text-slate-500">
-                      Picked:{" "}
-                      <span className="text-slate-400">{item.pick}</span>
-                    </span>
-                  </div>
-                  <div className="flex shrink-0 flex-col items-end gap-[2px] pt-[3px]">
-                    <span
-                      className={`text-[0.42rem] font-semibold ${
-                        item.result === "correct" ? "text-emerald-400/75" : "text-rose-400/65"
+              predictionRecord.map((item) =>
+                item.status === "resolved" ? (
+                  <div key={item.id} className="flex items-start gap-2.5 py-2">
+                    <div
+                      className={`mt-[4px] h-[5px] w-[5px] shrink-0 rounded-full ${
+                        item.result === "correct" ? "bg-emerald-400/75" : "bg-rose-400/70"
                       }`}
-                    >
-                      {item.result === "correct" ? "✓" : "✗"}
-                    </span>
-                    <span className="text-[0.38rem] text-slate-600">
-                      +{item.points} pts
-                    </span>
+                    />
+                    <div className="flex min-w-0 flex-1 flex-col gap-[2px]">
+                      <span className="text-[0.42rem] text-slate-500">{item.show}</span>
+                      <p className="text-[0.6rem] leading-snug text-slate-400">{item.question}</p>
+                      <span className="text-[0.42rem] text-slate-500">
+                        Picked:{" "}
+                        <span className="text-slate-400">{item.pick}</span>
+                      </span>
+                    </div>
+                    <div className="flex shrink-0 flex-col items-end gap-[2px] pt-[3px]">
+                      <span
+                        className={`text-[0.42rem] font-semibold ${
+                          item.result === "correct" ? "text-emerald-400/75" : "text-rose-400/65"
+                        }`}
+                      >
+                        {item.result === "correct" ? "✓" : "✗"}
+                      </span>
+                      <span className="text-[0.38rem] text-slate-600">
+                        +{item.points} pts
+                      </span>
+                    </div>
                   </div>
-                </div>
-              ))
+                ) : (
+                  <div key={item.id} className="flex items-start gap-2.5 py-2">
+                    <div className="mt-[4px] h-[5px] w-[5px] shrink-0 rounded-full bg-amber-400/60" />
+                    <div className="flex min-w-0 flex-1 flex-col gap-[2px]">
+                      <span className="text-[0.42rem] text-slate-500">{item.show}</span>
+                      <p className="text-[0.6rem] leading-snug text-slate-400">{item.question}</p>
+                      <span className="text-[0.42rem] text-slate-500">
+                        Picked:{" "}
+                        <span className="text-slate-400">{item.pick}</span>
+                      </span>
+                    </div>
+                    <div className="flex shrink-0 flex-col items-end gap-[2px] pt-[3px]">
+                      <span className="text-[0.42rem] font-semibold text-amber-400/75">…</span>
+                      <span className="text-[0.38rem] text-slate-600">
+                        {pendingStatusLabel(item.locksAt)}
+                      </span>
+                    </div>
+                  </div>
+                )
+              )
             )}
           </div>
         </section>
