@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Lock } from "lucide-react";
 import BottomNav from "../components/BottomNav";
 import PosterBackground from "../components/PosterBackground";
 import TopBar, { type TopBarUser } from "../components/TopBar";
@@ -34,6 +35,7 @@ export type PredictionData = {
   correctOptionId: string | null;
   show: string;
   poster: string;
+  accentColor: string | null;
   options: PredictionOption[];
 };
 
@@ -71,7 +73,7 @@ function closeBadgeFor(card: PredictionData): { text: string; urgent: boolean } 
   if (!card.locksAt) return null;
   const diffMs = new Date(card.locksAt).getTime() - Date.now();
   if (diffMs <= 0) return { text: "Closed", urgent: false };
-  return { text: `Closes ${closesInLabel(card.locksAt)}`, urgent: true };
+  return { text: `Closes in ${closesInLabel(card.locksAt)}`, urgent: true };
 }
 
 // Vote pills, shared by every card regardless of size. A pill is only
@@ -121,7 +123,7 @@ function VotePills({
           missing percentages read as "nobody has voted yet", which may not
           be true. Says nothing about how many people actually voted. */}
       {card.status === "open" && (
-        <p className="text-[0.42rem] text-slate-600">Votes hidden until this closes.</p>
+        <p className="text-[0.42rem] text-slate-500">Votes hidden until this closes.</p>
       )}
       <div className="flex flex-wrap gap-1.5">
       {card.options.map((opt) => {
@@ -183,6 +185,14 @@ function VotePills({
             <div className={fillClassName} style={{ width: barsMounted ? `${pct}%` : "0%" }} />
             <div className="relative flex items-center justify-center gap-1.5">
               <span className={labelClassName}>{opt.label}</span>
+              {isPickedLocked && (
+                // Color alone (white vs. amber) shouldn't be the only thing
+                // distinguishing "committed, open" from "committed, locked"
+                // for a color-blind reader. Locked is the state worth a
+                // non-color explanation; the open case is self-evident from
+                // the bright border alone, so it gets no glyph.
+                <Lock className="h-[8px] w-[8px] text-amber-300" strokeWidth={2.5} />
+              )}
               {isPending ? (
                 <span className="text-[0.44rem] font-semibold text-white/80">Tap to confirm</span>
               ) : (
@@ -286,7 +296,7 @@ function PredictionCard({
         )}
       </div>
 
-      <div className={variant === "large" ? "mt-auto space-y-1.5" : "mt-1.5 space-y-1.5"}>
+      <div className={variant === "large" ? "mt-auto space-y-1" : "mt-1.5 space-y-1"}>
         <p
           className={
             variant === "large"
@@ -310,7 +320,12 @@ function PredictionCard({
             merely having a pick, so a picked-but-still-open prediction can't
             fall into the same branch as a picked-and-locked one.
             Resolved is one bar, not two: the outcome, the pick, and the
-            correct answer only get named once each, never twice. */}
+            correct answer only get named once each, never twice.
+            Open-with-a-pick and locked-with-a-pick render no bar at all —
+            the pill's own border (and, for locked, the small lock glyph)
+            already carries it; a card with a pick should read as cleanly as
+            one without. Only "voting closed with no pick" still needs a
+            bar, since nothing else on the card says that. */}
         {card.status === "resolved" ? (
           myPickId && myResult ? (
             <div
@@ -329,26 +344,9 @@ function PredictionCard({
               Correct answer: {correctLabel ?? "—"}
             </div>
           )
-        ) : card.status === "locked" ? (
-          myPickId ? (
-            // Amber, never keyed off the option label: this state has no
-            // outcome yet, correct or wrong, regardless of what the pick is
-            // called. Matches the pill's amber treatment for the same state.
-            <div className="w-full rounded-lg border border-amber-400/30 bg-amber-400/[0.08] py-[5px] text-center text-[0.6rem] font-semibold tracking-[0.04em] text-amber-300">
-              Locked: {myPickLabel} ✓
-            </div>
-          ) : (
-            <div className="w-full rounded-lg border border-white/[0.06] bg-black/20 py-[5px] text-center text-[0.6rem] font-semibold tracking-[0.04em] text-white/40">
-              Voting closed
-            </div>
-          )
-        ) : card.status === "open" && myPickId ? (
-          // Committed and can't be changed, but the prediction itself is
-          // still open — other people can still vote. Neutral, matching the
-          // pill's own neutral "this is what I chose" treatment; not amber,
-          // since nothing has locked yet.
-          <div className="w-full rounded-lg border border-white/[0.06] bg-black/20 py-[5px] text-center text-[0.6rem] font-semibold tracking-[0.04em] text-slate-300">
-            Picked: {myPickLabel}
+        ) : card.status === "locked" && !myPickId ? (
+          <div className="w-full rounded-lg border border-white/[0.06] bg-black/20 py-[5px] text-center text-[0.6rem] font-semibold tracking-[0.04em] text-white/40">
+            Voting closed
           </div>
         ) : null}
       </div>
@@ -369,15 +367,23 @@ function PredictionCard({
     }
     // No poster art for this channel yet — a plain card sized to its
     // content instead of the fixed-height poster band with nothing in it.
+    // Left-edge accent from the channel's accent_color gives it identity
+    // without imagery; degrades to the plain uniform border if unset.
     return (
-      <article className="flex flex-col gap-1.5 rounded-2xl border border-white/[0.07] bg-white/[0.025] p-3.5">
+      <article
+        className="flex flex-col gap-1.5 rounded-2xl border border-white/[0.07] bg-white/[0.025] p-3.5"
+        style={card.accentColor ? { borderLeftColor: card.accentColor, borderLeftWidth: 2 } : undefined}
+      >
         {content}
       </article>
     );
   }
 
   return (
-    <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] px-3 py-2.5">
+    <div
+      className="rounded-xl border border-white/[0.07] bg-white/[0.02] px-3 py-2"
+      style={card.accentColor ? { borderLeftColor: card.accentColor, borderLeftWidth: 2 } : undefined}
+    >
       {content}
     </div>
   );
@@ -561,7 +567,7 @@ export default function PredictClient({
             Predictions
           </p>
 
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             {sortedPredictions.length === 0 ? (
               <div className="rounded-xl border border-white/[0.05] bg-white/[0.015] px-3 py-3">
                 <p className="text-[0.6rem] text-slate-600">{tabEmptyMessage[activeTab]}</p>

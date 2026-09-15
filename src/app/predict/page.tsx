@@ -69,6 +69,7 @@ export default async function PredictPage() {
       correctOptionId: p.correct_option_id as string | null,
       show: p.channel.name,
       poster: predictionPosters[p.id] ?? channelPosters[p.channel.slug] ?? "",
+      accentColor: p.channel.accent_color ?? null,
       options: (p.options ?? [])
         .slice()
         .sort((a: { sort_order: number }, b: { sort_order: number }) => a.sort_order - b.sort_order)
