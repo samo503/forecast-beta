@@ -146,7 +146,7 @@ function VotePills({
           isPickedLocked
             ? "border-amber-400"
             : isPicked
-            ? "border-white/40"
+            ? "border-white/70"
             : isPending
             ? "border-white"
             : isLeading
