@@ -298,7 +298,11 @@ export default function ProfileClient({
         </section>
         )}
 
-        {/* ── Following Shows ── */}
+        {/* ── Following Shows ──
+            Not reconciled against the color-semantics rule adopted for
+            Predict/My Picks. Its rose LIVE/FINALE badge means "this show is
+            airing right now," a third meaning the rule doesn't cover.
+            Re-check before ever unhiding this. */}
         {SHOW_FOLLOWING && (
         <section className="space-y-2">
           <div className="flex items-center justify-between px-0.5">
@@ -409,7 +413,11 @@ export default function ProfileClient({
           </div>
         </section>
 
-        {/* ── Activity ── */}
+        {/* ── Activity ──
+            Not reconciled against the color-semantics rule. Its rose/amber
+            icon backgrounds mean "this item's category is prediction /
+            trophy," not urgency, wrong, or pending. Re-check before ever
+            unhiding this. */}
         {SHOW_ACTIVITY && (
         <section className="space-y-1.5">
           <p className="px-0.5 text-[0.54rem] font-bold uppercase tracking-[0.22em] text-slate-500">
@@ -447,7 +455,10 @@ export default function ProfileClient({
         </section>
         )}
 
-        {/* ── Friends ── */}
+        {/* ── Friends ──
+            Not reconciled against the color-semantics rule. Its amber
+            achievement badge means "this friend earned an accolade," not
+            pending/ongoing. Re-check before ever unhiding this. */}
         {SHOW_FRIENDS && (
         <section className="space-y-1.5">
           <div className="flex items-center justify-between px-0.5">

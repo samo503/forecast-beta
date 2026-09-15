@@ -130,29 +130,47 @@ function VotePills({
         const isPending = votable && pending === opt.id;
         const isLeading = leadingId === opt.id;
 
+        // Color reports fact, never a guess dressed as one. A pill only ever
+        // says which option is yours (and, while locked, that it's a
+        // commitment still awaiting an outcome) — it never claims correct or
+        // wrong. That's the resolved receipt bar's job alone, so a picked
+        // pill looks the same whether the card is open or already resolved.
+        // isPicked (locked): amber, matching the pending-outcome meaning
+        // amber already carries on /profile's My Picks. isPicked (open or
+        // resolved): neutral white. isLeading (crowd's current lean, never
+        // the user's own signal): a fainter neutral slate, one tier below
+        // isPicked so "mine" still reads stronger than "popular."
+        const isPickedLocked = isPicked && card.status === "locked";
+
         const pillClassName = `relative min-w-[62px] overflow-hidden rounded-full border px-3 py-[5px] ${
-          isPicked
-            ? "border-rose-400"
+          isPickedLocked
+            ? "border-amber-400"
+            : isPicked
+            ? "border-white/40"
             : isPending
             ? "border-white"
             : isLeading
-            ? "border-rose-400/35"
+            ? "border-slate-400/30"
             : "border-white/[0.1]"
         } ${votable ? "cursor-pointer" : ""}`;
 
         const fillClassName = `absolute inset-y-0 left-0 transition-[width] duration-700 ease-out ${
-          isPicked
-            ? "bg-rose-400/[0.12]"
+          isPickedLocked
+            ? "bg-amber-400/[0.12]"
+            : isPicked
+            ? "bg-white/[0.08]"
             : isPending
             ? "bg-white/[0.14]"
             : isLeading
-            ? "bg-rose-400/20"
+            ? "bg-white/[0.06]"
             : "bg-white/[0.05]"
         }`;
 
         const labelClassName = `text-[0.58rem] font-medium ${
-          isPicked
-            ? "text-rose-300"
+          isPickedLocked
+            ? "text-amber-300"
+            : isPicked
+            ? "text-white"
             : isPending
             ? "text-white"
             : isLeading
@@ -171,7 +189,13 @@ function VotePills({
                 total > 0 && (
                   <span
                     className={`text-[0.44rem] font-semibold ${
-                      isPicked || isLeading ? "text-rose-300" : "text-slate-500"
+                      isPickedLocked
+                        ? "text-amber-300"
+                        : isPicked
+                        ? "text-white/70"
+                        : isLeading
+                        ? "text-slate-300"
+                        : "text-slate-500"
                     }`}
                   >
                     {pct}%
@@ -305,13 +329,10 @@ function PredictionCard({
             </div>
           )
         ) : locked ? (
-          <div
-            className={`w-full rounded-lg border py-[5px] text-center text-[0.6rem] font-semibold tracking-[0.04em] ${
-              lockedLabel === "Yes"
-                ? "border-emerald-400/30 bg-emerald-400/[0.08] text-emerald-300"
-                : "border-rose-400/30 bg-rose-400/[0.08] text-rose-300"
-            }`}
-          >
+          // Amber, never keyed off the option label: this state has no
+          // outcome yet, correct or wrong, regardless of what the pick is
+          // called. Matches the pill's amber treatment for the same state.
+          <div className="w-full rounded-lg border border-amber-400/30 bg-amber-400/[0.08] py-[5px] text-center text-[0.6rem] font-semibold tracking-[0.04em] text-amber-300">
             Locked: {lockedLabel} ✓
           </div>
         ) : card.status !== "open" ? (
@@ -577,7 +598,13 @@ export default function PredictClient({
         </section>
         )}
 
-        {/* ── Section 4: Past Picks (preview) ── */}
+        {/* ── Section 4: Past Picks (preview) ──
+            Not reconciled against the color-semantics rule adopted for
+            VotePills and the receipt banners above (rose = urgency or
+            confirmed wrong, emerald = confirmed correct + success toast,
+            amber = pending/ongoing, neutral = a selection with no verdict
+            yet). It happens to already match — correct is emerald, wrong is
+            rose, pending is amber — but re-check before ever unhiding it. */}
         {SHOW_PAST_PICKS_PREVIEW && (
         <section className="space-y-1.5">
           <div className="flex items-center justify-between px-0.5">
