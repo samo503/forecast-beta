@@ -41,6 +41,14 @@ export type PredictionData = {
 
 type Tab = "open" | "locked" | "past";
 
+// Below this many total votes, a crowd split is more noise than signal: one
+// vote renders as 100% and looks like consensus when it's one person, and a
+// 3-to-1 split among early testers renders as a confident 75% when it's four
+// people. This is a deliberate policy call, not a technical limit, so raise
+// it if the real audience is still small enough that individual votes swing
+// the percentages by double digits.
+const MIN_VOTES_FOR_CROWD_SPLIT = 10;
+
 function totalVotes(options: PredictionOption[]): number {
   return options.reduce((sum, o) => sum + o.voteCount, 0);
 }
@@ -103,8 +111,13 @@ function VotePills({
   showToast: (message: string) => void;
 }) {
   const total = totalVotes(card.options);
+  // Below the threshold, the crowd split is withheld entirely: no
+  // percentages, no fill proportion, no "leading option" emphasis. All
+  // three are claims about the crowd, and a claim from a handful of votes
+  // is misleading even without printing a number.
+  const hasEnoughVotes = total >= MIN_VOTES_FOR_CROWD_SPLIT;
   const leadingId =
-    total > 0
+    hasEnoughVotes
       ? card.options.reduce((lead, o) => (o.voteCount > lead.voteCount ? o : lead), card.options[0]).id
       : null;
   const myPick = lockedPicks[card.id];
@@ -182,7 +195,10 @@ function VotePills({
 
         const inner = (
           <>
-            <div className={fillClassName} style={{ width: barsMounted ? `${pct}%` : "0%" }} />
+            <div
+              className={fillClassName}
+              style={{ width: barsMounted && hasEnoughVotes ? `${pct}%` : "0%" }}
+            />
             <div className="relative flex items-center justify-center gap-1.5">
               <span className={labelClassName}>{opt.label}</span>
               {isPickedLocked && (
@@ -196,7 +212,7 @@ function VotePills({
               {isPending ? (
                 <span className="text-[0.44rem] font-semibold text-white/80">Tap to confirm</span>
               ) : (
-                total > 0 && (
+                hasEnoughVotes && (
                   <span
                     className={`text-[0.44rem] font-semibold ${
                       isPickedLocked
