@@ -80,7 +80,7 @@ export default function LiveClient({
             Live
           </h1>
           <p className="mt-1 text-[0.6rem] text-slate-500">
-            Watch together. Talk in real time.
+            Watch together. Chat in real time.
           </p>
         </div>
 

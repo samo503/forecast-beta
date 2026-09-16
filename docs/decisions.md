@@ -236,3 +236,46 @@ production on 2026-09-14 (commit `467e2c5`), out of order relative to
 migrations directory no longer reflects production state in file
 order. Before assuming a migration has been applied, verify against
 the database rather than against the file list.
+
+## Design principles
+
+Product principles from a design discussion, captured here so they reach
+future sessions directly rather than through chat context.
+
+**Socially available, not artificially socially busy.** Live may state
+that a room is open. It may not imply people are in it unless that is
+actually known. This governs presence indicators, viewer counts, friend
+activity, and trending.
+
+**Don't advertise an interaction until the interaction exists.** Card
+copy that promises something untappable is worse than a thinner card
+that claims nothing.
+
+**Lifecycle framing.** The core loop is predict, anticipate, watch,
+resolve, learn how you did, return. Forecast does not need manufactured
+gamification, because every prediction already creates an unanswered
+question with a future resolution. The job is exposing and strengthening
+that tension, not inventing new tension.
+
+Each state has a job. Open is the decision. Locked is anticipation. Live
+is the payoff environment. Past is the reveal and receipt. Profile is
+reputation over time.
+
+**States differ through emphasis, copy, and hierarchy, never through
+separate component systems.**
+
+**Ethical rule.** Use anticipation, genuine social context, earned
+reputation, and truthful feedback. Avoid fake scarcity, fake consensus,
+fake activity counts, engineered near misses, loss chasing, sunk-cost
+framing, and streak-loss pressure.
+
+The test: are we making an existing fact more legible, or manufacturing
+pressure that did not otherwise exist?
+
+Forecast's structural advantage is that nobody loses anything, since the
+episode airs regardless. There is nothing to chase.
+
+**Held until the room route exists:** live card copy for a live episode
+reads "Live chat is open now" with a "Join live chat" affordance —
+chosen over "Live conversation happening now", which implies people are
+present in what may be an empty room.
