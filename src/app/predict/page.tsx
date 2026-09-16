@@ -4,27 +4,6 @@ import { computeStreak } from "../../../lib/streak";
 import type { TopBarUser } from "../components/TopBar";
 import PredictClient, { type PredictionData } from "./PredictClient";
 
-// Channel art isn't in the schema yet — same local lookup used on the homepage.
-const channelPosters: Record<string, string> = {
-  "love-island-usa": "",
-  "emmys":
-    "https://images.unsplash.com/photo-1713514116766-d9be318edaf8?fm=jpg&q=80&w=1200&auto=format&fit=crop",
-};
-
-// Per-category art for the 4 real Emmy predictions, keyed by prediction id
-// since they all share one channel (so channelPosters alone can't tell them
-// apart). Falls back to channelPosters for any prediction not listed here.
-const predictionPosters: Record<string, string> = {
-  "eeeeeeee-3333-3333-3333-000000000001": // Outstanding Drama Series
-    "https://images.unsplash.com/photo-1713514116766-d9be318edaf8?fm=jpg&q=80&w=1200&auto=format&fit=crop",
-  "eeeeeeee-3333-3333-3333-000000000002": // Outstanding Comedy Series
-    "https://images.unsplash.com/photo-1760437429636-2e280cf3726f?fm=jpg&q=80&w=1200&auto=format&fit=crop",
-  "eeeeeeee-3333-3333-3333-000000000003": // Outstanding Lead Actor in a Drama Series
-    "https://images.unsplash.com/photo-1784542471030-043371709e27?fm=jpg&q=80&w=1200&auto=format&fit=crop",
-  "eeeeeeee-3333-3333-3333-000000000004": // Outstanding Lead Actress in a Drama Series
-    "https://images.unsplash.com/photo-1761925116230-d24410fbe1a0?fm=jpg&q=80&w=1200&auto=format&fit=crop",
-};
-
 function isPast(iso: string): boolean {
   return new Date(iso).getTime() < Date.now();
 }
@@ -68,7 +47,6 @@ export default async function PredictPage() {
       locksAt: p.locks_at,
       correctOptionId: p.correct_option_id as string | null,
       show: p.channel.name,
-      poster: predictionPosters[p.id] ?? channelPosters[p.channel.slug] ?? "",
       accentColor: p.channel.accent_color ?? null,
       options: (p.options ?? [])
         .slice()

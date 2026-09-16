@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Lock } from "lucide-react";
 import BottomNav from "../components/BottomNav";
-import PosterBackground from "../components/PosterBackground";
 import TopBar, { type TopBarUser } from "../components/TopBar";
 import { lockPrediction } from "../actions/predictions";
 import {
@@ -34,7 +33,6 @@ export type PredictionData = {
   locksAt: string | null;
   correctOptionId: string | null;
   show: string;
-  poster: string;
   accentColor: string | null;
   options: PredictionOption[];
 };
@@ -348,15 +346,31 @@ function PredictionCard({
         {card.status === "resolved" ? (
           myPickId && myResult ? (
             <div
-              className={`w-full rounded-lg border py-[5px] text-center text-[0.6rem] font-semibold tracking-[0.04em] ${
+              className={`w-full rounded-lg border py-[5px] text-center tracking-[0.04em] ${
                 myResult.isCorrect
                   ? "border-emerald-400/30 bg-emerald-400/[0.08] text-emerald-300"
                   : "border-rose-400/30 bg-rose-400/[0.08] text-rose-300"
               }`}
             >
-              {myResult.isCorrect
-                ? `✓ ${myPickLabel} · +${myResult.points}`
-                : `✗ ${myPickLabel} · Correct: ${correctLabel ?? "—"} · +${myResult.points}`}
+              {myResult.isCorrect ? (
+                // One fact to state, so one line, as before.
+                <span className="text-[0.6rem] font-semibold">
+                  ✓ {myPickLabel} · +{myResult.points}
+                </span>
+              ) : (
+                // Two facts, scannable top to bottom instead of packed into
+                // one sentence: what I picked (primary line, full brightness)
+                // above what was actually correct (secondary line, smaller
+                // and dimmer), rather than both parsed left to right.
+                <>
+                  <p className="text-[0.6rem] font-semibold">
+                    ✗ {myPickLabel} · +{myResult.points}
+                  </p>
+                  <p className="mt-[2px] text-[0.48rem] font-medium text-rose-300/70">
+                    Correct: {correctLabel ?? "—"}
+                  </p>
+                </>
+              )}
             </div>
           ) : (
             <div className="w-full rounded-lg border border-white/[0.06] bg-black/20 py-[5px] text-center text-[0.6rem] font-semibold tracking-[0.04em] text-slate-300">
@@ -373,24 +387,15 @@ function PredictionCard({
   );
 
   if (variant === "large") {
-    if (card.poster) {
-      return (
-        <article className="relative overflow-hidden rounded-2xl">
-          {/* title="" — card.show is already shown above as the badge */}
-          <PosterBackground src={card.poster} title="" />
-          <div className="absolute inset-x-0 top-0 h-14 bg-gradient-to-b from-black/45 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/55 to-transparent" />
-          <div className="relative flex h-[160px] flex-col p-3.5">{content}</div>
-        </article>
-      );
-    }
-    // No poster art for this channel yet — a plain card sized to its
-    // content instead of the fixed-height poster band with nothing in it.
-    // Left-edge accent from the channel's accent_color gives it identity
-    // without imagery; degrades to the plain uniform border if unset.
+    // No image treatment for any card, ever — one card looking different
+    // because it happened to have an entry in a poster lookup map read as
+    // an accident, not a design choice. Every card is this same plain,
+    // content-sized shape; the channel's accent_color left edge is the
+    // only per-channel identity cue, and degrades to a plain uniform
+    // border if unset.
     return (
       <article
-        className="flex flex-col gap-1.5 rounded-2xl border border-white/[0.07] bg-white/[0.025] p-3.5"
+        className="flex flex-col gap-1 rounded-2xl border border-white/[0.07] bg-white/[0.025] p-3"
         style={card.accentColor ? { borderLeftColor: card.accentColor, borderLeftWidth: 2 } : undefined}
       >
         {content}
@@ -546,9 +551,9 @@ export default function PredictClient({
             Your Forecast
           </p>
 
-          <div className="flex items-center justify-between rounded-xl border border-white/[0.07] bg-white/[0.025] px-5 py-2.5">
+          <div className="flex items-center justify-between rounded-xl border border-white/[0.07] bg-white/[0.025] px-5 py-2">
             {/* Streak */}
-            <div className="flex flex-col items-center gap-0.5">
+            <div className="flex flex-col items-center">
               <div className="flex items-baseline gap-1">
                 <span className="text-[1.15rem] font-black leading-none text-amber-300">
                   {streak}
@@ -560,10 +565,10 @@ export default function PredictClient({
               </span>
             </div>
 
-            <div className="h-7 w-px bg-white/[0.06]" />
+            <div className="h-6 w-px bg-white/[0.06]" />
 
             {/* Accuracy */}
-            <div className="flex flex-col items-center gap-0.5">
+            <div className="flex flex-col items-center">
               <span className="text-[1.15rem] font-black leading-none text-white">
                 {accuracy === null ? "—" : `${accuracy}%`}
               </span>
@@ -572,10 +577,10 @@ export default function PredictClient({
               </span>
             </div>
 
-            <div className="h-7 w-px bg-white/[0.06]" />
+            <div className="h-6 w-px bg-white/[0.06]" />
 
             {/* This week */}
-            <div className="flex flex-col items-center gap-0.5">
+            <div className="flex flex-col items-center">
               <span className="text-[1.15rem] font-black leading-none text-white">
                 {picksThisWeek}
               </span>
