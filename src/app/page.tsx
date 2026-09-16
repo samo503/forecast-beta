@@ -1,5 +1,4 @@
 import {
-  categories,
   tonightsBrief,
   type ChannelCard,
   type HeroFeedShow,
@@ -21,7 +20,7 @@ const channelStatusLabel: Record<string, string> = {
   live: "LIVE",
   upcoming: "RETURNS",
   off_air: "OFF-AIR",
-  off_season: "OFF-SEA",
+  off_season: "OFF-SEASON",
   pilot: "COMING SOON",
 };
 
@@ -140,14 +139,7 @@ export default async function Home() {
   return (
     <main className="relative min-h-screen bg-[#020205] pb-28 text-white">
       <div className="mx-auto flex max-w-[640px] flex-col gap-3 px-4 pt-5">
-        <TopBar
-          currentUser={currentUserBadge}
-          tabs={[
-            { label: "For You", active: true },
-            { label: "Following" },
-            { label: "Tonight" },
-          ]}
-        />
+        <TopBar currentUser={currentUserBadge} />
 
         {heroFeed.length > 0 && (
         <section className="space-y-2">
@@ -177,11 +169,8 @@ export default async function Home() {
                       <PosterBackground src={item.poster} title="" />
                       <div className="absolute inset-0 bg-gradient-to-t from-slate-950/96 via-slate-950/10 opacity-80" />
                       <div className="relative flex h-full flex-col justify-between p-3">
-                        {/* Top row: channel badge + LIVE NOW pill */}
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="rounded-full border border-white/10 bg-slate-950/60 px-2 py-0.5 text-[0.56rem] text-slate-300">
-                            {item.channel}
-                          </span>
+                        {/* Top row: LIVE NOW / status pill */}
+                        <div className="flex items-center justify-end gap-2">
                           {item.status === "LIVE" ? (
                             <span className="inline-flex items-center gap-[5px] rounded-full bg-rose-500/10 px-2 py-[3px] text-[0.5rem] font-semibold uppercase tracking-[0.08em] text-rose-300">
                               <span className="h-[5px] w-[5px] rounded-full bg-rose-400 animate-pulse" />
@@ -253,23 +242,6 @@ export default async function Home() {
         </section>
         )}
 
-        <section className="overflow-x-auto pb-2">
-          <div className="flex gap-2">
-            {categories.map((category) => (
-              <button
-                key={category.id}
-                className={`rounded-lg border px-2 py-0.5 text-[0.65rem] transition ${
-                  category.active
-                    ? "border-white/10 bg-white/5 text-slate-200"
-                    : "border-white/[0.06] text-slate-500 hover:text-slate-300"
-                }`}
-              >
-                {category.label}
-              </button>
-            ))}
-          </div>
-        </section>
-
         <section className="space-y-2">
           <div className="grid grid-cols-2 gap-3">
             {/** Curate and balance the grid to alternate visual weight and avoid orphan/empty cards */}
@@ -286,22 +258,6 @@ export default async function Home() {
                 while (bright.length || dark.length) {
                   if (bright.length) out.push(bright.shift()!);
                   if (dark.length) out.push(dark.shift()!);
-                }
-                // ensure even number of cards to avoid orphan
-                if (out.length % 2 === 1) {
-                  out.push({
-                    id: 9999,
-                    channel: "",
-                    title: "Explore more",
-                    status: "",
-                    note: "Curated picks",
-                    poster:
-                      "https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/Placeholder_vertical_gradient.png/600px-Placeholder_vertical_gradient.png",
-                    mode: "logo",
-                    logoFallback:
-                      "https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/Placeholder_vertical_gradient.png/600px-Placeholder_vertical_gradient.png",
-                    visualWeight: "logo",
-                  });
                 }
                 return out;
               })();
@@ -329,10 +285,7 @@ export default async function Home() {
                       <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-transparent to-transparent" />
 
                       <div className="relative flex h-full flex-col justify-between p-3">
-                        <div className="flex items-center justify-between gap-2 text-[0.62rem] uppercase tracking-[0.16em] text-slate-200">
-                          <span className="rounded-full border border-white/10 bg-slate-950/60 px-2 py-0.5 text-slate-100 text-[0.62rem]">
-                            {channel.channel || ""}
-                          </span>
+                        <div className="flex items-center justify-end gap-2 text-[0.62rem] uppercase tracking-[0.16em] text-slate-200">
                           {channel.status === "LIVE" ? (
                             <span className="inline-flex items-center gap-1 rounded-full bg-rose-500/10 px-1.5 py-px text-[0.54rem] font-medium uppercase tracking-[0.06em] text-rose-400">
                               <span className="h-1 w-1 rounded-full bg-rose-400 animate-pulse" />
@@ -358,11 +311,6 @@ export default async function Home() {
             })()}
           </div>
         </section>
-
-        <button className="flex w-full items-center justify-between rounded-md border border-white/[0.08] bg-slate-950/80 px-3 py-1.5 text-[0.62rem] text-slate-500 transition hover:border-white/15 hover:text-slate-300">
-          <span>Browse all channels</span>
-          <span>→</span>
-        </button>
 
         {SHOW_TONIGHTS_BRIEF && (
         <section className="space-y-2.5">
