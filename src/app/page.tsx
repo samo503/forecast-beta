@@ -70,7 +70,8 @@ export default async function Home() {
   const { data: episodeRows } = await supabase
     .from("episodes")
     .select("*, channel:channels(*)")
-    .order("air_date", { ascending: false });
+    .in("status", ["live", "upcoming"])
+    .order("air_date", { ascending: true });
 
   const channelCards: ChannelCard[] = (channelRows ?? []).map((c) => ({
     id: c.channel_number,
@@ -83,9 +84,23 @@ export default async function Home() {
     visualWeight: channelPosters[c.slug] ? "bright" : "typography",
   }));
 
-  const heroFeed: HeroFeedShow[] = (episodeRows ?? [])
-    .filter((e) => e.channel)
-    .map((e, idx) => {
+  // One hero slot per channel, not one per episode — a channel with several
+  // upcoming episodes shouldn't crowd out channels with none. Ascending
+  // air_date order means the first occurrence per channel is already its
+  // most urgent one: a computed-live episode (past air_date, still stored
+  // as 'upcoming') always sorts before that channel's actual future
+  // episodes, so no separate live/upcoming branch is needed here.
+  const HERO_LIMIT = 8;
+  const seenChannelIds = new Set<string>();
+  const heroEpisodes: NonNullable<typeof episodeRows> = [];
+  for (const e of episodeRows ?? []) {
+    if (!e.channel || seenChannelIds.has(e.channel_id)) continue;
+    seenChannelIds.add(e.channel_id);
+    heroEpisodes.push(e);
+    if (heroEpisodes.length >= HERO_LIMIT) break;
+  }
+
+  const heroFeed: HeroFeedShow[] = heroEpisodes.map((e, idx) => {
       const air = e.air_date ? new Date(e.air_date) : null;
       const status = displayEpisodeStatus(e.status, e.air_date);
       return {
@@ -94,8 +109,8 @@ export default async function Home() {
         channel: `CH ${String(e.channel.channel_number).padStart(2, "0")}`,
         slot: "",
         status: episodeStatusLabel[status] ?? status.toUpperCase(),
-        title: e.channel.name,
-        subtitle: "",
+        title: e.title,
+        subtitle: e.channel.name,
         detail: [
           e.episode_number ? `E${e.episode_number}` : null,
           air
@@ -116,6 +131,12 @@ export default async function Home() {
       };
     });
 
+  // "Live now" only when something in the strip actually is; otherwise the
+  // honest claim is "Up next," not a hardcoded urgency the cards themselves
+  // don't back up.
+  const heroIsLive = heroFeed.some((item) => item.status === "LIVE");
+  const heroHeading = heroIsLive ? "Live now" : "Up next";
+
   return (
     <main className="relative min-h-screen bg-[#020205] pb-28 text-white">
       <div className="mx-auto flex max-w-[640px] flex-col gap-3 px-4 pt-5">
@@ -128,10 +149,15 @@ export default async function Home() {
           ]}
         />
 
+        {heroFeed.length > 0 && (
         <section className="space-y-2">
           <div className="flex items-center justify-between gap-3">
-            <p className="text-[0.7rem] uppercase tracking-[0.32em] text-pink-400">
-              Live now
+            <p
+              className={`text-[0.7rem] uppercase tracking-[0.32em] ${
+                heroIsLive ? "text-pink-400" : "text-cyan-400"
+              }`}
+            >
+              {heroHeading}
             </p>
             <button className="text-[0.72rem] font-medium uppercase tracking-[0.18em] text-slate-500 transition hover:text-slate-300">
               Full Guide
@@ -141,45 +167,6 @@ export default async function Home() {
           <div className="-mx-4 overflow-x-auto px-4 pb-2">
             <div className="flex gap-4">
               {heroFeed.map((item) => {
-                const tone = (() => {
-                  const titleForTone = item.kind === "show" ? item.title : undefined;
-                  switch (titleForTone) {
-                    case "Severance":
-                      return {
-                        gradient: "from-slate-900 via-slate-800",
-                        titleColor: "text-amber-100",
-                      };
-                    case "RuPaul’s Drag Race":
-                      return {
-                        gradient: "from-pink-900 via-fuchsia-800",
-                        titleColor: "text-pink-50",
-                      };
-                    case "Big Brother":
-                      return {
-                        gradient: "from-emerald-900 via-emerald-700",
-                        titleColor: "text-emerald-100",
-                      };
-                    case "The Bear":
-                      return {
-                        gradient: "from-slate-900 via-amber-900",
-                        titleColor: "text-white",
-                      };
-                    case "House of the Dragon":
-                      return {
-                        gradient: "from-rose-900 via-slate-800",
-                        titleColor: "text-amber-100",
-                      };
-                    case "Love Island":
-                    case "Love Island USA":
-                      return {
-                        gradient: "from-amber-600/65 via-pink-500/35",
-                        titleColor: "text-white",
-                      };
-                    default:
-                      return { gradient: "from-slate-950/96 via-slate-950/10", titleColor: "text-white" };
-                  }
-                })();
-
                 return (
                   <article
                     key={item.id}
@@ -188,7 +175,7 @@ export default async function Home() {
                     <div className="relative h-full bg-slate-950">
                       {/* title="" — the title is already shown below as the h2 */}
                       <PosterBackground src={item.poster} title="" />
-                      <div className={`absolute inset-0 bg-gradient-to-t ${tone.gradient} opacity-80`} />
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/96 via-slate-950/10 opacity-80" />
                       <div className="relative flex h-full flex-col justify-between p-3">
                         {/* Top row: channel badge + LIVE NOW pill */}
                         <div className="flex items-center justify-between gap-2">
@@ -207,9 +194,12 @@ export default async function Home() {
                           )}
                         </div>
 
-                        {/* Bottom: title → episode/time → stats panel */}
+                        {/* Bottom: subtitle → title → episode/time → stats panel */}
                         <div>
-                          <h2 className={`text-[1.85rem] font-extrabold leading-tight ${tone.titleColor}`}>
+                          <p className="text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-slate-400">
+                            {item.subtitle}
+                          </p>
+                          <h2 className="text-[1.85rem] font-extrabold leading-tight text-white">
                             {item.title}
                           </h2>
                           <p className="mt-0.5 text-[0.86rem] leading-snug text-slate-200/75">
@@ -261,6 +251,7 @@ export default async function Home() {
             </div>
           </div>
         </section>
+        )}
 
         <section className="overflow-x-auto pb-2">
           <div className="flex gap-2">
