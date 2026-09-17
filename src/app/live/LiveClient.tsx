@@ -1,6 +1,7 @@
 'use client'
 
 import BottomNav from "../components/BottomNav";
+import LocalTime from "../components/LocalTime";
 import PosterBackground from "../components/PosterBackground";
 import TopBar, { type TopBarUser } from "../components/TopBar";
 
@@ -22,21 +23,6 @@ export type RoomEpisode = {
 function accentWash(color: string | null, percent: number): string | undefined {
   if (!color) return undefined;
   return `color-mix(in srgb, ${color} ${percent}%, transparent)`;
-}
-
-// No explicit timeZone: this runs in the browser, so it defaults to the
-// viewer's own local zone. Deliberately different from the homepage hero's
-// air time, which is pinned to America/New_York on purpose (a fixed US
-// broadcast time). Here the ask is the viewer's own local time.
-function formatLocalAirTime(iso: string | null): string {
-  if (!iso) return "";
-  return new Date(iso).toLocaleString(undefined, {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
 }
 
 // Same relative-time vocabulary as /predict's closesInLabel, not a new one:
@@ -162,12 +148,9 @@ export default function LiveClient({
                       {episode.title}
                     </p>
                     <span className="text-[0.4rem] text-slate-600">
-                      {[
-                        episode.episodeNumber ? `E${episode.episodeNumber}` : null,
-                        episode.airDate ? formatLocalAirTime(episode.airDate) : null,
-                      ]
-                        .filter(Boolean)
-                        .join(" · ")}
+                      {episode.episodeNumber && `E${episode.episodeNumber}`}
+                      {episode.episodeNumber && episode.airDate && " · "}
+                      {episode.airDate && <LocalTime iso={episode.airDate} />}
                     </span>
                   </div>
                   {episode.airDate && (

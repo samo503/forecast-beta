@@ -339,3 +339,29 @@ the underlying stat (accuracy, an active streak) fluctuates.
 `America/Los_Angeles`, not each user's own `profiles.timezone`) with at
 least one locked-in pick, matching the weekly cadence most content on
 this app actually airs on.
+
+## Displayed air times: viewer's local timezone, not a hardcoded one
+
+**Reversed a prior decision.** Guide's hero used to format episode air
+times pinned to `America/New_York` on purpose, on the reasoning that it's
+"a fixed US broadcast time." That reasoning doesn't hold once the
+audience isn't assumed to be Eastern — a viewer in Los Angeles doesn't
+want to do timezone math to know when something they're watching on their
+own TV actually airs for them. All displayed times now use the viewer's
+own local timezone, on every page that shows one.
+
+**`src/app/components/LocalTime.tsx`** is the one place this is
+implemented. It can't format the real local time on the server — the
+server has no idea what timezone the viewer is in, and Vercel's own
+runtime timezone (UTC) isn't a stand-in for it either. Rendering a
+guessed time server-side and correcting it client-side would still
+produce a visible flash and a React hydration mismatch (server and client
+would render different text for the same node). Instead it renders
+nothing until mounted, then fills in the real local time from a
+`useEffect` — server and client's first render both produce the same
+empty output, so there's nothing to mismatch, and no
+`suppressHydrationWarning` is needed to hide a problem that was avoided
+rather than papered over. Guide's hero and Live's Upcoming Rooms both use
+it now; their previous separate formatting helpers (one hardcoded to
+`America/New_York`, one relying on the browser's default zone with no
+hydration-safety handling) are gone.

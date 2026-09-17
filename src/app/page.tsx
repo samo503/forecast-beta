@@ -7,6 +7,7 @@ import { supabase } from "../../lib/supabase/client";
 import { getCurrentUserBadge } from "../../lib/supabase/current-user";
 import { effectiveEpisodeStatus } from "../lib/episodeStatus";
 import BottomNav from "./components/BottomNav";
+import LocalTime from "./components/LocalTime";
 import PosterBackground from "./components/PosterBackground";
 import TopBar from "./components/TopBar";
 
@@ -96,7 +97,6 @@ export default async function Home() {
   }
 
   const heroFeed: HeroFeedShow[] = heroEpisodes.map((e, idx) => {
-      const air = e.air_date ? new Date(e.air_date) : null;
       const status = effectiveEpisodeStatus(e.status, e.air_date, now);
       return {
         id: idx,
@@ -106,19 +106,11 @@ export default async function Home() {
         status: episodeStatusLabel[status] ?? status.toUpperCase(),
         title: e.title,
         subtitle: e.channel.name,
-        detail: [
-          e.episode_number ? `E${e.episode_number}` : null,
-          air
-            ? air.toLocaleString("en-US", {
-                timeZone: "America/New_York",
-                weekday: "short",
-                hour: "numeric",
-                minute: "2-digit",
-              })
-            : null,
-        ]
-          .filter(Boolean)
-          .join(" · "),
+        // Episode-number label only — the air time renders via <LocalTime>
+        // at the call site instead of being pre-joined into this string,
+        // since it can't be safely formatted server-side (see airDate below).
+        detail: e.episode_number ? `E${e.episode_number}` : "",
+        airDate: e.air_date,
         viewers: "",
         predicted: "",
         action: "",
@@ -189,6 +181,8 @@ export default async function Home() {
                           </h2>
                           <p className="mt-0.5 text-[0.86rem] leading-snug text-slate-200/75">
                             {item.detail}
+                            {item.detail && item.airDate && " · "}
+                            {item.airDate && <LocalTime iso={item.airDate} />}
                           </p>
 
                           {/* Three-stat glass panel — only shown when at least one stat has real data */}

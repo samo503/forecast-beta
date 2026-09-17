@@ -7,6 +7,10 @@ export type HeroFeedShow = {
   title: string;
   subtitle: string;
   detail: string;
+  /** Real air_date, rendered via <LocalTime> at the call site — kept
+   *  separate from `detail` since the formatted time can't be computed
+   *  server-side without risking a wrong-timezone flash (see LocalTime.tsx). */
+  airDate: string | null;
   viewers: string;
   predicted: string;
   action: string;
