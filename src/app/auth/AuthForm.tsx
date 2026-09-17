@@ -17,7 +17,7 @@ export default function AuthForm() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(
     callbackError === 'missing_code' || callbackError === 'auth_failed'
-      ? "That link didn't work — it may have been opened in a different browser than the one you requested it from, or it's expired. Request a new one below."
+      ? "That link didn't work. It may have been opened in a different browser than the one you requested it from, or it's expired. Request a new one below."
       : null
   )
 
