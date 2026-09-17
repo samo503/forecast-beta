@@ -466,3 +466,38 @@ the current app — it may predate the Guide redesign (which removed the
 last hardcoded channel-name-adjacent UI, the grid's CH-badge and status
 label) or describe a build this session doesn't have visibility into.
 No `UPDATE` statements were needed as a result.
+
+## Imagery
+
+Forecast uses original, licensed, or otherwise approved atmospheric
+imagery rather than network artwork as its primary visual language.
+Channel imagery should evoke the world, mood, or event without relying
+on characters, logos, copyrighted show stills, or recognizable
+franchise iconography. Each channel has a coherent visual family that
+can produce multiple images across Guide, Live and Predict. Photography
+carries channel personality; UI color remains restrained.
+
+Imagery intensity isn't uniform — it scales down with how much weight
+each surface gives to browsing versus deciding. Guide carries the
+richest imagery of any surface, because discovery is its entire job:
+it's the page where a viewer is scanning the whole lineup and imagery
+is doing real work distinguishing one channel from the next. Live keeps
+imagery large and atmospheric — a viewer has already picked a channel
+by the time they're here, so the art is setting mood for something
+already chosen rather than competing for attention with five others.
+Predict deliberately mutes this further: shorter, darker crops, because
+the question itself has to stay the dominant thing on a card whose job
+is a decision, not a browse. Profile carries essentially no channel
+imagery at all — it's about the viewer's own history and reputation,
+not any one show. No channel's artwork ships until that channel's
+visual family has actually been art-directed and approved; until then,
+every channel uses the existing accent-color fallback rather than a
+placeholder that looks more finished than it is.
+
+## Navigation affordances
+
+Navigation affordances must correspond to implemented destinations. The
+grouped Predict banner and its prediction-collection destination are
+one feature and ship together. Until the destination exists, do not
+expose a banner, chevron, button, or other control implying that
+navigation.
