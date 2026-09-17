@@ -12,6 +12,7 @@ export type LockPredictionResult =
   | { ok: true }
   | { ok: false; reason: 'not_authenticated' }
   | { ok: false; reason: 'duplicate_pick' }
+  | { ok: false; reason: 'closed' }
 
 export async function lockPrediction(
   predictionId: string,
@@ -32,9 +33,14 @@ export async function lockPrediction(
 
   if (error) {
     // unique_violation on (prediction_id, user_id) — the user already has
-    // a pick locked in for this prediction. Distinct from every other
-    // insert failure (RLS rejection, bad ids, etc), which stay generic.
+    // a pick locked in for this prediction.
     if (error.code === '23505') return { ok: false, reason: 'duplicate_pick' }
+    // insufficient_privilege — the insert's RLS check failed (see
+    // 0011_enforce_locks_at_on_pick.sql: status is no longer 'open', or
+    // locks_at has passed, or both). Matched on the Postgres error code,
+    // not the message, since RLS violation messages aren't a stable API
+    // to parse. Everything else stays a genuine unexpected failure.
+    if (error.code === '42501') return { ok: false, reason: 'closed' }
     throw error
   }
 

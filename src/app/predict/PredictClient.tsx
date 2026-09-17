@@ -493,6 +493,18 @@ export default function PredictClient({
       delete next[card.id];
       return next;
     });
+
+    // A tab left open past locksAt never re-runs the lazy lock itself
+    // (that only happens on a fresh server render of /predict), so this
+    // catches the common late-pick case before even attempting the write.
+    // 0011_enforce_locks_at_on_pick.sql's RLS check is the real backstop
+    // for whatever this client-side check misses.
+    if (card.locksAt && Date.now() >= new Date(card.locksAt).getTime()) {
+      showToast("Picks for this question have closed.");
+      router.refresh();
+      return;
+    }
+
     const label = card.options.find((o) => o.id === optionId)?.label ?? "";
 
     try {
@@ -508,6 +520,9 @@ export default function PredictClient({
           return;
         case "duplicate_pick":
           showToast("You've already locked in a pick for this category");
+          return;
+        case "closed":
+          showToast("Picks for this question have closed.");
           return;
         default: {
           const exhaustiveCheck: never = result;
