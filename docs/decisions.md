@@ -403,3 +403,66 @@ rather than papered over. Guide's hero and Live's Upcoming Rooms both use
 it now; their previous separate formatting helpers (one hardcoded to
 `America/New_York`, one relying on the browser's default zone with no
 hydration-safety handling) are gone.
+
+## "Rooms" is the mechanic, "Events" is what you're anticipating
+
+**Live's "Upcoming Rooms" section is now "Upcoming Events."** A user
+doesn't anticipate a room — they anticipate an event (an episode airing,
+an awards show happening) and joins a room *inside* that event once it's
+live. "Room" is correct terminology for the live, in-progress
+conversation (see "Room lifecycle equals episode lifecycle," above), but
+wrong for something that hasn't started yet — there's no room to name
+yet for an episode that airs in four days, only an event on the
+calendar. The Live Now section keeps its own heading as-is; this rename
+only applies to the not-yet-started list.
+
+## Streak label: standardized to "Current streak," ambiguity flagged not resolved
+
+**Profile's and Predict's streak stat are the same metric, confirmed by
+reading both call sites.** Both call `computeStreak()`
+(`lib/streak.ts`) on every one of the user's `user_predictions.created_at`
+timestamps, unfiltered by resolution or correctness —
+`profile/page.tsx`'s `allPicks.map(p => p.created_at)` and
+`predict/page.tsx`'s `pickResults.map(p => p.created_at)` are the same
+query shape against the same table for the same user. TopBar's
+avatar-badge streak (`lib/supabase/current-user.ts`'s
+`getCurrentUserBadge()`) computes it the same way too — all three
+call sites are structurally identical, so there was never a
+same-page-different-number risk here. Both stat panels previously said
+"Week streak"; both now say "Current streak."
+
+**Flagged, not resolved: "current streak" is genuinely ambiguous next to
+the Hot Streak trophy.** The streak stat is participation-based (any
+week with at least one locked-in pick counts, right or wrong — see
+"Streak: participation-based, local-day, snapshot timezone," above,
+now weekly per "Trophy rules"). The Hot Streak trophy, sitting on the
+same Profile page, is correctness-based (five *correct* resolved picks
+in a row). A viewer reading "Current streak: 3" right above a trophy
+called "Hot Streak" has a real reason to assume the number means three
+*correct* picks in a row — it doesn't. "Current streak" doesn't
+disambiguate participation from correctness the way the old "Week
+streak" at least gestured at (wrongly implying daily/weekly is the only
+distinction that matters, but at least not implying accuracy). Proposed
+alternatives, not applied — worth a deliberate call rather than a
+default: "Weeks active," "Consecutive weeks," or "Weeks in a row" all
+name the actual unit (weeks, not correctness) and would read as clearly
+distinct from Hot Streak's "five in a row" framing. Revisit before this
+sits much longer, since the ambiguity doesn't go away on its own.
+
+## Channel naming: audited, no inconsistency found in the live app or database
+
+**Every live channel name across the running app and the production
+database is already singular per channel** — `channels.name` holds
+exactly one value each ("Love Island USA," "Primetime Emmy Awards,"
+"Lanterns"), and every place the app renders a channel name reads
+`channel.name`/`c.name` dynamically rather than hardcoding a copy of it.
+The only other place "Emmys" appears anywhere in the repository is the
+channel's `slug` column (`"emmys"`) and a migration filename
+(`0008_seed_emmys_2026.sql`) — neither is ever displayed to a user.
+Searched the full codebase, `docs/`, and the live database directly for
+"Primetime Emmys" (the third variant reported) and found no occurrence
+anywhere. This audit could not reproduce the reported inconsistency in
+the current app — it may predate the Guide redesign (which removed the
+last hardcoded channel-name-adjacent UI, the grid's CH-badge and status
+label) or describe a build this session doesn't have visibility into.
+No `UPDATE` statements were needed as a result.

@@ -69,7 +69,7 @@ export default function LiveClient({
             Live
           </h1>
           <p className="mt-1 text-caption text-slate-500">
-            What&apos;s airing now and up next.
+            Be there when it happens.
           </p>
         </div>
 
@@ -119,7 +119,7 @@ export default function LiveClient({
         {upcomingEpisodes.length > 0 && (
           <section className="space-y-2">
             <p className="px-0.5 text-caption font-bold uppercase tracking-[0.24em] text-slate-500">
-              Upcoming Rooms
+              Upcoming Events
             </p>
             <div className="divide-y divide-white/[0.04] rounded-xl border border-white/[0.05] bg-white/[0.015] px-3">
               {upcomingEpisodes.map((episode, i) => (

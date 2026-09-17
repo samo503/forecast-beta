@@ -258,7 +258,7 @@ export default function ProfileClient({
               {profile.streak}
             </span>
             <span className="text-micro uppercase tracking-[0.1em] text-slate-500">
-              Week streak
+              Current streak
             </span>
           </div>
         </div>

@@ -623,7 +623,7 @@ export default function PredictClient({
                 <span className="text-label leading-none">🔥</span>
               </div>
               <span className="text-micro uppercase tracking-[0.12em] text-slate-500">
-                Week streak
+                Current streak
               </span>
             </div>
 
