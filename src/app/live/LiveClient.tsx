@@ -2,7 +2,6 @@
 
 import BottomNav from "../components/BottomNav";
 import LocalTime from "../components/LocalTime";
-import PosterBackground from "../components/PosterBackground";
 import TopBar, { type TopBarUser } from "../components/TopBar";
 
 export type RoomEpisode = {
@@ -134,12 +133,11 @@ export default function LiveClient({
                       : undefined
                   }
                 >
-                  {/* No real imagery exists for any channel yet — this is the
-                      same honest fallback PosterBackground renders on Guide,
-                      not a stand-in image pretending to be real art. */}
-                  <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-lg">
-                    <PosterBackground src={null} title="" />
-                  </div>
+                  {/* No real imagery exists for any channel yet — an empty
+                      44px thumbnail frame here would just be a visible
+                      placeholder for a missing image, not a fallback. Row
+                      layout carries entirely on the accent edge and text
+                      until a channel's approved artwork exists. */}
                   <div className="flex min-w-0 flex-1 flex-col gap-[2px]">
                     {showsChannelBadge(upcomingEpisodes, i) && (
                       <span className="text-micro text-slate-500">{episode.show}</span>

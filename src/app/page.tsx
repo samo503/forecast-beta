@@ -158,7 +158,7 @@ export default async function Home() {
                 return (
                   <article
                     key={item.id}
-                    className="w-[82vw] max-w-[480px] aspect-[16/10] shrink-0 overflow-hidden rounded-2xl border border-white/10 shadow-sm"
+                    className="w-[82vw] max-w-[480px] aspect-[16/9] shrink-0 overflow-hidden rounded-2xl border border-white/10 shadow-sm"
                     style={{
                       borderLeftWidth: 2,
                       borderLeftColor: item.accentColor ?? undefined,
@@ -228,7 +228,7 @@ export default async function Home() {
               return (
                 <article
                   key={channel.id}
-                  className="min-h-[190px] overflow-hidden rounded-xl border border-white/10 bg-slate-950/10 shadow-sm"
+                  className="min-h-[150px] overflow-hidden rounded-xl border border-white/10 bg-slate-950/10 shadow-sm"
                   style={{
                     borderLeftWidth: 2,
                     borderLeftColor: channel.accent_color ?? undefined,

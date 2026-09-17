@@ -501,3 +501,23 @@ grouped Predict banner and its prediction-collection destination are
 one feature and ship together. Until the destination exists, do not
 expose a banner, chevron, button, or other control implying that
 navigation.
+
+## Fallback states must look intentionally complete
+
+Fallback states must look intentionally complete without imagery. They
+should not expose empty thumbnail frames or blank image placeholders.
+The presence or absence of approved artwork should not make a
+component appear broken or incomplete.
+
+This does not alter the approved imagery strategy above — approved
+channel artwork still becomes the primary visual language across
+Guide, Live, and Predict once a channel's visual family is art-directed
+and approved. This is about the state before that: Live's upcoming rows
+no longer reserve a 44px thumbnail square for an image that doesn't
+exist; Guide's channel cards no longer carry a fixed height inherited
+from a poster-shaped aspect ratio when there's no poster to fill it;
+Guide's hero keeps its pill and text content anchored to their own
+positions rather than stretched to opposite edges of a box sized for
+art that isn't there yet. None of these changes wait for real artwork
+to look finished — they're the pre-artwork state actually looking
+finished, not a smaller version of the post-artwork state.
