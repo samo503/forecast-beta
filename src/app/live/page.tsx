@@ -12,7 +12,7 @@ export default async function Live() {
   // specified, so the same order is fine there too.
   const { data: episodeRows } = await supabase
     .from("episodes")
-    .select("id, title, air_date, status, channel:channels(name, accent_color)")
+    .select("id, title, episode_number, air_date, status, channel:channels(name, accent_color)")
     .in("status", ["live", "upcoming"])
     .order("air_date", { ascending: true });
 
@@ -26,6 +26,7 @@ export default async function Live() {
     return {
       id: e.id,
       title: e.title,
+      episodeNumber: e.episode_number,
       airDate: e.air_date,
       show: channel?.name ?? "",
       accentColor: channel?.accent_color ?? null,

@@ -1,22 +1,25 @@
 'use client'
 
 import BottomNav from "../components/BottomNav";
+import PosterBackground from "../components/PosterBackground";
 import TopBar, { type TopBarUser } from "../components/TopBar";
 
 export type RoomEpisode = {
   id: string;
   title: string;
+  episodeNumber: number | null;
   airDate: string | null;
   show: string;
   accentColor: string | null;
 };
 
-// Same accent color per channel throughout — only its strength changes.
-// Live rooms are the most prominent thing on the page (full strength plus a
-// background wash), the soonest upcoming room is next (medium), and later
-// upcoming rooms fall back to a quiet edge. color-mix keeps this working for
-// whatever format accent_color is stored in, not just #rrggbb hex.
-function accentAtStrength(color: string | null, percent: number): string | undefined {
+// Two tiers only, matching PredictClient.tsx's restraint: upcoming rows get
+// the same flat, full-strength accentColor left border every card there
+// gets, no graduated intensity between them. Live is the one state that
+// still gets extra weight — full strength plus this background wash — since
+// it's the single most prominent thing on the page, not one point on a
+// gradient of urgency.
+function accentWash(color: string | null, percent: number): string | undefined {
   if (!color) return undefined;
   return `color-mix(in srgb, ${color} ${percent}%, transparent)`;
 }
@@ -80,7 +83,7 @@ export default function LiveClient({
             Live
           </h1>
           <p className="mt-1 text-[0.6rem] text-slate-500">
-            Watch together. Chat in real time.
+            What&apos;s airing now and up next.
           </p>
         </div>
 
@@ -97,8 +100,8 @@ export default function LiveClient({
                   className="rounded-xl border border-white/[0.07] bg-white/[0.02] px-3 py-2.5"
                   style={{
                     borderLeftWidth: 2,
-                    borderLeftColor: accentAtStrength(episode.accentColor, 100),
-                    backgroundColor: accentAtStrength(episode.accentColor, 8),
+                    borderLeftColor: episode.accentColor ?? undefined,
+                    backgroundColor: accentWash(episode.accentColor, 8),
                   }}
                 >
                   <div className="mb-1 flex items-center gap-1.5">
@@ -115,6 +118,11 @@ export default function LiveClient({
                   <p className="text-[0.82rem] font-bold leading-snug text-white">
                     {episode.title}
                   </p>
+                  {episode.episodeNumber && (
+                    <span className="text-[0.42rem] text-slate-500">
+                      E{episode.episodeNumber}
+                    </span>
+                  )}
                 </div>
               ))}
             </div>
@@ -131,14 +139,22 @@ export default function LiveClient({
               {upcomingEpisodes.map((episode, i) => (
                 <div
                   key={episode.id}
-                  className={`flex items-start justify-between gap-2.5 border-l-2 pl-2 ${
+                  className={`flex items-center gap-2.5 border-l-2 pl-2 ${
                     i === 0 ? "py-2" : "py-1.5"
                   }`}
-                  style={{
-                    borderLeftColor: accentAtStrength(episode.accentColor, i === 0 ? 55 : 22),
-                  }}
+                  style={
+                    episode.accentColor
+                      ? { borderLeftColor: episode.accentColor, borderLeftWidth: 2 }
+                      : undefined
+                  }
                 >
-                  <div className="flex min-w-0 flex-col gap-[2px]">
+                  {/* No real imagery exists for any channel yet — this is the
+                      same honest fallback PosterBackground renders on Guide,
+                      not a stand-in image pretending to be real art. */}
+                  <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-lg">
+                    <PosterBackground src={null} title="" />
+                  </div>
+                  <div className="flex min-w-0 flex-1 flex-col gap-[2px]">
                     {showsChannelBadge(upcomingEpisodes, i) && (
                       <span className="text-[0.42rem] text-slate-500">{episode.show}</span>
                     )}
@@ -146,8 +162,12 @@ export default function LiveClient({
                       {episode.title}
                     </p>
                     <span className="text-[0.4rem] text-slate-600">
-                      Room opens when the episode starts
-                      {episode.airDate && ` · ${formatLocalAirTime(episode.airDate)}`}
+                      {[
+                        episode.episodeNumber ? `E${episode.episodeNumber}` : null,
+                        episode.airDate ? formatLocalAirTime(episode.airDate) : null,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
                     </span>
                   </div>
                   {episode.airDate && (
