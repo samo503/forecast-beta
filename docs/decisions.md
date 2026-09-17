@@ -294,3 +294,48 @@ episode airs regardless. There is nothing to chase.
 reads "Live chat is open now" with a "Join live chat" affordance —
 chosen over "Live conversation happening now", which implies people are
 present in what may be an empty room.
+
+## Trophy rules (for a future earned-state pass, not built)
+
+The four trophies on `/profile` render permanently locked today — no
+earned-state logic exists (see `LOCKED_TROPHIES` in
+`src/app/profile/ProfileClient.tsx`). These are the rules a future
+earned-state pass should implement, derived from existing tables only —
+recorded now so that work starts from an already-settled definition
+instead of re-deriving one.
+
+**Called It** — the user was correct on a resolved prediction where the
+correct option's share of total voters was 25% or less, with at least 10
+total voters on that prediction (same crowd-percentage/minimum-votes
+shape already used for the crowd-split UI's `MIN_VOTES_FOR_CROWD_SPLIT`
+threshold in `PredictClient.tsx`). Permanent once earned.
+
+**Hot Streak** — five consecutive correct resolved picks at any point in
+the user's full history, not a currently-active run. A later wrong pick
+must not revoke it. Order by `user_predictions.created_at` — there is no
+resolution-time column anywhere in the schema (`user_predictions` has no
+`resolved_at`, and `resolve_prediction()` doesn't stamp one), so
+pick-time order is the only ordering available. Permanent once earned.
+
+**Sharp Eye** — cumulative accuracy reached 70%+ at some point with 10+
+resolved picks, computed historically (walk the user's resolved picks in
+order and check cumulative accuracy at each step), not from today's
+live-recomputed accuracy. This one specifically must not be implemented
+as a live threshold check — accuracy can drop back below 70% as more
+picks resolve wrong, which would make the trophy flicker on and off
+instead of staying earned. Permanent once earned, never re-evaluated
+downward.
+
+**Full Sweep** — the user picked every prediction on a single episode,
+all of them resolved correct, and that episode had at least 3
+predictions. Permanent once earned.
+
+**Earned trophies are never revoked, for any of the four.** Once true,
+always true — none of these are live/current-state checks, even where
+the underlying stat (accuracy, an active streak) fluctuates.
+
+**Streak is participation-based and weekly**, not daily — see
+`lib/streak.ts`. It counts consecutive Monday–Sunday weeks (fixed to
+`America/Los_Angeles`, not each user's own `profiles.timezone`) with at
+least one locked-in pick, matching the weekly cadence most content on
+this app actually airs on.
