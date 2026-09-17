@@ -1,9 +1,9 @@
 export type HeroFeedShow = {
   id: number;
   kind: "show";
-  channel: string;
-  slot: string;
-  status: string;
+  episodeId: string;
+  isLive: boolean;
+  hasOpenPrediction: boolean;
   title: string;
   subtitle: string;
   detail: string;
@@ -11,13 +11,8 @@ export type HeroFeedShow = {
    *  separate from `detail` since the formatted time can't be computed
    *  server-side without risking a wrong-timezone flash (see LocalTime.tsx). */
   airDate: string | null;
-  viewers: string;
-  predicted: string;
-  action: string;
+  accentColor: string | null;
   poster: string;
-  liveChatCount?: number;
-  topPrediction?: string;
-  momentum?: "up" | "flat" | "down";
 };
 
 export type HeroFeedPrediction = {

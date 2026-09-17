@@ -42,6 +42,7 @@ export default async function PredictPage() {
     .filter((p) => p.channel)
     .map((p) => ({
       id: p.id,
+      episodeId: p.episode_id,
       question: p.question,
       status: p.status as "open" | "locked" | "resolved",
       locksAt: p.locks_at,

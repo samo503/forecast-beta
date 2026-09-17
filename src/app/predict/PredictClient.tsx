@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Lock } from "lucide-react";
 import BottomNav from "../components/BottomNav";
 import TopBar, { type TopBarUser } from "../components/TopBar";
@@ -28,6 +28,7 @@ export type PredictionOption = {
 
 export type PredictionData = {
   id: string;
+  episodeId: string;
   question: string;
   status: "open" | "locked" | "resolved";
   locksAt: string | null;
@@ -395,6 +396,7 @@ function PredictionCard({
     // border if unset.
     return (
       <article
+        id={`prediction-${card.id}`}
         className="flex flex-col gap-1 rounded-2xl border border-white/[0.07] bg-white/[0.025] p-3"
         style={card.accentColor ? { borderLeftColor: card.accentColor, borderLeftWidth: 2 } : undefined}
       >
@@ -405,6 +407,7 @@ function PredictionCard({
 
   return (
     <div
+      id={`prediction-${card.id}`}
       className="rounded-xl border border-white/[0.07] bg-white/[0.02] px-3 py-2"
       style={card.accentColor ? { borderLeftColor: card.accentColor, borderLeftWidth: 2 } : undefined}
     >
@@ -439,6 +442,8 @@ export default function PredictClient({
   picksThisWeek: number;
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const targetEpisodeId = searchParams.get("episode");
   const [lockedPicks, setLockedPicks] = useState<Record<string, string>>(myPicks);
   const [pendingSelection, setPendingSelection] = useState<Record<string, string>>({});
   const [toast, setToast] = useState<string | null>(null);
@@ -481,6 +486,47 @@ export default function PredictClient({
     past: "No resolved predictions yet.",
   };
   const sortedPredictions = tabPredictions[activeTab];
+
+  // Deep link from Guide's "Make a prediction" CTA (?episode=<id>). A
+  // matching episode's predictions can land on any of the three tabs, so
+  // this switches to whichever one actually has a match, most-actionable
+  // first — matching why someone was sent here in the first place. If the
+  // episode has no predictions at all (bad id, or none were ever created),
+  // this is silently a no-op: same "let the page just be correct" stance
+  // as everywhere else a stale or missing target is handled.
+  useEffect(() => {
+    if (!targetEpisodeId) return;
+    const matches = predictions.filter((p) => p.episodeId === targetEpisodeId);
+    if (!matches.length) return;
+    const tabForStatus: Record<PredictionData["status"], Tab> = {
+      open: "open",
+      locked: "locked",
+      resolved: "past",
+    };
+    const tabPriority: Tab[] = ["open", "locked", "past"];
+    const matchedTabs = new Set(matches.map((p) => tabForStatus[p.status]));
+    const winningTab = tabPriority.find((tab) => matchedTabs.has(tab));
+    // This is reacting to a URL param, not synchronizing with the tab
+    // state itself — there's no way to know which tab a deep-linked
+    // episode belongs on without first looking at the loaded predictions,
+    // which only exist once this effect runs.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (winningTab) setActiveTab(winningTab);
+  }, [targetEpisodeId, predictions]);
+
+  // Runs after the tab switch above actually re-renders the DOM (this
+  // effect depends on activeTab, so it re-fires once that tab's cards
+  // exist) — scrolls to the first matching card and stops there. If the
+  // prediction has since locked or resolved by the time this runs, this
+  // still scrolls to it and lets the card show its own real state; that's
+  // the page being correct, not an error to special-case.
+  useEffect(() => {
+    if (!targetEpisodeId) return;
+    const match = sortedPredictions.find((p) => p.episodeId === targetEpisodeId);
+    if (!match) return;
+    document.getElementById(`prediction-${match.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, targetEpisodeId, predictions]);
 
   const showToast = (message: string) => {
     setToast(message);

@@ -1,6 +1,6 @@
+import Link from "next/link";
 import {
   tonightsBrief,
-  type ChannelCard,
   type HeroFeedShow,
 } from "../../lib/mock-data";
 import { supabase } from "../../lib/supabase/client";
@@ -11,26 +11,14 @@ import LocalTime from "./components/LocalTime";
 import PosterBackground from "./components/PosterBackground";
 import TopBar from "./components/TopBar";
 
-// Channel art isn't in the schema yet — keyed by slug until channels gain a poster column.
-const channelPosters: Record<string, string> = {
-  "love-island-usa": "",
-  "emmys":
-    "https://images.unsplash.com/photo-1713514116766-d9be318edaf8?fm=jpg&q=80&w=1200&auto=format&fit=crop",
-};
-
-const channelStatusLabel: Record<string, string> = {
-  live: "LIVE",
-  upcoming: "RETURNS",
-  off_air: "OFF-AIR",
-  off_season: "OFF-SEASON",
-  pilot: "COMING SOON",
-};
-
-const episodeStatusLabel: Record<string, string> = {
-  live: "LIVE",
-  upcoming: "UPCOMING",
-  ended: "FINAL",
-};
+// Channel art isn't in the schema yet. The Emmys channel briefly used a
+// stock photo here — https://images.unsplash.com/photo-1713514116766-d9be318edaf8
+// (Unsplash-licensed, confirmed to contain no people or logos: an empty
+// theater curtain and seats) — removed so every channel gets the same
+// honest accent-color fallback instead of one looking more "real" than
+// the others for reasons that have nothing to do with the data. Restore
+// that URL here if the image is ever reinstated.
+const channelPosters: Record<string, string> = {};
 
 // "Tonight's Brief" is entirely mock (lib/mock-data.ts's tonightsBrief) —
 // none of its 5 items correspond to a real channel/prediction (Survivor,
@@ -50,6 +38,7 @@ const briefTheme: Record<string, { color: string }> = {
 
 export default async function Home() {
   const currentUserBadge = await getCurrentUserBadge();
+  const now = new Date();
 
   const { data: channelRows } = await supabase
     .from("channels")
@@ -62,67 +51,88 @@ export default async function Home() {
     .in("status", ["live", "upcoming"])
     .order("air_date", { ascending: true });
 
-  const channelCards: ChannelCard[] = (channelRows ?? []).map((c) => ({
-    id: c.channel_number,
-    channel: `CH ${String(c.channel_number).padStart(2, "0")}`,
-    title: c.name,
-    status: channelStatusLabel[c.status] ?? c.status.toUpperCase(),
-    note: c.description ?? c.genre ?? "",
-    poster: channelPosters[c.slug] ?? "",
-    mode: channelPosters[c.slug] ? "poster" : "typography",
-    visualWeight: channelPosters[c.slug] ? "bright" : "typography",
-  }));
+  // Real, not derived from predictions.status alone: a prediction whose
+  // locks_at has passed but whose status hasn't been synced yet (the same
+  // lazy-transition gap /predict's own lock_expired_prediction() exists
+  // to self-heal) shouldn't read as "open" here either — mirrors the
+  // check migration 0011 added at the database level for the same reason.
+  const { data: openPredictionRows } = await supabase
+    .from("predictions")
+    .select("episode_id")
+    .eq("status", "open")
+    .gt("locks_at", now.toISOString());
+  const openPredictionEpisodeIds = new Set(
+    (openPredictionRows ?? []).map((p) => p.episode_id)
+  );
 
-  // One hero slot per channel, not one per episode — a channel with several
-  // upcoming episodes shouldn't crowd out channels with none. Ascending
-  // air_date order means the first non-ended occurrence per channel is
-  // already its most urgent one: a computed-live episode (past air_date,
-  // still stored as 'upcoming') always sorts before that channel's actual
-  // future episodes, so no separate live/upcoming branch is needed here.
-  const now = new Date();
-  const HERO_LIMIT = 8;
-  const seenChannelIds = new Set<string>();
-  const heroEpisodes: NonNullable<typeof episodeRows> = [];
+  // One slot per channel — its most urgent non-ended episode (soonest
+  // upcoming, or the one currently live) — shared by the hero strip and
+  // the channel grid below rather than computed twice. Ascending air_date
+  // order means the first non-ended occurrence per channel is already its
+  // most urgent one: a computed-live episode (past air_date, still stored
+  // as 'upcoming') always sorts before that channel's actual future
+  // episodes.
+  const channelEpisode = new Map<string, NonNullable<typeof episodeRows>[number]>();
   for (const e of episodeRows ?? []) {
-    if (!e.channel || seenChannelIds.has(e.channel_id)) continue;
-    // Effectively-ended episodes never occupy a hero slot — an episode
-    // whose air_date passed the live window well before this page load
-    // shouldn't read as current just because nobody flipped its stored
-    // status yet. Skipping (not marking the channel "seen") lets that
-    // channel's next real episode, if any, take the slot instead.
+    if (!e.channel || channelEpisode.has(e.channel_id)) continue;
     if (effectiveEpisodeStatus(e.status, e.air_date, now) === "ended") continue;
-    seenChannelIds.add(e.channel_id);
-    heroEpisodes.push(e);
-    if (heroEpisodes.length >= HERO_LIMIT) break;
+    channelEpisode.set(e.channel_id, e);
   }
 
-  const heroFeed: HeroFeedShow[] = heroEpisodes.map((e, idx) => {
-      const status = effectiveEpisodeStatus(e.status, e.air_date, now);
-      return {
-        id: idx,
-        kind: "show",
-        channel: `CH ${String(e.channel.channel_number).padStart(2, "0")}`,
-        slot: "",
-        status: episodeStatusLabel[status] ?? status.toUpperCase(),
-        title: e.title,
-        subtitle: e.channel.name,
-        // Episode-number label only — the air time renders via <LocalTime>
-        // at the call site instead of being pre-joined into this string,
-        // since it can't be safely formatted server-side (see airDate below).
-        detail: e.episode_number ? `E${e.episode_number}` : "",
-        airDate: e.air_date,
-        viewers: "",
-        predicted: "",
-        action: "",
-        poster: channelPosters[e.channel.slug] ?? "",
-      };
-    });
+  // ── Up Next hero ──
+  const HERO_LIMIT = 8;
+  const heroFeed: HeroFeedShow[] = [...channelEpisode.values()]
+    .slice(0, HERO_LIMIT)
+    .map((e, idx) => ({
+      id: idx,
+      kind: "show",
+      episodeId: e.id,
+      isLive: effectiveEpisodeStatus(e.status, e.air_date, now) === "live",
+      hasOpenPrediction: openPredictionEpisodeIds.has(e.id),
+      title: e.title,
+      subtitle: e.channel.name,
+      detail: e.episode_number ? `E${e.episode_number}` : "",
+      airDate: e.air_date,
+      accentColor: e.channel.accent_color ?? null,
+      poster: channelPosters[e.channel.slug] ?? "",
+    }));
 
-  // "Live now" only when something in the strip actually is; otherwise the
-  // honest claim is "Up next," not a hardcoded urgency the cards themselves
-  // don't back up.
-  const heroIsLive = heroFeed.some((item) => item.status === "LIVE");
-  const heroHeading = heroIsLive ? "Live now" : "Up next";
+  // The section heading/subtitle describe the primary (first) hero card
+  // specifically, not "is anything in the strip live" — each card still
+  // carries its own pill/CTA independently for whatever else is in the
+  // strip (e.g. the next channel's upcoming episode peeking in beside it).
+  const primaryHero = heroFeed[0] as HeroFeedShow | undefined;
+  const heroHeading = primaryHero?.isLive ? "Live now" : "Up next";
+  const heroSubtitle = primaryHero?.isLive
+    ? "Picks are locked until results are in."
+    : "Upcoming episodes you can predict.";
+
+  // ── Channels ──
+  // Live first, then soonest upcoming episode, then channels with nothing
+  // upcoming — never channels.status, which is manual and can say
+  // anything regardless of what's actually scheduled (see docs/status.md's
+  // "three independent status columns" finding). Name is the stable
+  // tiebreak within each tier.
+  const channelsOrdered = (channelRows ?? [])
+    .map((c) => {
+      const episode = channelEpisode.get(c.id) ?? null;
+      const isLive = episode
+        ? effectiveEpisodeStatus(episode.status, episode.air_date, now) === "live"
+        : false;
+      return { channel: c, episode, isLive };
+    })
+    .sort((a, b) => {
+      const rank = (x: (typeof channelsOrdered)[number]) =>
+        x.isLive ? 0 : x.episode ? 1 : 2;
+      const rankDiff = rank(a) - rank(b);
+      if (rankDiff !== 0) return rankDiff;
+      if (!a.isLive && !b.isLive && a.episode && b.episode) {
+        const dateDiff =
+          new Date(a.episode.air_date!).getTime() - new Date(b.episode.air_date!).getTime();
+        if (dateDiff !== 0) return dateDiff;
+      }
+      return a.channel.name.localeCompare(b.channel.name);
+    });
 
   return (
     <main className="relative min-h-screen bg-[#020205] pb-28 text-white">
@@ -131,17 +141,15 @@ export default async function Home() {
 
         {heroFeed.length > 0 && (
         <section className="space-y-2">
-          <div className="flex items-center justify-between gap-3">
+          <div className="space-y-0.5">
             <p
               className={`text-[0.7rem] uppercase tracking-[0.32em] ${
-                heroIsLive ? "text-pink-400" : "text-cyan-400"
+                primaryHero?.isLive ? "text-pink-400" : "text-cyan-400"
               }`}
             >
               {heroHeading}
             </p>
-            <button className="text-[0.72rem] font-medium uppercase tracking-[0.18em] text-slate-500 transition hover:text-slate-300">
-              Full Guide
-            </button>
+            <p className="text-[0.6rem] text-slate-500">{heroSubtitle}</p>
           </div>
 
           <div className="-mx-4 overflow-x-auto px-4 pb-2">
@@ -151,27 +159,31 @@ export default async function Home() {
                   <article
                     key={item.id}
                     className="w-[82vw] max-w-[480px] aspect-[16/10] shrink-0 overflow-hidden rounded-[1.25rem] border border-white/10 shadow-sm"
+                    style={{
+                      borderLeftWidth: 2,
+                      borderLeftColor: item.accentColor ?? undefined,
+                    }}
                   >
                     <div className="relative h-full bg-slate-950">
                       {/* title="" — the title is already shown below as the h2 */}
                       <PosterBackground src={item.poster} title="" />
                       <div className="absolute inset-0 bg-gradient-to-t from-slate-950/96 via-slate-950/10 opacity-80" />
                       <div className="relative flex h-full flex-col justify-between p-3">
-                        {/* Top row: LIVE NOW / status pill */}
+                        {/* Top row: live / predictions-open pill, or nothing */}
                         <div className="flex items-center justify-end gap-2">
-                          {item.status === "LIVE" ? (
+                          {item.isLive ? (
                             <span className="inline-flex items-center gap-[5px] rounded-full bg-rose-500/10 px-2 py-[3px] text-[0.5rem] font-semibold uppercase tracking-[0.08em] text-rose-300">
                               <span className="h-[5px] w-[5px] rounded-full bg-rose-400 animate-pulse" />
                               Live Now
                             </span>
-                          ) : (
-                            <span className="rounded-full bg-white/6 px-2 py-0.5 text-[0.52rem] font-semibold uppercase tracking-[0.1em] text-slate-300">
-                              {item.status}
+                          ) : item.hasOpenPrediction ? (
+                            <span className="rounded-full bg-pink-400/10 px-2 py-0.5 text-[0.52rem] font-semibold uppercase tracking-[0.1em] text-pink-300">
+                              Predictions open
                             </span>
-                          )}
+                          ) : null}
                         </div>
 
-                        {/* Bottom: subtitle → title → episode/time → stats panel */}
+                        {/* Bottom: subtitle → title → episode/time → CTA */}
                         <div>
                           <p className="text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-slate-400">
                             {item.subtitle}
@@ -185,42 +197,14 @@ export default async function Home() {
                             {item.airDate && <LocalTime iso={item.airDate} />}
                           </p>
 
-                          {/* Three-stat glass panel — only shown when at least one stat has real data */}
-                          {item.kind === "show" &&
-                            (item.viewers || item.predicted || item.liveChatCount) && (
-                              <div className="mt-2 mx-0.5 flex divide-x divide-white/[0.06] overflow-hidden rounded-xl bg-black/28 backdrop-blur-md">
-                                {item.viewers ? (
-                                  <div className="flex flex-1 flex-col items-center gap-[2px] py-[6px]">
-                                    <span className="text-[0.74rem] font-bold leading-none text-white">
-                                      {item.viewers.split(" ")[0]}
-                                    </span>
-                                    <span className="text-[0.42rem] uppercase tracking-[0.05em] text-slate-400/90">
-                                      watching
-                                    </span>
-                                  </div>
-                                ) : null}
-                                {item.predicted ? (
-                                  <div className="flex flex-1 flex-col items-center gap-[2px] py-[6px]">
-                                    <span className="text-[0.74rem] font-bold leading-none text-white">
-                                      {item.predicted.split(" ")[0]}
-                                    </span>
-                                    <span className="text-[0.42rem] uppercase tracking-[0.05em] text-slate-400/90">
-                                      predicted right
-                                    </span>
-                                  </div>
-                                ) : null}
-                                {item.liveChatCount ? (
-                                  <div className="flex flex-1 flex-col items-center gap-[2px] py-[6px]">
-                                    <span className="text-[0.74rem] font-bold leading-none text-white">
-                                      {(item.liveChatCount / 1000).toFixed(1)}k
-                                    </span>
-                                    <span className="text-[0.42rem] uppercase tracking-[0.05em] text-slate-400/90">
-                                      discussing
-                                    </span>
-                                  </div>
-                                ) : null}
-                              </div>
-                            )}
+                          {!item.isLive && item.hasOpenPrediction && (
+                            <Link
+                              href={`/predict?episode=${item.episodeId}`}
+                              className="mt-2 inline-flex w-fit items-center rounded-full bg-pink-400/15 px-3 py-1.5 text-[0.62rem] font-semibold text-pink-300 transition hover:bg-pink-400/25"
+                            >
+                              Make a prediction
+                            </Link>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -233,72 +217,65 @@ export default async function Home() {
         )}
 
         <section className="space-y-2">
+          <p className="px-0.5 text-[0.54rem] font-bold uppercase tracking-[0.22em] text-slate-500">
+            Channels
+          </p>
           <div className="grid grid-cols-2 gap-3">
-            {/** Curate and balance the grid to alternate visual weight and avoid orphan/empty cards */}
-            {(() => {
-              const curated = (() => {
-                // simple bucket interleave: bright/face/logo vs dark/typography
-                const bright: typeof channelCards = [];
-                const dark: typeof channelCards = [];
-                channelCards.forEach((c) => {
-                  if (c.visualWeight === "dark" || c.visualWeight === "typography") dark.push(c);
-                  else bright.push(c);
-                });
-                const out: typeof channelCards = [];
-                while (bright.length || dark.length) {
-                  if (bright.length) out.push(bright.shift()!);
-                  if (dark.length) out.push(dark.shift()!);
-                }
-                return out;
-              })();
+            {channelsOrdered.map(({ channel, episode, isLive }) => {
+              const poster = channelPosters[channel.slug] ?? "";
+              const renderTypography = !poster;
 
-              return curated.map((channel) => {
-                const renderPoster = channel.mode === "poster" && channel.poster;
-                const renderLogo = (channel.mode === "logo" && (channel.logoFallback || channel.poster)) || undefined;
-                const renderTypography = channel.mode === "typography" || (!channel.poster && !channel.logoFallback);
+              return (
+                <article
+                  key={channel.id}
+                  className="aspect-[9/10] overflow-hidden rounded-[1.1rem] border border-white/10 bg-slate-950/10 shadow-sm"
+                  style={{
+                    borderLeftWidth: 2,
+                    borderLeftColor: channel.accent_color ?? undefined,
+                  }}
+                >
+                  <div className="relative h-full">
+                    {renderTypography ? (
+                      <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-slate-900 to-slate-800 px-4" />
+                    ) : (
+                      <PosterBackground src={poster} title="" />
+                    )}
 
-                return (
-                  <article
-                    key={channel.id}
-                    className="aspect-[9/10] overflow-hidden rounded-[1.1rem] border border-white/10 bg-slate-950/10 shadow-sm transition duration-200 hover:-translate-y-0.5"
-                  >
-                    <div className="relative h-full">
-                      {/* title="" on all three — channel.title is already shown below in the info panel */}
-                      {renderPoster ? (
-                        <PosterBackground src={channel.poster} title="" />
-                      ) : renderLogo ? (
-                        <PosterBackground src={renderLogo} title="" variant="logo" />
-                      ) : renderTypography ? (
-                        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-slate-900 to-slate-800 px-4" />
-                      ) : null}
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-transparent to-transparent" />
 
-                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-transparent to-transparent" />
-
-                      <div className="relative flex h-full flex-col justify-between p-3">
-                        <div className="flex items-center justify-end gap-2 text-[0.62rem] uppercase tracking-[0.16em] text-slate-200">
-                          {channel.status === "LIVE" ? (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-rose-500/10 px-1.5 py-px text-[0.54rem] font-medium uppercase tracking-[0.06em] text-rose-400">
-                              <span className="h-1 w-1 rounded-full bg-rose-400 animate-pulse" />
-                              LIVE
-                            </span>
-                          ) : (
-                            <span className="rounded-full bg-white/5 px-1.5 py-px text-[0.54rem] font-medium uppercase tracking-[0.06em] text-slate-400">
-                              {channel.status}
-                            </span>
-                          )}
-                        </div>
-                        <div className="space-y-1">
-                          <p className="text-[0.9rem] font-bold tracking-tight text-white">
-                            {channel.title}
+                    <div className="relative flex h-full flex-col justify-end p-3">
+                      <div className="space-y-1">
+                        <p className="text-[0.9rem] font-bold tracking-tight text-white">
+                          {channel.name}
+                        </p>
+                        {channel.description && (
+                          <p className="line-clamp-2 text-[0.62rem] text-slate-500">
+                            {channel.description}
                           </p>
-                          <p className="line-clamp-2 text-[0.62rem] text-slate-500">{channel.note}</p>
-                        </div>
+                        )}
+                        <p
+                          className={`text-[0.56rem] ${
+                            isLive || episode ? "text-slate-400" : "text-slate-600"
+                          }`}
+                        >
+                          {isLive ? (
+                            "Live now"
+                          ) : episode ? (
+                            <>
+                              Next:{" "}
+                              {episode.episode_number ? `E${episode.episode_number} · ` : ""}
+                              <LocalTime iso={episode.air_date!} />
+                            </>
+                          ) : (
+                            "No upcoming episodes"
+                          )}
+                        </p>
                       </div>
                     </div>
-                  </article>
-                );
-              });
-            })()}
+                  </div>
+                </article>
+              );
+            })}
           </div>
         </section>
 
