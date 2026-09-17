@@ -161,7 +161,7 @@ export default function ProfileClient({
   };
 
   return (
-    <main className="relative min-h-screen bg-[#020205] pb-32 text-white">
+    <main className="relative min-h-screen bg-[#020205] pb-28 text-white">
       <div className="mx-auto flex max-w-[640px] flex-col gap-6 px-4 pt-5">
 
         {/* No top-left avatar on Profile — the hero below is the one real
@@ -268,7 +268,7 @@ export default function ProfileClient({
             spaces, which is the point. A vertical checklist would read as
             a to-do list instead of a shelf. */}
         <section className="space-y-2">
-          <p className="px-0.5 text-caption font-bold uppercase tracking-[0.28em] text-slate-500">
+          <p className="px-0.5 text-caption font-bold uppercase tracking-[0.24em] text-slate-500">
             Trophies
           </p>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -277,7 +277,7 @@ export default function ProfileClient({
               return (
                 <div
                   key={trophy.name}
-                  className="relative flex flex-col items-center gap-1.5 rounded-xl border border-white/[0.07] bg-white/[0.02] px-3 py-3 text-center"
+                  className="relative flex flex-col items-center gap-1.5 rounded-xl border border-white/[0.07] bg-white/[0.02] px-3 py-2 text-center"
                 >
                   <Lock
                     className="absolute right-2 top-2 h-2.5 w-2.5 text-slate-600"
@@ -391,7 +391,7 @@ export default function ProfileClient({
             reveal. Add one, pointing at a new /profile/picks route, once
             resolved history actually grows past 5. */}
         <section className="space-y-1.5">
-          <p className="px-0.5 text-caption font-bold uppercase tracking-[0.22em] text-slate-500">
+          <p className="px-0.5 text-caption font-bold uppercase tracking-[0.24em] text-slate-500">
             My Picks
           </p>
           <div className="divide-y divide-white/[0.04] rounded-xl border border-white/[0.05] bg-white/[0.015] px-3">

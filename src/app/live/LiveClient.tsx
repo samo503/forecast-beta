@@ -76,14 +76,14 @@ export default function LiveClient({
         {/* ── Live Now ── */}
         {liveEpisodes.length > 0 && (
           <section className="space-y-2">
-            <p className="px-0.5 text-caption font-bold uppercase tracking-[0.22em] text-slate-500">
+            <p className="px-0.5 text-caption font-bold uppercase tracking-[0.24em] text-slate-500">
               Live Now
             </p>
             <div className="space-y-2">
               {liveEpisodes.map((episode, i) => (
                 <div
                   key={episode.id}
-                  className="rounded-xl border border-white/[0.07] bg-white/[0.02] px-3 py-2.5"
+                  className="rounded-xl border border-white/[0.07] bg-white/[0.02] px-3 py-2"
                   style={{
                     borderLeftWidth: 2,
                     borderLeftColor: episode.accentColor ?? undefined,
@@ -118,7 +118,7 @@ export default function LiveClient({
         {/* ── Upcoming Rooms ── */}
         {upcomingEpisodes.length > 0 && (
           <section className="space-y-2">
-            <p className="px-0.5 text-caption font-bold uppercase tracking-[0.22em] text-slate-500">
+            <p className="px-0.5 text-caption font-bold uppercase tracking-[0.24em] text-slate-500">
               Upcoming Rooms
             </p>
             <div className="divide-y divide-white/[0.04] rounded-xl border border-white/[0.05] bg-white/[0.015] px-3">

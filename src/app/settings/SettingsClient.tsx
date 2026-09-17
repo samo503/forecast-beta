@@ -11,7 +11,7 @@ export default function SettingsClient({
   currentUser: TopBarUser | null;
 }) {
   return (
-    <main className="relative min-h-screen bg-[#020205] pb-32 text-white">
+    <main className="relative min-h-screen bg-[#020205] pb-28 text-white">
       <div className="mx-auto flex max-w-[640px] flex-col gap-6 px-4 pt-5">
 
         <TopBar currentUser={currentUser} />
@@ -27,7 +27,7 @@ export default function SettingsClient({
         {/* Sign out lives on /profile's footer now. This route stays for
             real account settings once there are any to add. */}
         <section className="space-y-2">
-          <p className="px-0.5 text-caption font-bold uppercase tracking-[0.28em] text-slate-500">
+          <p className="px-0.5 text-caption font-bold uppercase tracking-[0.24em] text-slate-500">
             Settings
           </p>
           <p className="px-0.5 text-caption text-slate-600">Nothing to configure yet.</p>

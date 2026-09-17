@@ -609,11 +609,11 @@ export default function PredictClient({
 
         {/* ── Section 1: Your Forecast ── */}
         <section className="space-y-2">
-          <p className="px-0.5 text-caption font-bold uppercase tracking-[0.28em] text-slate-500">
+          <p className="px-0.5 text-caption font-bold uppercase tracking-[0.24em] text-slate-500">
             Your Forecast
           </p>
 
-          <div className="flex items-center justify-between rounded-xl border border-white/[0.07] bg-white/[0.025] px-5 py-2">
+          <div className="flex items-center justify-between rounded-xl border border-white/[0.07] bg-white/[0.025] px-5 py-3">
             {/* Streak */}
             <div className="flex flex-col items-center">
               <div className="flex items-baseline gap-1">
@@ -655,13 +655,13 @@ export default function PredictClient({
 
         {/* ── Section 2: Predictions ── */}
         <section className="space-y-2">
-          <p className="px-0.5 text-caption font-bold uppercase tracking-[0.28em] text-slate-500">
+          <p className="px-0.5 text-caption font-bold uppercase tracking-[0.24em] text-slate-500">
             Predictions
           </p>
 
           <div className="space-y-1">
             {sortedPredictions.length === 0 ? (
-              <div className="rounded-xl border border-white/[0.05] bg-white/[0.015] px-3 py-3">
+              <div className="rounded-xl border border-white/[0.05] bg-white/[0.015] px-3 py-2">
                 <p className="text-caption text-slate-600">{tabEmptyMessage[activeTab]}</p>
               </div>
             ) : (

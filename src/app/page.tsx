@@ -136,7 +136,7 @@ export default async function Home() {
 
   return (
     <main className="relative min-h-screen bg-[#020205] pb-28 text-white">
-      <div className="mx-auto flex max-w-[640px] flex-col gap-3 px-4 pt-5">
+      <div className="mx-auto flex max-w-[640px] flex-col gap-6 px-4 pt-5">
         <TopBar currentUser={currentUserBadge} />
 
         {heroFeed.length > 0 && (
@@ -158,7 +158,7 @@ export default async function Home() {
                 return (
                   <article
                     key={item.id}
-                    className="w-[82vw] max-w-[480px] aspect-[16/10] shrink-0 overflow-hidden rounded-[1.25rem] border border-white/10 shadow-sm"
+                    className="w-[82vw] max-w-[480px] aspect-[16/10] shrink-0 overflow-hidden rounded-2xl border border-white/10 shadow-sm"
                     style={{
                       borderLeftWidth: 2,
                       borderLeftColor: item.accentColor ?? undefined,
@@ -217,7 +217,7 @@ export default async function Home() {
         )}
 
         <section className="space-y-2">
-          <p className="px-0.5 text-caption font-bold uppercase tracking-[0.22em] text-slate-500">
+          <p className="px-0.5 text-caption font-bold uppercase tracking-[0.24em] text-slate-500">
             Channels
           </p>
           <div className="grid grid-cols-2 gap-3">
@@ -228,7 +228,7 @@ export default async function Home() {
               return (
                 <article
                   key={channel.id}
-                  className="aspect-[9/10] overflow-hidden rounded-[1.1rem] border border-white/10 bg-slate-950/10 shadow-sm"
+                  className="aspect-[9/10] overflow-hidden rounded-xl border border-white/10 bg-slate-950/10 shadow-sm"
                   style={{
                     borderLeftWidth: 2,
                     borderLeftColor: channel.accent_color ?? undefined,
