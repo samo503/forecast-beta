@@ -1,0 +1,50 @@
+// A stored 'upcoming' episode never flips to 'live' or 'ended' on its own —
+// nothing writes to episodes.status except a manual admin action (same
+// pattern as predictions, minus even the lazy lock_expired_prediction()
+// self-heal). Guide and Live both need to *display* the truth as air time
+// passes without waiting on that manual update, the same way Guide's old
+// displayEpisodeStatus already did for the upcoming->live transition — this
+// just makes that a shared, pure function and adds the live->ended half
+// that never existed anywhere before (Guide used to show a passed episode
+// as "Live" forever).
+//
+// LIVE_WINDOW_MINUTES is an MVP approximation, not a real runtime: episodes
+// has no duration/ends_at column (verified against every committed
+// migration), only a single air_date timestamp. Content that actually runs
+// longer than this window (awards shows, live finales) will get marked
+// "ended" here even while still genuinely airing — those need the manual
+// 'live' override kept in place by hand for their actual duration. A stored
+// 'live' status is exempt from this window entirely (see the rule below),
+// which is what makes that manual override possible.
+export const LIVE_WINDOW_MINUTES = 90;
+
+export type EffectiveEpisodeStatus = "upcoming" | "live" | "ended";
+
+// Pure: no I/O, no Date.now() read internally, never writes to the
+// database. `now` is a parameter specifically so this is testable without
+// mocking the clock.
+export function effectiveEpisodeStatus(
+  storedStatus: string,
+  airDate: string | null,
+  now: Date
+): EffectiveEpisodeStatus {
+  if (storedStatus === "ended") return "ended";
+
+  // Manual override, unchanged: once someone sets it live, it stays live
+  // until they change it themselves. No auto-expiry — see the
+  // LIVE_WINDOW_MINUTES comment above for why that's true only here.
+  if (storedStatus === "live") return "live";
+
+  // storedStatus === "upcoming" from here down.
+  if (!airDate) return "upcoming";
+
+  const airTime = new Date(airDate).getTime();
+  const nowTime = now.getTime();
+
+  if (nowTime < airTime) return "upcoming";
+
+  const windowMs = LIVE_WINDOW_MINUTES * 60 * 1000;
+  if (nowTime <= airTime + windowMs) return "live";
+
+  return "ended";
+}

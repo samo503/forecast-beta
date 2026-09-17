@@ -1,5 +1,6 @@
 import { supabase } from "../../../lib/supabase/client";
 import { getCurrentUserBadge } from "../../../lib/supabase/current-user";
+import { effectiveEpisodeStatus } from "../../lib/episodeStatus";
 import LiveClient, { type RoomEpisode } from "./LiveClient";
 
 export default async function Live() {
@@ -10,6 +11,12 @@ export default async function Live() {
   // episodes have nothing to show here. Ascending air_date gives Upcoming
   // its required soonest-first order for free; Live Now's order isn't
   // specified, so the same order is fine there too.
+  //
+  // The query filters on the *stored* status, which only ever excludes
+  // already-'ended' rows. A stored 'upcoming' episode whose air_date has
+  // already passed the live window still comes back here and needs
+  // effectiveEpisodeStatus() below to be read as 'ended' — otherwise it
+  // would sit under "Opens in soon" forever once its air time passes.
   const { data: episodeRows } = await supabase
     .from("episodes")
     .select("id, title, episode_number, air_date, status, channel:channels(name, accent_color)")
@@ -33,11 +40,15 @@ export default async function Live() {
     };
   };
 
+  // Effectively-ended episodes (stored 'upcoming', air time already past
+  // the live window) satisfy neither filter below and are silently
+  // dropped, same as an actually-'ended' row already is by the query.
+  const now = new Date();
   const liveEpisodes: RoomEpisode[] = episodeRowsNonNull
-    .filter((e) => e.status === "live")
+    .filter((e) => effectiveEpisodeStatus(e.status, e.air_date, now) === "live")
     .map(toRoomEpisode);
   const upcomingEpisodes: RoomEpisode[] = episodeRowsNonNull
-    .filter((e) => e.status === "upcoming")
+    .filter((e) => effectiveEpisodeStatus(e.status, e.air_date, now) === "upcoming")
     .map(toRoomEpisode);
 
   return (

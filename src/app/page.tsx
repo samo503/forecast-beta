@@ -5,6 +5,7 @@ import {
 } from "../../lib/mock-data";
 import { supabase } from "../../lib/supabase/client";
 import { getCurrentUserBadge } from "../../lib/supabase/current-user";
+import { effectiveEpisodeStatus } from "../lib/episodeStatus";
 import BottomNav from "./components/BottomNav";
 import PosterBackground from "./components/PosterBackground";
 import TopBar from "./components/TopBar";
@@ -29,18 +30,6 @@ const episodeStatusLabel: Record<string, string> = {
   upcoming: "UPCOMING",
   ended: "FINAL",
 };
-
-// Mirrors lock_expired_prediction()'s lazy self-healing for predictions,
-// but purely at display time — no DB write. An episode stays 'upcoming'
-// in storage until someone manually marks it otherwise (same as Love
-// Island's status fix), so a page load has to compute whether it should
-// *read* as live now that its air_date has passed.
-function displayEpisodeStatus(status: string, airDate: string | null): string {
-  if (status === "upcoming" && airDate && new Date(airDate).getTime() <= Date.now()) {
-    return "live";
-  }
-  return status;
-}
 
 // "Tonight's Brief" is entirely mock (lib/mock-data.ts's tonightsBrief) —
 // none of its 5 items correspond to a real channel/prediction (Survivor,
@@ -85,15 +74,22 @@ export default async function Home() {
 
   // One hero slot per channel, not one per episode — a channel with several
   // upcoming episodes shouldn't crowd out channels with none. Ascending
-  // air_date order means the first occurrence per channel is already its
-  // most urgent one: a computed-live episode (past air_date, still stored
-  // as 'upcoming') always sorts before that channel's actual future
-  // episodes, so no separate live/upcoming branch is needed here.
+  // air_date order means the first non-ended occurrence per channel is
+  // already its most urgent one: a computed-live episode (past air_date,
+  // still stored as 'upcoming') always sorts before that channel's actual
+  // future episodes, so no separate live/upcoming branch is needed here.
+  const now = new Date();
   const HERO_LIMIT = 8;
   const seenChannelIds = new Set<string>();
   const heroEpisodes: NonNullable<typeof episodeRows> = [];
   for (const e of episodeRows ?? []) {
     if (!e.channel || seenChannelIds.has(e.channel_id)) continue;
+    // Effectively-ended episodes never occupy a hero slot — an episode
+    // whose air_date passed the live window well before this page load
+    // shouldn't read as current just because nobody flipped its stored
+    // status yet. Skipping (not marking the channel "seen") lets that
+    // channel's next real episode, if any, take the slot instead.
+    if (effectiveEpisodeStatus(e.status, e.air_date, now) === "ended") continue;
     seenChannelIds.add(e.channel_id);
     heroEpisodes.push(e);
     if (heroEpisodes.length >= HERO_LIMIT) break;
@@ -101,7 +97,7 @@ export default async function Home() {
 
   const heroFeed: HeroFeedShow[] = heroEpisodes.map((e, idx) => {
       const air = e.air_date ? new Date(e.air_date) : null;
-      const status = displayEpisodeStatus(e.status, e.air_date);
+      const status = effectiveEpisodeStatus(e.status, e.air_date, now);
       return {
         id: idx,
         kind: "show",

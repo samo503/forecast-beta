@@ -40,6 +40,24 @@ letting it drift.
 - Poster images gracefully fall back to a gradient/title card when the
   source blocks hotlinking (most of them do) — no broken images anywhere,
   and nothing downloaded or self-hosted.
+- **Episode status (Guide's hero, Live's Live Now/Upcoming Rooms) is now
+  derived from air time, not read raw from `episodes.status`.**
+  `src/lib/episodeStatus.ts`'s `effectiveEpisodeStatus()` treats a stored
+  `upcoming` episode as `live` for a fixed 90-minute window starting at
+  `air_date`, then `ended` after that window passes — purely at display
+  time, never written back to the database. This closes the gap where
+  Guide used to show a passed episode as "Live" forever and Live used to
+  show "Opens in soon" indefinitely past air time. **Long-running events
+  (awards shows, live finales) exceed the 90-minute window and need
+  `episodes.status` set to `live` by hand for their actual duration** —
+  and because a stored `live` status is a manual override with no
+  auto-expiry, **never set an episode to `live` manually for
+  normal episode-length content**; let it derive from air time instead,
+  or it will never come back down to `ended` on its own.
+  `predictions.status` and `channels.status` are unaffected by this and
+  remain entirely manual, unsynced with each other and with episode
+  status — see the "three independent status columns" finding from the
+  original Guide audit.
 - A dedicated test login exists (`scripts/test-login.ts` +
   `TEST_USER_EMAIL`/`TEST_USER_PASSWORD` in `.env.local`) so a future
   session can get an authenticated browser session without relaying a
