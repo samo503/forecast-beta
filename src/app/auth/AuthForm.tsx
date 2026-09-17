@@ -3,13 +3,13 @@
 import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '../../../lib/supabase/browser'
+import { safeNext } from '../../../lib/safeNext'
 import ForecastWordmark from '../components/ForecastWordmark'
 
 export default function AuthForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const rawNext = searchParams.get('next') ?? '/'
-  const next = rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : '/'
+  const next = safeNext(searchParams.get('next'))
   const callbackError = searchParams.get('error')
 
   const [email, setEmail] = useState('')

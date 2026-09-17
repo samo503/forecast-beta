@@ -2,11 +2,15 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { safeNext } from '../../../../lib/safeNext'
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
-  const next = searchParams.get('next') ?? '/'
+  // This redirect is built as `${origin}${next}` below — plain string
+  // concatenation, not URL resolution — so an unvalidated next could
+  // escape the origin entirely (see lib/safeNext.ts for exactly how).
+  const next = safeNext(searchParams.get('next'))
 
   if (!code) {
     return NextResponse.redirect(`${origin}/auth?error=missing_code`)

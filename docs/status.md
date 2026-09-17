@@ -58,6 +58,13 @@ letting it drift.
   remain entirely manual, unsynced with each other and with episode
   status — see the "three independent status columns" finding from the
   original Guide audit.
+- **`supabase/migrations/0011_enforce_locks_at_on_pick.sql` has been
+  applied to production (2026-09-16)**, confirmed via SQL editor — no
+  longer just a file sitting in the repo. The `user_predictions` insert
+  policy now requires `locks_at > now()` in addition to `status = 'open'`,
+  closing the gap where a client that loaded `/predict` before `locks_at`
+  and never reloaded could still write a pick after the deadline as long
+  as no other page load had triggered the lazy lock in the meantime.
 - A dedicated test login exists (`scripts/test-login.ts` +
   `TEST_USER_EMAIL`/`TEST_USER_PASSWORD` in `.env.local`) so a future
   session can get an authenticated browser session without relaying a
