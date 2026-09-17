@@ -8,10 +8,6 @@ function isPast(iso: string): boolean {
   return new Date(iso).getTime() < Date.now();
 }
 
-function isWithinPastWeek(iso: string): boolean {
-  return Date.now() - new Date(iso).getTime() <= 7 * 24 * 60 * 60 * 1000;
-}
-
 export default async function PredictPage() {
   const { data: predictionRows } = await supabase
     .from("predictions")
@@ -90,7 +86,10 @@ export default async function PredictPage() {
   // least one *resolved* pick, same fallback as profile's stats row.
   let accuracy: number | null = null;
   let streak = 0;
-  let picksThisWeek = 0;
+  // Total picks ever made, same metric as /profile's "Predictions" stat
+  // (stats.predictions = allPicks.length) — the two stat rows now match
+  // in both metrics and order.
+  let predictionsCount = 0;
 
   if (user) {
     const { data: profileRow } = await authedSupabase
@@ -110,10 +109,7 @@ export default async function PredictPage() {
       ? Math.round((correct.length / resolved.length) * 100)
       : null;
     streak = computeStreak((pickResults ?? []).map((p) => p.created_at));
-    // Same metric as /profile's "This week": every pick locked in the last
-    // 7 days, regardless of status or outcome. Accuracy already covers
-    // whether picks are landing, so this slot doesn't need to.
-    picksThisWeek = (pickResults ?? []).filter((p) => isWithinPastWeek(p.created_at)).length;
+    predictionsCount = (pickResults ?? []).length;
 
     currentUserBadge = {
       name: profileRow?.display_name ?? profileRow?.username ?? "You",
@@ -151,7 +147,7 @@ export default async function PredictPage() {
       currentUser={currentUserBadge}
       accuracy={accuracy}
       streak={streak}
-      picksThisWeek={picksThisWeek}
+      predictionsCount={predictionsCount}
     />
   );
 }

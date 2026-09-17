@@ -177,7 +177,7 @@ export default async function Home() {
                               Live Now
                             </span>
                           ) : item.hasOpenPrediction ? (
-                            <span className="rounded-full bg-cyan-400/10 px-2 py-0.5 text-caption font-semibold uppercase tracking-[0.1em] text-cyan-300">
+                            <span className="rounded-full bg-white/[0.08] px-2 py-0.5 text-caption font-semibold uppercase tracking-[0.1em] text-slate-300">
                               Predictions open
                             </span>
                           ) : null}
@@ -228,7 +228,7 @@ export default async function Home() {
               return (
                 <article
                   key={channel.id}
-                  className="aspect-[9/10] overflow-hidden rounded-xl border border-white/10 bg-slate-950/10 shadow-sm"
+                  className="min-h-[190px] overflow-hidden rounded-xl border border-white/10 bg-slate-950/10 shadow-sm"
                   style={{
                     borderLeftWidth: 2,
                     borderLeftColor: channel.accent_color ?? undefined,

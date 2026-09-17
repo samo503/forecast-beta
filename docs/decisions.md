@@ -416,7 +416,7 @@ yet for an episode that airs in four days, only an event on the
 calendar. The Live Now section keeps its own heading as-is; this rename
 only applies to the not-yet-started list.
 
-## Streak label: standardized to "Current streak," ambiguity flagged not resolved
+## Streak label: resolved to "Weeks active"
 
 **Profile's and Predict's streak stat are the same metric, confirmed by
 reading both call sites.** Both call `computeStreak()`
@@ -428,26 +428,26 @@ query shape against the same table for the same user. TopBar's
 avatar-badge streak (`lib/supabase/current-user.ts`'s
 `getCurrentUserBadge()`) computes it the same way too — all three
 call sites are structurally identical, so there was never a
-same-page-different-number risk here. Both stat panels previously said
-"Week streak"; both now say "Current streak."
+same-page-different-number risk here.
 
-**Flagged, not resolved: "current streak" is genuinely ambiguous next to
-the Hot Streak trophy.** The streak stat is participation-based (any
-week with at least one locked-in pick counts, right or wrong — see
-"Streak: participation-based, local-day, snapshot timezone," above,
-now weekly per "Trophy rules"). The Hot Streak trophy, sitting on the
-same Profile page, is correctness-based (five *correct* resolved picks
-in a row). A viewer reading "Current streak: 3" right above a trophy
-called "Hot Streak" has a real reason to assume the number means three
-*correct* picks in a row — it doesn't. "Current streak" doesn't
-disambiguate participation from correctness the way the old "Week
-streak" at least gestured at (wrongly implying daily/weekly is the only
-distinction that matters, but at least not implying accuracy). Proposed
-alternatives, not applied — worth a deliberate call rather than a
-default: "Weeks active," "Consecutive weeks," or "Weeks in a row" all
-name the actual unit (weeks, not correctness) and would read as clearly
-distinct from Hot Streak's "five in a row" framing. Revisit before this
-sits much longer, since the ambiguity doesn't go away on its own.
+**Previously labeled "Current streak," which turned out to still be
+ambiguous next to the Hot Streak trophy.** The streak stat is
+participation-based (any week with at least one locked-in pick counts,
+right or wrong — see "Streak: participation-based, local-day, snapshot
+timezone," above, now weekly per "Trophy rules"). The Hot Streak
+trophy, sitting on the same Profile page, is correctness-based (five
+*correct* resolved picks in a row). A viewer reading "Current streak: 3"
+right above a trophy called "Hot Streak" had a real reason to assume
+the number meant three *correct* picks in a row — it doesn't. "Current
+streak" didn't disambiguate participation from correctness.
+
+**Resolved: both stat panels now say "Weeks active."** Names the actual
+unit (weeks, not correctness) and reads as clearly distinct from Hot
+Streak's "five in a row" framing — the ambiguity this section used to
+flag no longer applies to the shipped label. If a future trophy or stat
+introduces a different weekly or streak-shaped metric, re-check this
+naming against it rather than assuming "weeks active" stays
+unambiguous forever.
 
 ## Channel naming: audited, no inconsistency found in the live app or database
 

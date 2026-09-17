@@ -258,7 +258,7 @@ export default function ProfileClient({
               {profile.streak}
             </span>
             <span className="text-micro uppercase tracking-[0.1em] text-slate-500">
-              Current streak
+              Weeks active
             </span>
           </div>
         </div>
@@ -438,8 +438,7 @@ export default function ProfileClient({
                         <span className="text-slate-400">{item.pick}</span>
                       </span>
                     </div>
-                    <div className="flex shrink-0 flex-col items-end gap-[2px] pt-[3px]">
-                      <span className="text-micro font-semibold text-amber-400/75">…</span>
+                    <div className="flex shrink-0 flex-col items-end pt-[3px]">
                       <span className="text-micro text-slate-600">
                         {pendingStatusLabel(item.locksAt)}
                       </span>

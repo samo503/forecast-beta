@@ -69,18 +69,26 @@ function closesInLabel(locksAt: string | null): string {
   return `${Math.round(hours / 24)}d`;
 }
 
+// Rose (plus the pulsing dot) is reserved for genuine urgency — a
+// countdown that's true for days at a time drains the color of meaning
+// long before it matters. Matches the window a viewer would actually
+// call "closing soon."
+const URGENT_WITHIN_MS = 6 * 60 * 60 * 1000;
+
 // No badge without a deadline to report. Resolved always reads as
-// "Resolved", regardless of when it locked. Otherwise: a future locksAt is
-// the existing "Closes 6d" countdown (urgent, rose); a past locksAt (or, in
-// principle, a status other than "resolved" whose locksAt has already
-// passed) reads as the neutral "Closed" instead of repeating "Closes soon"
-// forever.
+// "Resolved", regardless of when it locked. Otherwise: a future locksAt
+// within the urgent window is the "Closes in 6h" countdown (rose,
+// pulsing); further out, the same countdown renders neutral, matching
+// Live's "Opens in" pill — still informative, not falsely alarming. A
+// past locksAt (or, in principle, a status other than "resolved" whose
+// locksAt has already passed) reads as the neutral "Closed" instead of
+// repeating "Closes soon" forever.
 function closeBadgeFor(card: PredictionData): { text: string; urgent: boolean } | null {
   if (card.status === "resolved") return { text: "Resolved", urgent: false };
   if (!card.locksAt) return null;
   const diffMs = new Date(card.locksAt).getTime() - Date.now();
   if (diffMs <= 0) return { text: "Closed", urgent: false };
-  return { text: `Closes in ${closesInLabel(card.locksAt)}`, urgent: true };
+  return { text: `Closes in ${closesInLabel(card.locksAt)}`, urgent: diffMs <= URGENT_WITHIN_MS };
 }
 
 // Vote pills, shared by every card regardless of size. A pill is only
@@ -423,7 +431,7 @@ export default function PredictClient({
   currentUser,
   accuracy,
   streak,
-  picksThisWeek,
+  predictionsCount,
 }: {
   predictions: PredictionData[];
   myPicks: Record<string, string>;
@@ -437,9 +445,9 @@ export default function PredictClient({
   accuracy: number | null;
   /** Real, live-computed week streak (participation-based). */
   streak: number;
-  /** Count of all picks locked in the past 7 days, regardless of status or
-   *  outcome. Same metric as /profile's "This week" stat. */
-  picksThisWeek: number;
+  /** Total picks ever made by this user, same metric as /profile's
+   *  "Predictions" stat (stats.predictions = allPicks.length). */
+  predictionsCount: number;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -614,21 +622,6 @@ export default function PredictClient({
           </p>
 
           <div className="flex items-center justify-between rounded-xl border border-white/[0.07] bg-white/[0.025] px-5 py-3">
-            {/* Streak */}
-            <div className="flex flex-col items-center">
-              <div className="flex items-baseline gap-1">
-                <span className="text-title font-black leading-none text-amber-300">
-                  {streak}
-                </span>
-                <span className="text-label leading-none">🔥</span>
-              </div>
-              <span className="text-micro uppercase tracking-[0.12em] text-slate-500">
-                Current streak
-              </span>
-            </div>
-
-            <div className="h-6 w-px bg-white/[0.06]" />
-
             {/* Accuracy */}
             <div className="flex flex-col items-center">
               <span className="text-title font-black leading-none text-white">
@@ -641,13 +634,28 @@ export default function PredictClient({
 
             <div className="h-6 w-px bg-white/[0.06]" />
 
-            {/* This week */}
+            {/* Predictions */}
             <div className="flex flex-col items-center">
               <span className="text-title font-black leading-none text-white">
-                {picksThisWeek}
+                {predictionsCount}
               </span>
               <span className="text-micro uppercase tracking-[0.12em] text-slate-500">
-                This week
+                Predictions
+              </span>
+            </div>
+
+            <div className="h-6 w-px bg-white/[0.06]" />
+
+            {/* Weeks active */}
+            <div className="flex flex-col items-center">
+              <div className="flex items-baseline gap-1">
+                <span className="text-title font-black leading-none text-amber-300">
+                  {streak}
+                </span>
+                {streak > 0 && <span className="text-label leading-none">🔥</span>}
+              </div>
+              <span className="text-micro uppercase tracking-[0.12em] text-slate-500">
+                Weeks active
               </span>
             </div>
           </div>
