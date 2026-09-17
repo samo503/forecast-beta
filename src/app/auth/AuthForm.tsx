@@ -8,7 +8,8 @@ import ForecastWordmark from '../components/ForecastWordmark'
 export default function AuthForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const next = searchParams.get('next') ?? '/'
+  const rawNext = searchParams.get('next') ?? '/'
+  const next = rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : '/'
   const callbackError = searchParams.get('error')
 
   const [email, setEmail] = useState('')
@@ -87,10 +88,11 @@ export default function AuthForm() {
 
   // Same email delivers both a clickable link and a numeric code — this
   // form is a second way to finish the same sign-in, not a separate flow.
-  // The link + /auth/callback route above keep working exactly as before
-  // for anyone who taps the link instead (e.g. still the only path that
-  // survives the cross-browser PKCE mismatch documented elsewhere, since
-  // that only affects the link, not a code typed by hand).
+  // The typed code is what survives the cross-browser PKCE mismatch:
+  // verifyOtp needs no code verifier from the original browser, while the
+  // link's /auth/callback route does, so the link is the path that fails
+  // when the link is opened in a different browser than it was requested
+  // from.
   const handleVerifyCode = async (e: React.FormEvent) => {
     e.preventDefault()
     setCodeError(null)
@@ -109,7 +111,7 @@ export default function AuthForm() {
     })
 
     if (error) {
-      setCodeError("That code didn't work — it may be wrong or expired. Request a new one below.")
+      setCodeError("That code didn't work. It may be wrong or expired, so request a new one below.")
       setVerifying(false)
       return
     }
@@ -157,7 +159,7 @@ export default function AuthForm() {
               )}
               {resent && !codeError && (
                 <p className="text-center text-[0.62rem] text-emerald-400">
-                  Sent again — check your email.
+                  Sent again. Check your email.
                 </p>
               )}
 

@@ -523,6 +523,7 @@ export default function PredictClient({
           return;
         case "closed":
           showToast("Picks for this question have closed.");
+          router.refresh();
           return;
         default: {
           const exhaustiveCheck: never = result;

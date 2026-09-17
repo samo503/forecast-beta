@@ -76,11 +76,9 @@ export default function TopBar({ tabs, rightIcon = "search", onRightIconClick, c
               {avatarCircle}
             </Link>
           )}
-          {signedInUser && (
+          {signedInUser && signedInUser.streak > 0 && (
             <div className="absolute -bottom-0.5 -right-1 flex items-center gap-px rounded-full border border-white/10 bg-[#020205] px-[3px] py-px">
-              {signedInUser.streak > 0 && (
-                <span className="text-[0.4rem] leading-none">🔥</span>
-              )}
+              <span className="text-[0.4rem] leading-none">🔥</span>
               <span className="text-[0.42rem] font-bold leading-none text-amber-300">
                 {signedInUser.streak}
               </span>
