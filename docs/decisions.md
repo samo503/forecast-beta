@@ -187,10 +187,16 @@ exception: `channel_follows`/`user_follows` exist as of migration
 0010, but no UI or application code reads or writes them yet — the
 follow features below remain mocked at the product level. These stay
 on `lib/mock-data.ts` deliberately, not because wiring was skipped:
-- `live/page.tsx`: "Live Rooms," "Friends Are Talking," and "Active
-  Discussions" (the last is structurally just predictions again, not a
-  distinct real feature). Only "Room Highlights" is real (`comments` +
-  `reactions`, episode-scoped).
+- `live/page.tsx`: no longer belongs on this list. "Live Rooms," "Friends
+  Are Talking," "Active Discussions," and the old "Room Highlights"
+  comments feed described here previously are all gone — replaced by the
+  "episode room lobby" rewrite. The current Live Now / Upcoming Rooms
+  lobby is sourced entirely from real `episodes` and `channels` data,
+  filtered on real `status` values, with no mock content anywhere on the
+  page. `LiveCommentsFeed.tsx` and `actions/comments.ts` (the old real
+  comments feed) still exist in the repo but are unwired and dormant —
+  see docs/status.md, not a mock/real distinction anymore but a
+  built/disconnected one.
 - `profile/ProfileClient.tsx`: Trophy Shelf, "Following" shows, and
   "Friends" are all mock. "Activity" is a mixed feed (predictions +
   comments + trophy events) with a real gap — trophy events have no
@@ -250,6 +256,15 @@ activity, and trending.
 **Don't advertise an interaction until the interaction exists.** Card
 copy that promises something untappable is worse than a thinner card
 that claims nothing.
+
+**Surface split.** Guide is browse — discovery and editorial across the
+whole lineup. Live is doors open now or about to open, never
+retrospective. The channel page (not built yet) is one show over time —
+the home for that show's archived rooms and event history.
+
+**Room lifecycle equals episode lifecycle.** One conversation per
+episode. Read-only once the episode ends. Still readable for the run of
+the season, for people who watch later in the week.
 
 **Lifecycle framing.** The core loop is predict, anticipate, watch,
 resolve, learn how you did, return. Forecast does not need manufactured

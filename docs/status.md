@@ -79,6 +79,25 @@ letting it drift.
 None of these have backing tables. Wiring any of them is a schema/product
 conversation, not a data-wiring task — see `docs/decisions.md`.
 
+## Built but dormant — not functional in production
+
+**`LiveCommentsFeed.tsx` and `actions/comments.ts` are wired in code but
+not functional in production.** Both were written for the pre-lobby
+version of `/live` and still exist on disk — a working Realtime
+subscription plus a `postComment` server action against real
+`comments`/`reactions` tables — but nothing currently imports or renders
+either file. Re-wiring them as-is would still not work, for two separate
+reasons:
+- `supabase/migrations/0009_comments_realtime.sql` (adds `comments` to
+  the `supabase_realtime` publication — required for the subscription to
+  receive anything at all) has never been applied to production — see
+  `docs/decisions.md`'s "Migration numbering" note.
+- The old version selected whichever episode had the newest `air_date`
+  overall, not whichever episode was actually `status = 'live'` — the
+  targeting was wrong even setting the migration aside.
+
+Do not describe these as working without re-verifying both of the above.
+
 ## Single most logical next step
 
 No known concrete blocker is outstanding as of this update — deployment,
