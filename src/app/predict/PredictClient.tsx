@@ -432,7 +432,7 @@ export default function PredictClient({
   /** Real computed accuracy, null when there are zero *resolved* picks
    *  (rendered as "—"). */
   accuracy: number | null;
-  /** Real, live-computed day streak (participation-based). */
+  /** Real, live-computed week streak (participation-based). */
   streak: number;
   /** Count of all picks locked in the past 7 days, regardless of status or
    *  outcome. Same metric as /profile's "This week" stat. */
@@ -561,7 +561,7 @@ export default function PredictClient({
                 <span className="text-[0.7rem] leading-none">🔥</span>
               </div>
               <span className="text-[0.42rem] uppercase tracking-[0.12em] text-slate-500">
-                Day streak
+                Week streak
               </span>
             </div>
 

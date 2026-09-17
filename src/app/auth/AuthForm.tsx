@@ -33,9 +33,14 @@ export default function AuthForm() {
       options: {
         emailRedirectTo: redirectUrl.toString(),
         // Only ever consumed by handle_new_user() on first sign-in, to
-        // snapshot the day-streak's local timezone once. Harmless to send
-        // on every request — returning users' profiles.timezone is never
-        // touched again.
+        // snapshot the user's local timezone once into profiles.timezone.
+        // Harmless to send on every request — returning users' stored
+        // value is never touched again. Note: nothing in the app actually
+        // reads profiles.timezone anymore — the streak now uses a fixed
+        // broadcast-schedule timezone (see lib/streak.ts), not this
+        // per-user one. Left capturing it regardless of the fact that
+        // it's currently unused, same dormant-but-harmless status as
+        // profiles.streak_count.
         data: {
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
         },

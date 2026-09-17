@@ -94,7 +94,7 @@ export default async function PredictPage() {
   if (user) {
     const { data: profileRow } = await authedSupabase
       .from("profiles")
-      .select("username, display_name, avatar_url, timezone")
+      .select("username, display_name, avatar_url")
       .eq("id", user.id)
       .single();
 
@@ -108,10 +108,7 @@ export default async function PredictPage() {
     accuracy = resolved.length
       ? Math.round((correct.length / resolved.length) * 100)
       : null;
-    streak = computeStreak(
-      (pickResults ?? []).map((p) => p.created_at),
-      profileRow?.timezone ?? "UTC"
-    );
+    streak = computeStreak((pickResults ?? []).map((p) => p.created_at));
     // Same metric as /profile's "This week": every pick locked in the last
     // 7 days, regardless of status or outcome. Accuracy already covers
     // whether picks are landing, so this slot doesn't need to.
