@@ -19,6 +19,18 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* Shared type scale — six sizes, floor at 11px. Replaces 31 distinct
+   arbitrary text-[Nrem] values found across the app; see docs/decisions.md
+   and docs/reports/design-baseline.md for the full mapping. */
+@theme {
+  --text-micro: 0.6875rem;   /* 11px */
+  --text-caption: 0.75rem;   /* 12px */
+  --text-label: 0.8125rem;   /* 13px */
+  --text-body: 0.875rem;     /* 14px */
+  --text-title: 1.0625rem;   /* 17px */
+  --text-display: 1.75rem;   /* 28px */
+}
+
 html {
   min-height: 100%;
   scroll-behavior: smooth;

@@ -195,7 +195,7 @@ export default function ProfileClient({
                   className="h-full w-full object-cover"
                 />
               ) : (
-                <span className="text-[1.1rem] font-bold text-slate-500">
+                <span className="text-title font-bold text-slate-500">
                   {(profile.name ?? profile.handle.replace(/^@/, "")).charAt(0).toUpperCase()}
                 </span>
               )}
@@ -209,16 +209,16 @@ export default function ProfileClient({
           <div className="relative z-10 flex flex-col items-center gap-[3px]">
             {profile.name ? (
               <>
-                <span className="text-[1.15rem] font-black leading-none text-white">
+                <span className="text-title font-black leading-none text-white">
                   {profile.name}
                 </span>
                 {profile.handle && (
-                  <span className="text-[0.56rem] text-slate-500">{profile.handle}</span>
+                  <span className="text-caption text-slate-500">{profile.handle}</span>
                 )}
               </>
             ) : (
               profile.handle && (
-                <span className="text-[1.15rem] font-black leading-none text-white">
+                <span className="text-title font-black leading-none text-white">
                   {profile.handle}
                 </span>
               )
@@ -230,7 +230,7 @@ export default function ProfileClient({
               cap; truncating existing content server-side would risk
               cutting it mid-word for no reason. */}
           {profile.identityLine && (
-            <p className="relative z-10 mx-auto line-clamp-2 max-w-[280px] text-center text-[0.58rem] leading-relaxed text-slate-400">
+            <p className="relative z-10 mx-auto line-clamp-2 max-w-[280px] text-center text-caption leading-relaxed text-slate-400">
               {profile.identityLine}
             </p>
           )}
@@ -239,25 +239,25 @@ export default function ProfileClient({
         {/* ── Stats Row ── */}
         <div className="flex items-center justify-between rounded-xl border border-white/[0.07] bg-white/[0.025] px-5 py-3">
           <div className="flex flex-col items-center gap-0.5">
-            <span className="text-[1.05rem] font-black leading-none text-white">
+            <span className="text-title font-black leading-none text-white">
               {stats.accuracy === null ? "—" : `${stats.accuracy}%`}
             </span>
-            <span className="text-[0.4rem] uppercase tracking-[0.1em] text-slate-500">Accuracy</span>
+            <span className="text-micro uppercase tracking-[0.1em] text-slate-500">Accuracy</span>
           </div>
           <div className="h-7 w-px bg-white/[0.06]" />
           <div className="flex flex-col items-center gap-0.5">
-            <span className="text-[1.05rem] font-black leading-none text-white">{stats.predictions}</span>
-            <span className="text-[0.4rem] uppercase tracking-[0.1em] text-slate-500">Predictions</span>
+            <span className="text-title font-black leading-none text-white">{stats.predictions}</span>
+            <span className="text-micro uppercase tracking-[0.1em] text-slate-500">Predictions</span>
           </div>
           <div className="h-7 w-px bg-white/[0.06]" />
           <div className="flex flex-col items-center gap-0.5">
-            <span className="flex items-center gap-1 text-[1.05rem] font-black leading-none text-white">
+            <span className="flex items-center gap-1 text-title font-black leading-none text-white">
               {profile.streak > 0 && (
                 <Flame className="h-[13px] w-[13px] text-amber-300" strokeWidth={2} />
               )}
               {profile.streak}
             </span>
-            <span className="text-[0.4rem] uppercase tracking-[0.1em] text-slate-500">
+            <span className="text-micro uppercase tracking-[0.1em] text-slate-500">
               Week streak
             </span>
           </div>
@@ -268,7 +268,7 @@ export default function ProfileClient({
             spaces, which is the point. A vertical checklist would read as
             a to-do list instead of a shelf. */}
         <section className="space-y-2">
-          <p className="px-0.5 text-[0.6rem] font-bold uppercase tracking-[0.28em] text-slate-200">
+          <p className="px-0.5 text-caption font-bold uppercase tracking-[0.28em] text-slate-200">
             Trophies
           </p>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -284,8 +284,8 @@ export default function ProfileClient({
                     strokeWidth={2}
                   />
                   <Icon className="h-5 w-5 text-slate-600" strokeWidth={1.75} />
-                  <span className="text-[0.58rem] font-semibold text-slate-300">{trophy.name}</span>
-                  <span className="text-[0.44rem] leading-snug text-slate-400">
+                  <span className="text-caption font-semibold text-slate-300">{trophy.name}</span>
+                  <span className="text-micro leading-snug text-slate-400">
                     {trophy.criterion}
                   </span>
                 </div>
@@ -391,12 +391,12 @@ export default function ProfileClient({
             reveal. Add one, pointing at a new /profile/picks route, once
             resolved history actually grows past 5. */}
         <section className="space-y-1.5">
-          <p className="px-0.5 text-[0.54rem] font-bold uppercase tracking-[0.22em] text-slate-500">
+          <p className="px-0.5 text-caption font-bold uppercase tracking-[0.22em] text-slate-500">
             My Picks
           </p>
           <div className="divide-y divide-white/[0.04] rounded-xl border border-white/[0.05] bg-white/[0.015] px-3">
             {predictionRecord.length === 0 ? (
-              <p className="py-2 text-[0.6rem] text-slate-600">No picks yet.</p>
+              <p className="py-2 text-caption text-slate-600">No picks yet.</p>
             ) : (
               predictionRecord.map((item) =>
                 item.status === "resolved" ? (
@@ -407,22 +407,22 @@ export default function ProfileClient({
                       }`}
                     />
                     <div className="flex min-w-0 flex-1 flex-col gap-[2px]">
-                      <span className="text-[0.42rem] text-slate-500">{item.show}</span>
-                      <p className="text-[0.6rem] leading-snug text-slate-400">{item.question}</p>
-                      <span className="text-[0.42rem] text-slate-500">
+                      <span className="text-micro text-slate-500">{item.show}</span>
+                      <p className="text-caption leading-snug text-slate-400">{item.question}</p>
+                      <span className="text-micro text-slate-500">
                         Picked:{" "}
                         <span className="text-slate-400">{item.pick}</span>
                       </span>
                     </div>
                     <div className="flex shrink-0 flex-col items-end gap-[2px] pt-[3px]">
                       <span
-                        className={`text-[0.42rem] font-semibold ${
+                        className={`text-micro font-semibold ${
                           item.result === "correct" ? "text-emerald-400/75" : "text-rose-400/65"
                         }`}
                       >
                         {item.result === "correct" ? "✓" : "✗"}
                       </span>
-                      <span className="text-[0.38rem] text-slate-600">
+                      <span className="text-micro text-slate-600">
                         +{item.points} pts
                       </span>
                     </div>
@@ -431,16 +431,16 @@ export default function ProfileClient({
                   <div key={item.id} className="flex items-start gap-2.5 py-2">
                     <div className="mt-[4px] h-[5px] w-[5px] shrink-0 rounded-full bg-amber-400/60" />
                     <div className="flex min-w-0 flex-1 flex-col gap-[2px]">
-                      <span className="text-[0.42rem] text-slate-500">{item.show}</span>
-                      <p className="text-[0.6rem] leading-snug text-slate-400">{item.question}</p>
-                      <span className="text-[0.42rem] text-slate-500">
+                      <span className="text-micro text-slate-500">{item.show}</span>
+                      <p className="text-caption leading-snug text-slate-400">{item.question}</p>
+                      <span className="text-micro text-slate-500">
                         Picked:{" "}
                         <span className="text-slate-400">{item.pick}</span>
                       </span>
                     </div>
                     <div className="flex shrink-0 flex-col items-end gap-[2px] pt-[3px]">
-                      <span className="text-[0.42rem] font-semibold text-amber-400/75">…</span>
-                      <span className="text-[0.38rem] text-slate-600">
+                      <span className="text-micro font-semibold text-amber-400/75">…</span>
+                      <span className="text-micro text-slate-600">
                         {pendingStatusLabel(item.locksAt)}
                       </span>
                     </div>
@@ -547,7 +547,7 @@ export default function ProfileClient({
         <div className="flex items-center justify-end px-0.5">
           <button
             onClick={handleSignOutTap}
-            className={`text-[0.42rem] transition ${
+            className={`text-micro transition ${
               confirmingSignOut ? "text-rose-400" : "text-slate-600 hover:text-slate-400"
             }`}
           >

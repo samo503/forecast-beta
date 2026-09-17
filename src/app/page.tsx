@@ -143,13 +143,13 @@ export default async function Home() {
         <section className="space-y-2">
           <div className="space-y-0.5">
             <p
-              className={`text-[0.7rem] uppercase tracking-[0.32em] ${
+              className={`text-label uppercase tracking-[0.32em] ${
                 primaryHero?.isLive ? "text-pink-400" : "text-cyan-400"
               }`}
             >
               {heroHeading}
             </p>
-            <p className="text-[0.6rem] text-slate-500">{heroSubtitle}</p>
+            <p className="text-caption text-slate-500">{heroSubtitle}</p>
           </div>
 
           <div className="-mx-4 overflow-x-auto px-4 pb-2">
@@ -172,12 +172,12 @@ export default async function Home() {
                         {/* Top row: live / predictions-open pill, or nothing */}
                         <div className="flex items-center justify-end gap-2">
                           {item.isLive ? (
-                            <span className="inline-flex items-center gap-[5px] rounded-full bg-rose-500/10 px-2 py-[3px] text-[0.5rem] font-semibold uppercase tracking-[0.08em] text-rose-300">
+                            <span className="inline-flex items-center gap-[5px] rounded-full bg-rose-500/10 px-2 py-[3px] text-caption font-semibold uppercase tracking-[0.08em] text-rose-300">
                               <span className="h-[5px] w-[5px] rounded-full bg-rose-400 animate-pulse" />
                               Live Now
                             </span>
                           ) : item.hasOpenPrediction ? (
-                            <span className="rounded-full bg-pink-400/10 px-2 py-0.5 text-[0.52rem] font-semibold uppercase tracking-[0.1em] text-pink-300">
+                            <span className="rounded-full bg-pink-400/10 px-2 py-0.5 text-caption font-semibold uppercase tracking-[0.1em] text-pink-300">
                               Predictions open
                             </span>
                           ) : null}
@@ -185,13 +185,13 @@ export default async function Home() {
 
                         {/* Bottom: subtitle → title → episode/time → CTA */}
                         <div>
-                          <p className="text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-slate-400">
+                          <p className="text-caption font-semibold uppercase tracking-[0.14em] text-slate-400">
                             {item.subtitle}
                           </p>
-                          <h2 className="text-[1.85rem] font-extrabold leading-tight text-white">
+                          <h2 className="text-display font-extrabold leading-tight text-white">
                             {item.title}
                           </h2>
-                          <p className="mt-0.5 text-[0.86rem] leading-snug text-slate-200/75">
+                          <p className="mt-0.5 text-body leading-snug text-slate-200/75">
                             {item.detail}
                             {item.detail && item.airDate && " · "}
                             {item.airDate && <LocalTime iso={item.airDate} />}
@@ -200,7 +200,7 @@ export default async function Home() {
                           {!item.isLive && item.hasOpenPrediction && (
                             <Link
                               href={`/predict?episode=${item.episodeId}`}
-                              className="mt-2 inline-flex w-fit items-center rounded-full bg-pink-400/15 px-3 py-1.5 text-[0.62rem] font-semibold text-pink-300 transition hover:bg-pink-400/25"
+                              className="mt-2 inline-flex w-fit items-center rounded-full bg-pink-400/15 px-3 py-1.5 text-caption font-semibold text-pink-300 transition hover:bg-pink-400/25"
                             >
                               Make a prediction
                             </Link>
@@ -217,7 +217,7 @@ export default async function Home() {
         )}
 
         <section className="space-y-2">
-          <p className="px-0.5 text-[0.54rem] font-bold uppercase tracking-[0.22em] text-slate-500">
+          <p className="px-0.5 text-caption font-bold uppercase tracking-[0.22em] text-slate-500">
             Channels
           </p>
           <div className="grid grid-cols-2 gap-3">
@@ -245,16 +245,16 @@ export default async function Home() {
 
                     <div className="relative flex h-full flex-col justify-end p-3">
                       <div className="space-y-1">
-                        <p className="text-[0.9rem] font-bold tracking-tight text-white">
+                        <p className="text-body font-bold tracking-tight text-white">
                           {channel.name}
                         </p>
                         {channel.description && (
-                          <p className="line-clamp-2 text-[0.62rem] text-slate-500">
+                          <p className="line-clamp-2 text-caption text-slate-500">
                             {channel.description}
                           </p>
                         )}
                         <p
-                          className={`text-[0.56rem] ${
+                          className={`text-caption ${
                             isLive || episode ? "text-slate-400" : "text-slate-600"
                           }`}
                         >

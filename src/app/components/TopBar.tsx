@@ -49,7 +49,7 @@ export default function TopBar({ tabs, rightIcon = "search", onRightIconClick, c
           className="h-full w-full object-cover"
         />
       ) : signedInUser ? (
-        <span className="text-[0.62rem] font-semibold text-slate-500">
+        <span className="text-caption font-semibold text-slate-500">
           {signedInUser.name.charAt(0).toUpperCase()}
         </span>
       ) : (
@@ -78,8 +78,8 @@ export default function TopBar({ tabs, rightIcon = "search", onRightIconClick, c
           )}
           {signedInUser && signedInUser.streak > 0 && (
             <div className="absolute -bottom-0.5 -right-1 flex items-center gap-px rounded-full border border-white/10 bg-[#020205] px-[3px] py-px">
-              <span className="text-[0.4rem] leading-none">🔥</span>
-              <span className="text-[0.42rem] font-bold leading-none text-amber-300">
+              <span className="text-micro leading-none">🔥</span>
+              <span className="text-micro font-bold leading-none text-amber-300">
                 {signedInUser.streak}
               </span>
             </div>
@@ -111,8 +111,8 @@ export default function TopBar({ tabs, rightIcon = "search", onRightIconClick, c
               onClick={tab.onClick}
               className={
                 tab.active
-                  ? "relative pb-2 text-[0.62rem] font-semibold text-white"
-                  : "pb-2 text-[0.62rem] font-medium text-slate-500 transition hover:text-slate-300"
+                  ? "relative pb-2 text-caption font-semibold text-white"
+                  : "pb-2 text-caption font-medium text-slate-500 transition hover:text-slate-300"
               }
             >
               {tab.label}

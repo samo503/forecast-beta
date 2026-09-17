@@ -18,7 +18,7 @@ export default function SettingsClient({
 
         <Link
           href="/profile"
-          className="flex w-fit items-center gap-1 text-[0.6rem] text-slate-500 transition hover:text-slate-300"
+          className="flex w-fit items-center gap-1 text-caption text-slate-500 transition hover:text-slate-300"
         >
           <ChevronLeft className="h-3 w-3" strokeWidth={2} />
           Back to profile
@@ -27,10 +27,10 @@ export default function SettingsClient({
         {/* Sign out lives on /profile's footer now. This route stays for
             real account settings once there are any to add. */}
         <section className="space-y-2">
-          <p className="px-0.5 text-[0.6rem] font-bold uppercase tracking-[0.28em] text-slate-200">
+          <p className="px-0.5 text-caption font-bold uppercase tracking-[0.28em] text-slate-200">
             Settings
           </p>
-          <p className="px-0.5 text-[0.6rem] text-slate-600">Nothing to configure yet.</p>
+          <p className="px-0.5 text-caption text-slate-600">Nothing to configure yet.</p>
         </section>
 
       </div>

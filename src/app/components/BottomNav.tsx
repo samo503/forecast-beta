@@ -34,7 +34,7 @@ export default function BottomNav() {
                 />
               </span>
               <span
-                className={`text-[0.58rem] uppercase tracking-[0.14em] ${
+                className={`text-caption uppercase tracking-[0.14em] ${
                   active ? "text-white" : "text-slate-400"
                 }`}
               >

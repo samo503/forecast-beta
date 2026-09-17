@@ -133,14 +133,14 @@ export default function AuthForm() {
             <div className="space-y-3">
               <div className="flex justify-center text-2xl">📬</div>
               <p className="font-semibold text-white">Check your email</p>
-              <p className="text-[0.72rem] text-slate-400">
+              <p className="text-label text-slate-400">
                 We sent a link and a code to{' '}
                 <span className="text-slate-300">{email}</span>
               </p>
             </div>
 
             <form onSubmit={handleVerifyCode} className="space-y-2.5 text-left">
-              <label className="block text-center text-[0.62rem] text-slate-500">
+              <label className="block text-center text-caption text-slate-500">
                 Enter the code from your email
               </label>
               <input
@@ -151,14 +151,14 @@ export default function AuthForm() {
                 onChange={(e) => setCode(e.target.value.replace(/[^\d]/g, '').slice(0, 10))}
                 placeholder="123456"
                 maxLength={10}
-                className="w-full rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 text-center text-[0.92rem] tracking-[0.2em] text-white placeholder:tracking-normal placeholder:text-slate-600 outline-none focus:border-violet-400/40 transition"
+                className="w-full rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 text-center text-body tracking-[0.2em] text-white placeholder:tracking-normal placeholder:text-slate-600 outline-none focus:border-violet-400/40 transition"
               />
 
               {codeError && (
-                <p className="text-center text-[0.62rem] text-rose-400">{codeError}</p>
+                <p className="text-center text-caption text-rose-400">{codeError}</p>
               )}
               {resent && !codeError && (
-                <p className="text-center text-[0.62rem] text-emerald-400">
+                <p className="text-center text-caption text-emerald-400">
                   Sent again. Check your email.
                 </p>
               )}
@@ -166,13 +166,13 @@ export default function AuthForm() {
               <button
                 type="submit"
                 disabled={verifying || !code}
-                className="w-full rounded-xl border border-white/[0.12] bg-white/[0.06] py-3 text-[0.72rem] font-semibold text-white transition hover:bg-white/[0.1] disabled:cursor-not-allowed disabled:opacity-40"
+                className="w-full rounded-xl border border-white/[0.12] bg-white/[0.06] py-3 text-label font-semibold text-white transition hover:bg-white/[0.1] disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {verifying ? 'Verifying…' : 'Verify code'}
               </button>
             </form>
 
-            <div className="flex items-center justify-center gap-3 text-[0.62rem] text-slate-600">
+            <div className="flex items-center justify-center gap-3 text-caption text-slate-600">
               <button
                 onClick={handleResend}
                 disabled={loading}
@@ -193,7 +193,7 @@ export default function AuthForm() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5 text-center">
               <p className="text-[1rem] font-bold text-white">Sign in to Forecast</p>
-              <p className="text-[0.68rem] text-slate-500">
+              <p className="text-caption text-slate-500">
                 TV predictions for people who are always right
               </p>
             </div>
@@ -205,23 +205,23 @@ export default function AuthForm() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="your@email.com"
                 required
-                className="w-full rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 text-[0.82rem] text-white placeholder:text-slate-600 outline-none focus:border-violet-400/40 transition"
+                className="w-full rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 text-body text-white placeholder:text-slate-600 outline-none focus:border-violet-400/40 transition"
               />
 
               {error && (
-                <p className="text-[0.62rem] text-rose-400">{error}</p>
+                <p className="text-caption text-rose-400">{error}</p>
               )}
 
               <button
                 type="submit"
                 disabled={loading || !email}
-                className="w-full rounded-xl border border-white/[0.12] bg-white/[0.06] py-3 text-[0.72rem] font-semibold text-white transition hover:bg-white/[0.1] disabled:cursor-not-allowed disabled:opacity-40"
+                className="w-full rounded-xl border border-white/[0.12] bg-white/[0.06] py-3 text-label font-semibold text-white transition hover:bg-white/[0.1] disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {loading ? 'Sending…' : 'Send Magic Link'}
               </button>
             </div>
 
-            <p className="text-center text-[0.58rem] text-slate-600">
+            <p className="text-center text-caption text-slate-600">
               No password needed. We&apos;ll email you a sign-in link and code.
             </p>
           </form>

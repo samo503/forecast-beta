@@ -135,7 +135,7 @@ function VotePills({
           missing percentages read as "nobody has voted yet", which may not
           be true. Says nothing about how many people actually voted. */}
       {card.status === "open" && (
-        <p className="text-[0.42rem] text-slate-400">Votes hidden until this closes.</p>
+        <p className="text-micro text-slate-400">Votes hidden until this closes.</p>
       )}
       <div className="flex flex-wrap gap-1.5">
       {card.options.map((opt) => {
@@ -180,7 +180,7 @@ function VotePills({
             : "bg-white/[0.05]"
         }`;
 
-        const labelClassName = `text-[0.58rem] font-medium ${
+        const labelClassName = `text-caption font-medium ${
           isPickedLocked
             ? "text-amber-300"
             : isPicked
@@ -209,11 +209,11 @@ function VotePills({
                 <Lock className="h-[8px] w-[8px] text-amber-300" strokeWidth={2.5} />
               )}
               {isPending ? (
-                <span className="text-[0.44rem] font-semibold text-white/80">Tap to confirm</span>
+                <span className="text-micro font-semibold text-white/80">Tap to confirm</span>
               ) : (
                 hasEnoughVotes && (
                   <span
-                    className={`text-[0.44rem] font-semibold ${
+                    className={`text-micro font-semibold ${
                       isPickedLocked
                         ? "text-amber-300"
                         : isPicked
@@ -292,7 +292,7 @@ function PredictionCard({
   // card's own left-edge accent already carries the stronger identity, this
   // just names which show.
   const showBadgeClassName =
-    "rounded-full border border-white/10 bg-slate-950/60 px-2 py-[3px] text-[0.5rem] font-medium text-slate-300";
+    "rounded-full border border-white/10 bg-slate-950/60 px-2 py-[3px] text-caption font-medium text-slate-300";
 
   const closeBadge = closeBadgeFor(card);
 
@@ -302,7 +302,7 @@ function PredictionCard({
         <span className={showBadgeClassName}>{card.show}</span>
         {closeBadge && (
           <span
-            className={`inline-flex items-center gap-[4px] rounded-full px-2 py-[3px] text-[0.44rem] font-bold uppercase tracking-[0.08em] ${
+            className={`inline-flex items-center gap-[4px] rounded-full px-2 py-[3px] text-micro font-bold uppercase tracking-[0.08em] ${
               closeBadge.urgent ? "bg-rose-500/15 text-rose-300" : "bg-white/[0.06] text-slate-400"
             }`}
           >
@@ -318,8 +318,8 @@ function PredictionCard({
         <p
           className={
             variant === "large"
-              ? "text-[0.88rem] font-extrabold leading-snug text-white"
-              : "text-[0.82rem] font-bold leading-snug text-white"
+              ? "text-body font-extrabold leading-snug text-white"
+              : "text-body font-bold leading-snug text-white"
           }
         >
           {card.question}
@@ -355,7 +355,7 @@ function PredictionCard({
             >
               {myResult.isCorrect ? (
                 // One fact to state, so one line, as before.
-                <span className="text-[0.6rem] font-semibold">
+                <span className="text-caption font-semibold">
                   ✓ {myPickLabel} · +{myResult.points}
                 </span>
               ) : (
@@ -364,22 +364,22 @@ function PredictionCard({
                 // above what was actually correct (secondary line, smaller
                 // and dimmer), rather than both parsed left to right.
                 <>
-                  <p className="text-[0.6rem] font-semibold">
+                  <p className="text-caption font-semibold">
                     ✗ {myPickLabel} · +{myResult.points}
                   </p>
-                  <p className="mt-[2px] text-[0.48rem] font-medium text-rose-300/70">
+                  <p className="mt-[2px] text-micro font-medium text-rose-300/70">
                     Correct: {correctLabel ?? "—"}
                   </p>
                 </>
               )}
             </div>
           ) : (
-            <div className="w-full rounded-lg border border-white/[0.06] bg-black/20 py-[5px] text-center text-[0.6rem] font-semibold tracking-[0.04em] text-slate-300">
+            <div className="w-full rounded-lg border border-white/[0.06] bg-black/20 py-[5px] text-center text-caption font-semibold tracking-[0.04em] text-slate-300">
               Correct answer: {correctLabel ?? "—"}
             </div>
           )
         ) : card.status === "locked" && !myPickId ? (
-          <div className="w-full rounded-lg border border-white/[0.06] bg-black/20 py-[5px] text-center text-[0.6rem] font-semibold tracking-[0.04em] text-white/40">
+          <div className="w-full rounded-lg border border-white/[0.06] bg-black/20 py-[5px] text-center text-caption font-semibold tracking-[0.04em] text-white/40">
             Voting closed
           </div>
         ) : null}
@@ -609,7 +609,7 @@ export default function PredictClient({
 
         {/* ── Section 1: Your Forecast ── */}
         <section className="space-y-2">
-          <p className="px-0.5 text-[0.6rem] font-bold uppercase tracking-[0.28em] text-slate-200">
+          <p className="px-0.5 text-caption font-bold uppercase tracking-[0.28em] text-slate-200">
             Your Forecast
           </p>
 
@@ -617,12 +617,12 @@ export default function PredictClient({
             {/* Streak */}
             <div className="flex flex-col items-center">
               <div className="flex items-baseline gap-1">
-                <span className="text-[1.15rem] font-black leading-none text-amber-300">
+                <span className="text-title font-black leading-none text-amber-300">
                   {streak}
                 </span>
-                <span className="text-[0.7rem] leading-none">🔥</span>
+                <span className="text-label leading-none">🔥</span>
               </div>
-              <span className="text-[0.42rem] uppercase tracking-[0.12em] text-slate-500">
+              <span className="text-micro uppercase tracking-[0.12em] text-slate-500">
                 Week streak
               </span>
             </div>
@@ -631,10 +631,10 @@ export default function PredictClient({
 
             {/* Accuracy */}
             <div className="flex flex-col items-center">
-              <span className="text-[1.15rem] font-black leading-none text-white">
+              <span className="text-title font-black leading-none text-white">
                 {accuracy === null ? "—" : `${accuracy}%`}
               </span>
-              <span className="text-[0.42rem] uppercase tracking-[0.12em] text-slate-500">
+              <span className="text-micro uppercase tracking-[0.12em] text-slate-500">
                 Accuracy
               </span>
             </div>
@@ -643,10 +643,10 @@ export default function PredictClient({
 
             {/* This week */}
             <div className="flex flex-col items-center">
-              <span className="text-[1.15rem] font-black leading-none text-white">
+              <span className="text-title font-black leading-none text-white">
                 {picksThisWeek}
               </span>
-              <span className="text-[0.42rem] uppercase tracking-[0.12em] text-slate-500">
+              <span className="text-micro uppercase tracking-[0.12em] text-slate-500">
                 This week
               </span>
             </div>
@@ -655,14 +655,14 @@ export default function PredictClient({
 
         {/* ── Section 2: Predictions ── */}
         <section className="space-y-2">
-          <p className="px-0.5 text-[0.6rem] font-bold uppercase tracking-[0.28em] text-slate-200">
+          <p className="px-0.5 text-caption font-bold uppercase tracking-[0.28em] text-slate-200">
             Predictions
           </p>
 
           <div className="space-y-1">
             {sortedPredictions.length === 0 ? (
               <div className="rounded-xl border border-white/[0.05] bg-white/[0.015] px-3 py-3">
-                <p className="text-[0.6rem] text-slate-600">{tabEmptyMessage[activeTab]}</p>
+                <p className="text-caption text-slate-600">{tabEmptyMessage[activeTab]}</p>
               </div>
             ) : (
               sortedPredictions.map((card, i) => (
@@ -761,7 +761,7 @@ export default function PredictClient({
         <div className="pointer-events-none fixed bottom-24 inset-x-0 z-[60] flex justify-center px-4">
           <div className="flex items-center gap-1.5 rounded-full border border-emerald-400/20 bg-[#0d0d14]/90 px-4 py-2 backdrop-blur-xl">
             <span className="h-[5px] w-[5px] rounded-full bg-emerald-400/70" />
-            <span className="text-[0.52rem] font-semibold uppercase tracking-[0.1em] text-emerald-300">
+            <span className="text-caption font-semibold uppercase tracking-[0.1em] text-emerald-300">
               {toast}
             </span>
           </div>

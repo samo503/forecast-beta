@@ -65,10 +65,10 @@ export default function LiveClient({
         <TopBar currentUser={currentUser} />
 
         <div className="px-0.5">
-          <h1 className="text-[0.72rem] font-black uppercase tracking-[0.2em] text-white">
+          <h1 className="text-label font-black uppercase tracking-[0.2em] text-white">
             Live
           </h1>
-          <p className="mt-1 text-[0.6rem] text-slate-500">
+          <p className="mt-1 text-caption text-slate-500">
             What&apos;s airing now and up next.
           </p>
         </div>
@@ -76,7 +76,7 @@ export default function LiveClient({
         {/* ── Live Now ── */}
         {liveEpisodes.length > 0 && (
           <section className="space-y-2">
-            <p className="px-0.5 text-[0.54rem] font-bold uppercase tracking-[0.22em] text-slate-500">
+            <p className="px-0.5 text-caption font-bold uppercase tracking-[0.22em] text-slate-500">
               Live Now
             </p>
             <div className="space-y-2">
@@ -92,20 +92,20 @@ export default function LiveClient({
                 >
                   <div className="mb-1 flex items-center gap-1.5">
                     {showsChannelBadge(liveEpisodes, i) && (
-                      <span className="text-[0.48rem] font-semibold uppercase tracking-[0.1em] text-slate-400">
+                      <span className="text-micro font-semibold uppercase tracking-[0.1em] text-slate-400">
                         {episode.show}
                       </span>
                     )}
-                    <span className="ml-auto inline-flex items-center gap-[3px] rounded-full bg-rose-500/10 px-1.5 py-[2px] text-[0.38rem] font-semibold uppercase tracking-[0.06em] text-rose-400/80">
+                    <span className="ml-auto inline-flex items-center gap-[3px] rounded-full bg-rose-500/10 px-1.5 py-[2px] text-micro font-semibold uppercase tracking-[0.06em] text-rose-400/80">
                       <span className="h-[3px] w-[3px] rounded-full bg-rose-400/70 animate-pulse" />
                       Live
                     </span>
                   </div>
-                  <p className="text-[0.82rem] font-bold leading-snug text-white">
+                  <p className="text-body font-bold leading-snug text-white">
                     {episode.title}
                   </p>
                   {episode.episodeNumber && (
-                    <span className="text-[0.42rem] text-slate-500">
+                    <span className="text-micro text-slate-500">
                       E{episode.episodeNumber}
                     </span>
                   )}
@@ -118,7 +118,7 @@ export default function LiveClient({
         {/* ── Upcoming Rooms ── */}
         {upcomingEpisodes.length > 0 && (
           <section className="space-y-2">
-            <p className="px-0.5 text-[0.54rem] font-bold uppercase tracking-[0.22em] text-slate-500">
+            <p className="px-0.5 text-caption font-bold uppercase tracking-[0.22em] text-slate-500">
               Upcoming Rooms
             </p>
             <div className="divide-y divide-white/[0.04] rounded-xl border border-white/[0.05] bg-white/[0.015] px-3">
@@ -142,19 +142,19 @@ export default function LiveClient({
                   </div>
                   <div className="flex min-w-0 flex-1 flex-col gap-[2px]">
                     {showsChannelBadge(upcomingEpisodes, i) && (
-                      <span className="text-[0.42rem] text-slate-500">{episode.show}</span>
+                      <span className="text-micro text-slate-500">{episode.show}</span>
                     )}
-                    <p className="text-[0.6rem] font-medium leading-snug text-slate-300">
+                    <p className="text-caption font-medium leading-snug text-slate-300">
                       {episode.title}
                     </p>
-                    <span className="text-[0.4rem] text-slate-600">
+                    <span className="text-micro text-slate-600">
                       {episode.episodeNumber && `E${episode.episodeNumber}`}
                       {episode.episodeNumber && episode.airDate && " · "}
                       {episode.airDate && <LocalTime iso={episode.airDate} />}
                     </span>
                   </div>
                   {episode.airDate && (
-                    <span className="shrink-0 rounded-full bg-white/[0.06] px-1.5 py-[2px] text-[0.38rem] font-semibold uppercase tracking-[0.06em] text-slate-400">
+                    <span className="shrink-0 rounded-full bg-white/[0.06] px-1.5 py-[2px] text-micro font-semibold uppercase tracking-[0.06em] text-slate-400">
                       Opens in {opensInLabel(episode.airDate)}
                     </span>
                   )}
@@ -165,7 +165,7 @@ export default function LiveClient({
         )}
 
         {hasNoRooms && (
-          <p className="px-0.5 text-[0.6rem] text-slate-600">No rooms scheduled.</p>
+          <p className="px-0.5 text-caption text-slate-600">No rooms scheduled.</p>
         )}
 
       </div>
