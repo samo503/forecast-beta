@@ -227,17 +227,17 @@ job); the former pink "Predictions open" pill is now cyan (it's an
 informational/editorial fact about a prediction's status, not the
 action of making one).
 
-**Known inconsistency, not fixed here:** the wordmark's pink pill
-(`ForecastWordmark.tsx`) is a hardcoded hex, `#fb7185` — which is
-identical to Tailwind's `rose-400` swatch, not to Tailwind's `pink-*`
-family (`pink-400` ≈ `#f472b6`, distinctly more magenta). The "Make a
-prediction" CTA uses Tailwind's `pink-400`/`pink-300` utility classes.
-So the two things this rule now reserves pink for don't currently render
-as the same color — "brand pink" (the wordmark's actual hex) and "CTA
-pink" (the Tailwind swatch) are two different hues that happen to share
-a name. Left alone since reconciling them wasn't asked for and picking
-one unprompted would be a visual change beyond this pass's scope; worth
-a deliberate decision next time either one is touched.
+**Reconciled.** The wordmark's pink pill (`ForecastWordmark.tsx`) and
+the "Make a prediction" CTA used to be two different hues sharing the
+name "pink" — the wordmark a hardcoded `#fb7185` (identical to
+Tailwind's `rose-400` swatch, not to Tailwind's `pink-*` family, where
+`pink-400` ≈ `#f472b6`, distinctly more magenta), the CTA Tailwind's
+`pink-400`/`pink-300` utility classes. The wordmark's hex wins as the
+one real brand color. `styles/globals.css` now defines
+`--color-brand: #fb7185` once; both the wordmark's gradient and the
+CTA's classes (`bg-brand`/`text-brand`) reference it instead of one
+hardcoding a literal and the other reaching for an unrelated Tailwind
+swatch.
 
 Consistently applied via small `Record<string, ...>` theme maps in
 `src/app/page.tsx` (`briefTheme`, mock/hidden) and implicitly
@@ -252,7 +252,7 @@ elsewhere. **Final color-role table**, superseding the old bullet list:
 | Urgency / genuinely live / confirmed wrong | `text-rose-400` (and friends) | never pink for "live," never for "selected/active" either |
 | Confirmed correct | `text-emerald-400` | |
 | Pending / committed / streak | `text-amber-300` | |
-| Brand / primary action only | pink (see the two-hex caveat above) | wordmark and the "Make a prediction" CTA — nowhere else |
+| Brand / primary action only | `bg-brand`/`text-brand` (`--color-brand: #fb7185`) | wordmark and the "Make a prediction" CTA — nowhere else |
 | Editorial / informational fact | `text-cyan-400` | Guide's "Up next" heading and "Predictions open" pill |
 | Focus ring / neutral interactive | `white/20` | replaces the orphaned `violet-400/40` that only ever appeared in `AuthForm.tsx` |
 | Active nav / selected tab | neutral white (`bg-white/[0.12]` glow, `text-white`) | not rose — rose is reserved for urgency/live/wrong, not "this is the current tab" |
