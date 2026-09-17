@@ -29,6 +29,13 @@
   --text-body: 0.875rem;     /* 14px */
   --text-title: 1.0625rem;   /* 17px */
   --text-display: 1.75rem;   /* 28px */
+
+  /* The one real brand color — ForecastWordmark's pill and the "Make a
+     prediction" CTA, nowhere else. Previously two different hexes shared
+     the name "pink" (the wordmark's literal #fb7185 vs. Tailwind's
+     pink-400/pink-300 classes on the CTA); this is the single source of
+     truth now, named for the role rather than the shade. */
+  --color-brand: #fb7185;
 }
 
 html {

@@ -200,7 +200,7 @@ export default async function Home() {
                           {!item.isLive && item.hasOpenPrediction && (
                             <Link
                               href={`/predict?episode=${item.episodeId}`}
-                              className="mt-2 inline-flex w-fit items-center rounded-full bg-pink-400/15 px-3 py-1.5 text-caption font-semibold text-pink-300 transition hover:bg-pink-400/25"
+                              className="mt-2 inline-flex w-fit items-center rounded-full bg-brand/15 px-3 py-1.5 text-caption font-semibold text-brand transition hover:bg-brand/25"
                             >
                               Make a prediction
                             </Link>
