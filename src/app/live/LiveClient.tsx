@@ -92,7 +92,7 @@ export default function LiveClient({
                 >
                   <div className="mb-1 flex items-center gap-1.5">
                     {showsChannelBadge(liveEpisodes, i) && (
-                      <span className="text-micro font-semibold uppercase tracking-[0.1em] text-slate-400">
+                      <span className="text-micro font-semibold uppercase tracking-[0.1em] text-slate-500">
                         {episode.show}
                       </span>
                     )}
@@ -154,7 +154,7 @@ export default function LiveClient({
                     </span>
                   </div>
                   {episode.airDate && (
-                    <span className="shrink-0 rounded-full bg-white/[0.06] px-1.5 py-[2px] text-micro font-semibold uppercase tracking-[0.06em] text-slate-400">
+                    <span className="shrink-0 rounded-full bg-white/[0.06] px-1.5 py-[2px] text-micro font-semibold uppercase tracking-[0.06em] text-slate-500">
                       Opens in {opensInLabel(episode.airDate)}
                     </span>
                   )}

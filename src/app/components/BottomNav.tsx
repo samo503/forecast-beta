@@ -25,17 +25,17 @@ export default function BottomNav() {
               <span className="relative flex items-center justify-center">
                 <span
                   className={`absolute h-8 w-8 rounded-full blur-lg ${
-                    active ? "bg-rose-500/[0.08]" : "bg-white/[0.04]"
+                    active ? "bg-white/[0.12]" : "bg-white/[0.04]"
                   }`}
                 />
                 <Icon
-                  className={`relative h-[18px] w-[18px] ${active ? "text-white" : "text-slate-400"}`}
+                  className={`relative h-[18px] w-[18px] ${active ? "text-white" : "text-slate-500"}`}
                   strokeWidth={1.5}
                 />
               </span>
               <span
                 className={`text-caption uppercase tracking-[0.14em] ${
-                  active ? "text-white" : "text-slate-400"
+                  active ? "text-white" : "text-slate-500"
                 }`}
               >
                 {label}

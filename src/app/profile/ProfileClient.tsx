@@ -268,7 +268,7 @@ export default function ProfileClient({
             spaces, which is the point. A vertical checklist would read as
             a to-do list instead of a shelf. */}
         <section className="space-y-2">
-          <p className="px-0.5 text-caption font-bold uppercase tracking-[0.28em] text-slate-200">
+          <p className="px-0.5 text-caption font-bold uppercase tracking-[0.28em] text-slate-500">
             Trophies
           </p>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">

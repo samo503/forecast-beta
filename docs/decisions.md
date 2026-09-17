@@ -213,18 +213,56 @@ time this boundary was hit.
 
 ## Color system
 
+**Narrowed, following the design-baseline audit
+(`docs/reports/design-baseline.md`).** The original rule — "pink is the
+prediction mechanic itself" — was written down but nothing in the app
+actually followed it: `/predict`, the one page that *is* the prediction
+mechanic, used no pink anywhere, and Guide's own "Live now" heading used
+pink for a fact (something is airing right now) that every other live
+indicator in the app renders in rose. Pink is now reserved for exactly
+two things: the wordmark and the primary-action CTA (Guide's "Make a
+prediction" button). Nothing else should reach for it. Guide's former
+pink "Live now" heading is now rose (it's a live-status fact, rose's
+job); the former pink "Predictions open" pill is now cyan (it's an
+informational/editorial fact about a prediction's status, not the
+action of making one).
+
+**Known inconsistency, not fixed here:** the wordmark's pink pill
+(`ForecastWordmark.tsx`) is a hardcoded hex, `#fb7185` — which is
+identical to Tailwind's `rose-400` swatch, not to Tailwind's `pink-*`
+family (`pink-400` ≈ `#f472b6`, distinctly more magenta). The "Make a
+prediction" CTA uses Tailwind's `pink-400`/`pink-300` utility classes.
+So the two things this rule now reserves pink for don't currently render
+as the same color — "brand pink" (the wordmark's actual hex) and "CTA
+pink" (the Tailwind swatch) are two different hues that happen to share
+a name. Left alone since reconciling them wasn't asked for and picking
+one unprompted would be a visual change beyond this pass's scope; worth
+a deliberate decision next time either one is touched.
+
 Consistently applied via small `Record<string, ...>` theme maps in
-`src/app/page.tsx` (`briefTheme`) and `src/app/live/page.tsx`
-(`discussionTheme`), and implicitly in the profile trophy shelf:
-- **Pink** (`#fb7185`) — the prediction mechanic itself (live polls,
-  open predictions, debates).
-- **Cyan** (`#22d3ee`) — editorial/news content (returning, renewed, TV
-  news, trending).
-- **Amber/gold** (`#fbbf24` and friends) — covers two related but
-  distinct things: buzz/social attention-getting content (recommended,
-  casting news) *and* achievement (the trophy shelf's single-hue rarity
-  system, where brightness signals rarity rather than each trophy getting
-  an arbitrary color).
+`src/app/page.tsx` (`briefTheme`, mock/hidden) and implicitly
+elsewhere. **Final color-role table**, superseding the old bullet list:
+
+| Role | Token | Notes |
+|---|---|---|
+| Primary content | `text-white` | titles, values |
+| Secondary content | `text-slate-300` | body/question text, hero detail lines |
+| Muted metadata | `text-slate-500` | captions, section headers, small-caps labels — `slate-200` and `slate-400` are retired from this role |
+| Quietest / inert | `text-slate-600` | empty states, disabled-feeling text |
+| Urgency / genuinely live / confirmed wrong | `text-rose-400` (and friends) | never pink for "live," never for "selected/active" either |
+| Confirmed correct | `text-emerald-400` | |
+| Pending / committed / streak | `text-amber-300` | |
+| Brand / primary action only | pink (see the two-hex caveat above) | wordmark and the "Make a prediction" CTA — nowhere else |
+| Editorial / informational fact | `text-cyan-400` | Guide's "Up next" heading and "Predictions open" pill |
+| Focus ring / neutral interactive | `white/20` | replaces the orphaned `violet-400/40` that only ever appeared in `AuthForm.tsx` |
+| Active nav / selected tab | neutral white (`bg-white/[0.12]` glow, `text-white`) | not rose — rose is reserved for urgency/live/wrong, not "this is the current tab" |
+
+`slate-400` remains in use outside the label/header role above (icon
+default/hover pairs, plain sentence body copy, disabled-state text) —
+those weren't retired, since they're a different role than the one this
+pass targeted and retiring them would have erased real state pairs (see
+`docs/reports/latest.md`'s color-semantics section for the specific
+cases considered and left alone).
 
 No `PROJECT_CONTEXT.md` exists in this repo despite being referenced in
 early task instructions — this document's color-system section is

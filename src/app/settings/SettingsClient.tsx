@@ -27,7 +27,7 @@ export default function SettingsClient({
         {/* Sign out lives on /profile's footer now. This route stays for
             real account settings once there are any to add. */}
         <section className="space-y-2">
-          <p className="px-0.5 text-caption font-bold uppercase tracking-[0.28em] text-slate-200">
+          <p className="px-0.5 text-caption font-bold uppercase tracking-[0.28em] text-slate-500">
             Settings
           </p>
           <p className="px-0.5 text-caption text-slate-600">Nothing to configure yet.</p>

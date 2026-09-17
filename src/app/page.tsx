@@ -144,7 +144,7 @@ export default async function Home() {
           <div className="space-y-0.5">
             <p
               className={`text-label uppercase tracking-[0.32em] ${
-                primaryHero?.isLive ? "text-pink-400" : "text-cyan-400"
+                primaryHero?.isLive ? "text-rose-400" : "text-cyan-400"
               }`}
             >
               {heroHeading}
@@ -177,7 +177,7 @@ export default async function Home() {
                               Live Now
                             </span>
                           ) : item.hasOpenPrediction ? (
-                            <span className="rounded-full bg-pink-400/10 px-2 py-0.5 text-caption font-semibold uppercase tracking-[0.1em] text-pink-300">
+                            <span className="rounded-full bg-cyan-400/10 px-2 py-0.5 text-caption font-semibold uppercase tracking-[0.1em] text-cyan-300">
                               Predictions open
                             </span>
                           ) : null}
@@ -185,13 +185,13 @@ export default async function Home() {
 
                         {/* Bottom: subtitle → title → episode/time → CTA */}
                         <div>
-                          <p className="text-caption font-semibold uppercase tracking-[0.14em] text-slate-400">
+                          <p className="text-caption font-semibold uppercase tracking-[0.14em] text-slate-500">
                             {item.subtitle}
                           </p>
                           <h2 className="text-display font-extrabold leading-tight text-white">
                             {item.title}
                           </h2>
-                          <p className="mt-0.5 text-body leading-snug text-slate-200/75">
+                          <p className="mt-0.5 text-body leading-snug text-slate-300/75">
                             {item.detail}
                             {item.detail && item.airDate && " · "}
                             {item.airDate && <LocalTime iso={item.airDate} />}
@@ -255,7 +255,7 @@ export default async function Home() {
                         )}
                         <p
                           className={`text-caption ${
-                            isLive || episode ? "text-slate-400" : "text-slate-600"
+                            isLive || episode ? "text-slate-500" : "text-slate-600"
                           }`}
                         >
                           {isLive ? (

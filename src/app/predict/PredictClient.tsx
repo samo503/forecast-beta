@@ -303,7 +303,7 @@ function PredictionCard({
         {closeBadge && (
           <span
             className={`inline-flex items-center gap-[4px] rounded-full px-2 py-[3px] text-micro font-bold uppercase tracking-[0.08em] ${
-              closeBadge.urgent ? "bg-rose-500/15 text-rose-300" : "bg-white/[0.06] text-slate-400"
+              closeBadge.urgent ? "bg-rose-500/15 text-rose-300" : "bg-white/[0.06] text-slate-500"
             }`}
           >
             {closeBadge.urgent && (
@@ -609,7 +609,7 @@ export default function PredictClient({
 
         {/* ── Section 1: Your Forecast ── */}
         <section className="space-y-2">
-          <p className="px-0.5 text-caption font-bold uppercase tracking-[0.28em] text-slate-200">
+          <p className="px-0.5 text-caption font-bold uppercase tracking-[0.28em] text-slate-500">
             Your Forecast
           </p>
 
@@ -655,7 +655,7 @@ export default function PredictClient({
 
         {/* ── Section 2: Predictions ── */}
         <section className="space-y-2">
-          <p className="px-0.5 text-caption font-bold uppercase tracking-[0.28em] text-slate-200">
+          <p className="px-0.5 text-caption font-bold uppercase tracking-[0.28em] text-slate-500">
             Predictions
           </p>
 

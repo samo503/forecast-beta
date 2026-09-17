@@ -151,7 +151,7 @@ export default function AuthForm() {
                 onChange={(e) => setCode(e.target.value.replace(/[^\d]/g, '').slice(0, 10))}
                 placeholder="123456"
                 maxLength={10}
-                className="w-full rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 text-center text-body tracking-[0.2em] text-white placeholder:tracking-normal placeholder:text-slate-600 outline-none focus:border-violet-400/40 transition"
+                className="w-full rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 text-center text-body tracking-[0.2em] text-white placeholder:tracking-normal placeholder:text-slate-600 outline-none focus:border-white/20 transition"
               />
 
               {codeError && (
@@ -205,7 +205,7 @@ export default function AuthForm() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="your@email.com"
                 required
-                className="w-full rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 text-body text-white placeholder:text-slate-600 outline-none focus:border-violet-400/40 transition"
+                className="w-full rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 text-body text-white placeholder:text-slate-600 outline-none focus:border-white/20 transition"
               />
 
               {error && (
