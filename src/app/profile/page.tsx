@@ -7,10 +7,6 @@ import ProfileClient, {
   type RecordItem,
 } from "./ProfileClient";
 
-function isWithinPastWeek(iso: string): boolean {
-  return Date.now() - new Date(iso).getTime() <= 7 * 24 * 60 * 60 * 1000;
-}
-
 export default async function ProfilePage() {
   const supabase = await createServerClient();
   const {
@@ -38,7 +34,10 @@ export default async function ProfilePage() {
   const allPicks = pickRows ?? [];
 
   const profile: ProfileData = {
-    name: profileRow?.display_name ?? profileRow?.username ?? "You",
+    // No "You"/username fallback here — a real name renders only when
+    // display_name is actually set. @handle is the always-real identity
+    // (ProfileClient promotes it to the primary line when name is null).
+    name: profileRow?.display_name ?? null,
     handle: profileRow?.username ? `@${profileRow.username}` : "",
     avatar: profileRow?.avatar_url ?? null,
     identityLine: profileRow?.identity_line ?? null,
@@ -57,7 +56,6 @@ export default async function ProfilePage() {
       ? Math.round((correctPicks.length / resolvedPicks.length) * 100)
       : null,
     predictions: allPicks.length,
-    thisWeek: allPicks.filter((p) => isWithinPastWeek(p.created_at)).length,
   };
 
   const validPicks = allPicks.filter((p) => p.prediction && p.option);

@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Edit3, Lock, Target, Flame, Crown, Mic, Sparkles, Zap } from "lucide-react";
+import { Lock, Target, Flame, Trophy, Star, Crown, Mic, Sparkles, Zap } from "lucide-react";
 import BottomNav from "../components/BottomNav";
 import PosterBackground from "../components/PosterBackground";
 import TopBar from "../components/TopBar";
@@ -27,18 +27,36 @@ const SHOW_FRIENDS = false;
 
 // Hardcoded and all locked. There's no trophy-awarding logic or schema for
 // any of these yet, so this is a fixed list of goals, not progress pulled
-// from data. "Called It" has no percentage threshold on purpose: the exact
-// bar for "most people missed" can't be set until there's real voting data
-// to set it against.
+// from data — see docs/decisions.md's "Trophy rules" section for exactly
+// how each would be derived once an earned-state pass happens.
 const LOCKED_TROPHIES = [
-  { name: "Called It", criterion: "correctly predict an outcome that most people missed" },
-  { name: "5 Pick Streak", criterion: "get five predictions right in a row" },
-  { name: "Drama Expert", criterion: "reach 70 percent accuracy on a drama channel" },
-  { name: "Perfect Night", criterion: "get every prediction right for a single episode or event" },
+  {
+    name: "Called It",
+    criterion: "Correctly predict an outcome that most people missed.",
+    icon: Trophy,
+  },
+  {
+    name: "Hot Streak",
+    criterion: "Get five predictions right in a row.",
+    icon: Flame,
+  },
+  {
+    name: "Sharp Eye",
+    criterion: "Reach 70%+ accuracy across 10+ resolved predictions.",
+    icon: Target,
+  },
+  {
+    name: "Full Sweep",
+    criterion: "Get every prediction right for a single episode or event.",
+    icon: Star,
+  },
 ];
 
 export type ProfileData = {
-  name: string;
+  /** display_name only — no "You"/username fallback. Null renders no name
+   *  row at all; ProfileClient promotes @handle to the primary identity
+   *  line in that case instead of hiding identity entirely. */
+  name: string | null;
   handle: string;
   avatar: string | null;
   identityLine: string | null;
@@ -49,7 +67,6 @@ export type ProfileStats = {
   /** null when there are zero *resolved* predictions to compute accuracy from. */
   accuracy: number | null;
   predictions: number;
-  thisWeek: number;
 };
 
 export type RecordItem =
@@ -80,10 +97,10 @@ function pendingStatusLabel(locksAt: string | null): string {
   const diffMs = new Date(locksAt).getTime() - Date.now();
   if (diffMs <= 0) return "Awaiting result";
   const mins = Math.round(diffMs / 60000);
-  if (mins < 60) return `Closes ${mins}m`;
+  if (mins < 60) return `Closes in ${mins}m`;
   const hours = Math.round(mins / 60);
-  if (hours < 24) return `Closes ${hours}h`;
-  return `Closes ${Math.round(hours / 24)}d`;
+  if (hours < 24) return `Closes in ${hours}h`;
+  return `Closes in ${Math.round(hours / 24)}d`;
 }
 
 // Single achievement hue (amber/gold). Brightness signals rarity, not identity —
@@ -147,8 +164,11 @@ export default function ProfileClient({
     <main className="relative min-h-screen bg-[#020205] pb-32 text-white">
       <div className="mx-auto flex max-w-[640px] flex-col gap-6 px-4 pt-5">
 
+        {/* No top-left avatar on Profile — the hero below is the one real
+            identity display on this page; duplicating it in the header
+            (and its streak badge) was redundant. */}
         <TopBar
-          currentUser={{ name: profile.name, avatar: profile.avatar, streak: profile.streak }}
+          currentUser={null}
           rightIcon="settings"
           onRightIconClick={() => router.push("/settings")}
         />
@@ -158,7 +178,8 @@ export default function ProfileClient({
           {/* Radial depth wash */}
           <div className="pointer-events-none absolute inset-x-0 -top-4 h-40 bg-[radial-gradient(ellipse_70%_55%_at_50%_10%,rgba(255,255,255,0.06),transparent)]" />
 
-          {/* Avatar */}
+          {/* Avatar — no streak badge here; the flame lives on the streak
+              stat below now, not duplicated on every avatar in the app. */}
           <div className="relative z-10">
             <div
               className="flex h-[58px] w-[58px] items-center justify-center overflow-hidden rounded-full bg-slate-900"
@@ -170,36 +191,37 @@ export default function ProfileClient({
               {profile.avatar ? (
                 <img
                   src={profile.avatar}
-                  alt={profile.name}
+                  alt={profile.name ?? profile.handle}
                   className="h-full w-full object-cover"
                 />
               ) : (
                 <span className="text-[1.1rem] font-bold text-slate-500">
-                  {profile.name.charAt(0).toUpperCase()}
+                  {(profile.name ?? profile.handle.replace(/^@/, "")).charAt(0).toUpperCase()}
                 </span>
               )}
             </div>
-            <div className="absolute -bottom-px -right-0.5 flex items-center gap-px rounded-full border border-white/10 bg-[#020205] px-[4px] py-[2px]">
-              <span className="text-[0.44rem] leading-none">🔥</span>
-              <span className="text-[0.46rem] font-bold leading-none text-amber-300">
-                {profile.streak}
-              </span>
-            </div>
           </div>
 
-          {/* Name + edit */}
+          {/* Name is display_name only — no synthetic fallback. When it's
+              unset, @handle (always real) becomes the primary identity line
+              instead of a fabricated name. No Edit control: there's no edit
+              flow anywhere in the app yet (see docs/decisions.md). */}
           <div className="relative z-10 flex flex-col items-center gap-[3px]">
-            <div className="flex items-center gap-2">
-              <span className="text-[1.15rem] font-black leading-none text-white">
-                {profile.name}
-              </span>
-              <button className="flex items-center gap-[3px] rounded-full border border-white/[0.08] bg-white/[0.03] px-[6px] py-[3px] text-[0.44rem] font-medium text-slate-500 transition hover:text-slate-300">
-                <Edit3 className="h-[7px] w-[7px]" strokeWidth={1.5} />
-                Edit
-              </button>
-            </div>
-            {profile.handle && (
-              <span className="text-[0.56rem] text-slate-500">{profile.handle}</span>
+            {profile.name ? (
+              <>
+                <span className="text-[1.15rem] font-black leading-none text-white">
+                  {profile.name}
+                </span>
+                {profile.handle && (
+                  <span className="text-[0.56rem] text-slate-500">{profile.handle}</span>
+                )}
+              </>
+            ) : (
+              profile.handle && (
+                <span className="text-[1.15rem] font-black leading-none text-white">
+                  {profile.handle}
+                </span>
+              )
             )}
           </div>
 
@@ -229,8 +251,13 @@ export default function ProfileClient({
           </div>
           <div className="h-7 w-px bg-white/[0.06]" />
           <div className="flex flex-col items-center gap-0.5">
-            <span className="text-[1.05rem] font-black leading-none text-white">{stats.thisWeek}</span>
-            <span className="text-[0.4rem] uppercase tracking-[0.1em] text-slate-500">This week</span>
+            <span className="flex items-center gap-1 text-[1.05rem] font-black leading-none text-white">
+              <Flame className="h-[13px] w-[13px] text-amber-300" strokeWidth={2} />
+              {profile.streak}
+            </span>
+            <span className="text-[0.4rem] uppercase tracking-[0.1em] text-slate-500">
+              Current streak
+            </span>
           </div>
         </div>
 
@@ -242,17 +269,26 @@ export default function ProfileClient({
           <p className="px-0.5 text-[0.6rem] font-bold uppercase tracking-[0.28em] text-slate-200">
             Trophies
           </p>
-          <div className="grid grid-cols-2 gap-2">
-            {LOCKED_TROPHIES.map((trophy) => (
-              <div
-                key={trophy.name}
-                className="flex flex-col items-center gap-1 rounded-xl border border-white/[0.07] bg-white/[0.02] px-3 py-2 text-center"
-              >
-                <Lock className="h-4 w-4 text-slate-600" strokeWidth={1.75} />
-                <span className="text-[0.58rem] font-semibold text-slate-300">{trophy.name}</span>
-                <span className="text-[0.44rem] leading-snug text-slate-400">{trophy.criterion}</span>
-              </div>
-            ))}
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {LOCKED_TROPHIES.map((trophy) => {
+              const Icon = trophy.icon;
+              return (
+                <div
+                  key={trophy.name}
+                  className="relative flex flex-col items-center gap-1.5 rounded-xl border border-white/[0.07] bg-white/[0.02] px-3 py-3 text-center"
+                >
+                  <Lock
+                    className="absolute right-2 top-2 h-2.5 w-2.5 text-slate-600"
+                    strokeWidth={2}
+                  />
+                  <Icon className="h-5 w-5 text-slate-600" strokeWidth={1.75} />
+                  <span className="text-[0.58rem] font-semibold text-slate-300">{trophy.name}</span>
+                  <span className="text-[0.44rem] leading-snug text-slate-400">
+                    {trophy.criterion}
+                  </span>
+                </div>
+              );
+            })}
           </div>
         </section>
 
