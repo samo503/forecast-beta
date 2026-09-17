@@ -252,7 +252,9 @@ export default function ProfileClient({
           <div className="h-7 w-px bg-white/[0.06]" />
           <div className="flex flex-col items-center gap-0.5">
             <span className="flex items-center gap-1 text-[1.05rem] font-black leading-none text-white">
-              <Flame className="h-[13px] w-[13px] text-amber-300" strokeWidth={2} />
+              {profile.streak > 0 && (
+                <Flame className="h-[13px] w-[13px] text-amber-300" strokeWidth={2} />
+              )}
               {profile.streak}
             </span>
             <span className="text-[0.4rem] uppercase tracking-[0.1em] text-slate-500">

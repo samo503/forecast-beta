@@ -1,11 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '../../../lib/supabase/browser'
 import ForecastWordmark from '../components/ForecastWordmark'
 
 export default function AuthForm() {
+  const router = useRouter()
   const searchParams = useSearchParams()
   const next = searchParams.get('next') ?? '/'
   const callbackError = searchParams.get('error')
@@ -19,16 +20,19 @@ export default function AuthForm() {
       : null
   )
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError(null)
+  const [code, setCode] = useState('')
+  const [verifying, setVerifying] = useState(false)
+  const [codeError, setCodeError] = useState<string | null>(null)
+  const [resent, setResent] = useState(false)
 
+  // Shared by the initial send and by "Resend code" — same request either
+  // way, just triggered from two different places.
+  const sendMagicLink = async () => {
     const supabase = createClient()
     const redirectUrl = new URL('/auth/callback', window.location.origin)
     redirectUrl.searchParams.set('next', next)
 
-    const { error } = await supabase.auth.signInWithOtp({
+    return supabase.auth.signInWithOtp({
       email,
       options: {
         emailRedirectTo: redirectUrl.toString(),
@@ -46,6 +50,14 @@ export default function AuthForm() {
         },
       },
     })
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
+
+    const { error } = await sendMagicLink()
 
     if (error) {
       setError(error.message)
@@ -57,6 +69,55 @@ export default function AuthForm() {
     setLoading(false)
   }
 
+  const handleResend = async () => {
+    setLoading(true)
+    setCodeError(null)
+    setResent(false)
+
+    const { error } = await sendMagicLink()
+
+    setLoading(false)
+    if (error) {
+      setCodeError(error.message)
+      return
+    }
+    setCode('')
+    setResent(true)
+  }
+
+  // Same email delivers both a clickable link and a numeric code — this
+  // form is a second way to finish the same sign-in, not a separate flow.
+  // The link + /auth/callback route above keep working exactly as before
+  // for anyone who taps the link instead (e.g. still the only path that
+  // survives the cross-browser PKCE mismatch documented elsewhere, since
+  // that only affects the link, not a code typed by hand).
+  const handleVerifyCode = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setCodeError(null)
+
+    if (!/^\d{6,10}$/.test(code)) {
+      setCodeError('Enter the 6 to 10 digit code from your email.')
+      return
+    }
+
+    setVerifying(true)
+    const supabase = createClient()
+    const { error } = await supabase.auth.verifyOtp({
+      email,
+      token: code,
+      type: 'email',
+    })
+
+    if (error) {
+      setCodeError("That code didn't work — it may be wrong or expired. Request a new one below.")
+      setVerifying(false)
+      return
+    }
+
+    router.push(next)
+    router.refresh()
+  }
+
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#020205] px-4">
       <div className="w-full max-w-[320px] space-y-8">
@@ -66,19 +127,65 @@ export default function AuthForm() {
         </div>
 
         {sent ? (
-          <div className="space-y-3 text-center">
-            <div className="flex justify-center text-2xl">📬</div>
-            <p className="font-semibold text-white">Check your email</p>
-            <p className="text-[0.72rem] text-slate-400">
-              We sent a magic link to{' '}
-              <span className="text-slate-300">{email}</span>
-            </p>
-            <button
-              onClick={() => { setSent(false); setEmail('') }}
-              className="text-[0.62rem] text-slate-600 underline-offset-2 hover:text-slate-400"
-            >
-              Use a different email
-            </button>
+          <div className="space-y-5 text-center">
+            <div className="space-y-3">
+              <div className="flex justify-center text-2xl">📬</div>
+              <p className="font-semibold text-white">Check your email</p>
+              <p className="text-[0.72rem] text-slate-400">
+                We sent a link and a code to{' '}
+                <span className="text-slate-300">{email}</span>
+              </p>
+            </div>
+
+            <form onSubmit={handleVerifyCode} className="space-y-2.5 text-left">
+              <label className="block text-center text-[0.62rem] text-slate-500">
+                Enter the code from your email
+              </label>
+              <input
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                value={code}
+                onChange={(e) => setCode(e.target.value.replace(/[^\d]/g, '').slice(0, 10))}
+                placeholder="123456"
+                maxLength={10}
+                className="w-full rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 text-center text-[0.92rem] tracking-[0.2em] text-white placeholder:tracking-normal placeholder:text-slate-600 outline-none focus:border-violet-400/40 transition"
+              />
+
+              {codeError && (
+                <p className="text-center text-[0.62rem] text-rose-400">{codeError}</p>
+              )}
+              {resent && !codeError && (
+                <p className="text-center text-[0.62rem] text-emerald-400">
+                  Sent again — check your email.
+                </p>
+              )}
+
+              <button
+                type="submit"
+                disabled={verifying || !code}
+                className="w-full rounded-xl border border-white/[0.12] bg-white/[0.06] py-3 text-[0.72rem] font-semibold text-white transition hover:bg-white/[0.1] disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {verifying ? 'Verifying…' : 'Verify code'}
+              </button>
+            </form>
+
+            <div className="flex items-center justify-center gap-3 text-[0.62rem] text-slate-600">
+              <button
+                onClick={handleResend}
+                disabled={loading}
+                className="underline-offset-2 hover:text-slate-400 disabled:opacity-40"
+              >
+                Resend code
+              </button>
+              <span className="text-slate-800">·</span>
+              <button
+                onClick={() => { setSent(false); setEmail(''); setCode(''); setCodeError(null); setResent(false) }}
+                className="underline-offset-2 hover:text-slate-400"
+              >
+                Use a different email
+              </button>
+            </div>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -113,7 +220,7 @@ export default function AuthForm() {
             </div>
 
             <p className="text-center text-[0.58rem] text-slate-600">
-              No password needed. We&apos;ll email you a sign-in link.
+              No password needed. We&apos;ll email you a sign-in link and code.
             </p>
           </form>
         )}
