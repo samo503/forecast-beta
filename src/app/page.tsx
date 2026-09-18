@@ -86,8 +86,15 @@ export default async function Home() {
   }
 
   // ── Up Next hero ──
+  // One card per upcoming/live episode, not one per channel — Channels
+  // (below) answers coverage, Up Next answers "what's next," and
+  // consecutive episodes from one show intermixing with others as their
+  // schedules fill in is the intended feel, not a bug to dedupe away
+  // (see docs/decisions.md). channelEpisode above is untouched and still
+  // powers the Channels grid's own one-per-channel summary.
   const HERO_LIMIT = 8;
-  const heroFeed: HeroFeedShow[] = [...channelEpisode.values()]
+  const heroFeed: HeroFeedShow[] = (episodeRows ?? [])
+    .filter((e) => e.channel && effectiveEpisodeStatus(e.status, e.air_date, now) !== "ended")
     .slice(0, HERO_LIMIT)
     .map((e, idx) => ({
       id: idx,

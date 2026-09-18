@@ -623,3 +623,16 @@ rows with thumbnails and one without, in the same list, is the expected
 shape of this rule, not a bug — see Lanterns Episode 8, which has no
 entry in `liveEpisodeImages` because its only stand-in was generic forest
 stock art with no connection to the show.
+
+## Up Next: one card per episode, not one per channel
+
+`src/app/page.tsx`'s `heroFeed` is built from every upcoming/live episode
+(`episodeRows`, already sorted `air_date` ascending), capped at 8 — not
+from `channelEpisode`, the one-slot-per-channel Map that still powers the
+Channels grid below. Deliberate: Channels answers "what's on," Up Next
+answers "what's next," and consecutive episodes from one show
+intermixing with others as their schedules fill in (e.g. Lanterns'
+Bad Optics, Episode 7, and Episode 8 all appearing back-to-back before
+Survivor's premiere) is the intended feel, not a bug to dedupe away.
+`channelEpisode` itself is unchanged and untouched by this — it's shared
+with, not replaced for, the Channels grid.
