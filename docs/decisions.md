@@ -542,3 +542,33 @@ positions rather than stretched to opposite edges of a box sized for
 art that isn't there yet. None of these changes wait for real artwork
 to look finished — they're the pre-artwork state actually looking
 finished, not a smaller version of the post-artwork state.
+
+## Genre: controlled eight-word vocabulary, multi-genre per channel
+
+**`channels.genre` (a single free-text column) is now `channels.genres`
+(`text[]`)** — migration `0012_channel_genres.sql`. A channel
+structurally could not belong to more than one genre before; a single
+text column has nowhere to put a second value. The vocabulary is fixed
+at eight words: Drama, Comedy, Reality, Competition, Sci-Fi, Sports,
+Awards, Documentary — enforced by a `check` constraint
+(`genres <@ array[...]`), not just documentation discipline, so a typo
+can't silently create a ninth genre no chip ever shows.
+
+**"Dating" is deliberately not in the vocabulary.** It was Love Island
+USA's old free-text value, with no mapping target in the controlled
+list — that channel is `Reality` now, not `Reality` plus a
+grandfathered "Dating." Real mapping applied: Lanterns → `Drama,
+Sci-Fi` (its old value, "Sci-Fi Drama," was one free-text string mashing
+together its two real constituent genres — split, not inferred, since
+that inference doesn't generalize to any future channel's free text);
+Love Island USA → `Reality`; Primetime Emmy Awards → `Awards`;
+Survivor → `Reality, Competition` (seeded directly with this value, not
+backfilled).
+
+**Guide's genre chips render only for genres at least one channel
+actually carries** — computed as `present = new Set(channels.flatMap(c
+=> c.genres))`, then the *fixed vocabulary array* (not the derived set)
+filtered down to members of `present`. Filtering the vocabulary rather
+than sorting the derived set keeps chip order stable and intentional
+(Drama always before Comedy if both are present) regardless of which
+channels exist or in what order they were seeded.
