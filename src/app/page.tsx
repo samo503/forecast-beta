@@ -5,20 +5,16 @@ import {
 } from "../../lib/mock-data";
 import { supabase } from "../../lib/supabase/client";
 import { getCurrentUserBadge } from "../../lib/supabase/current-user";
+import {
+  channelPosters,
+  episodeImageKey,
+  heroEpisodeImages,
+} from "../../lib/standinImages";
 import { effectiveEpisodeStatus } from "../lib/episodeStatus";
 import BottomNav from "./components/BottomNav";
 import LocalTime from "./components/LocalTime";
 import PosterBackground from "./components/PosterBackground";
 import TopBar from "./components/TopBar";
-
-// Channel art isn't in the schema yet. The Emmys channel briefly used a
-// stock photo here — https://images.unsplash.com/photo-1713514116766-d9be318edaf8
-// (Unsplash-licensed, confirmed to contain no people or logos: an empty
-// theater curtain and seats) — removed so every channel gets the same
-// honest accent-color fallback instead of one looking more "real" than
-// the others for reasons that have nothing to do with the data. Restore
-// that URL here if the image is ever reinstated.
-const channelPosters: Record<string, string> = {};
 
 // "Tonight's Brief" is entirely mock (lib/mock-data.ts's tonightsBrief) —
 // none of its 5 items correspond to a real channel/prediction (Survivor,
@@ -94,7 +90,10 @@ export default async function Home() {
       detail: e.episode_number ? `E${e.episode_number}` : "",
       airDate: e.air_date,
       accentColor: e.channel.accent_color ?? null,
-      poster: channelPosters[e.channel.slug] ?? "",
+      poster:
+        heroEpisodeImages[episodeImageKey(e.channel.slug, e.episode_number)] ??
+        channelPosters[e.channel.slug] ??
+        "",
     }));
 
   // The section heading/subtitle describe the primary (first) hero card
@@ -166,7 +165,11 @@ export default async function Home() {
                   >
                     <div className="relative h-full bg-slate-950">
                       {/* title="" — the title is already shown below as the h2 */}
-                      <PosterBackground src={item.poster} title="" />
+                      <PosterBackground
+                        src={item.poster}
+                        title=""
+                        sizes="(max-width: 480px) 82vw, 480px"
+                      />
                       <div className="absolute inset-0 bg-gradient-to-t from-slate-950/96 via-slate-950/10 opacity-80" />
                       <div className="relative flex h-full flex-col justify-between p-3">
                         {/* Top row: live / predictions-open pill, or nothing */}
@@ -238,7 +241,18 @@ export default async function Home() {
                     {renderTypography ? (
                       <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-slate-900 to-slate-800 px-4" />
                     ) : (
-                      <PosterBackground src={poster} title="" />
+                      <PosterBackground
+                        src={poster}
+                        title=""
+                        // Lanterns reuses its own hero photo here (see
+                        // lib/standinImages.ts) — a lower crop keeps this
+                        // card visually distinct from the hero's framing
+                        // of the same source image.
+                        backgroundPosition={
+                          channel.slug === "lanterns" ? "center 75%" : "center"
+                        }
+                        sizes="(max-width: 640px) 50vw, 320px"
+                      />
                     )}
 
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-transparent to-transparent" />

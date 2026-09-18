@@ -494,6 +494,17 @@ visual family has actually been art-directed and approved; until then,
 every channel uses the existing accent-color fallback rather than a
 placeholder that looks more finished than it is.
 
+**Exception, six assets only.** These six assets are temporary
+AI-generated atmospheric stand-ins, not final artwork, added Sept 17,
+2026 before the Sept 20 test. They contain no characters, logos, or
+franchise iconography, and are to be replaced by original photography.
+This supersedes the earlier "no artwork until a channel's visual family
+is approved" line for these six assets only — every other channel,
+and any future asset beyond these six, still waits for that approval.
+Mapped in `lib/standinImages.ts`; see the build report for the
+per-surface crop and reuse decisions (Lanterns' channel card reusing
+its own hero photo, in particular).
+
 ## Navigation affordances
 
 Navigation affordances must correspond to implemented destinations. The

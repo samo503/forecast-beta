@@ -1,5 +1,6 @@
 import { supabase } from "../../../lib/supabase/client";
 import { getCurrentUserBadge } from "../../../lib/supabase/current-user";
+import { episodeImageKey, liveEpisodeImages } from "../../../lib/standinImages";
 import { effectiveEpisodeStatus } from "../../lib/episodeStatus";
 import LiveClient, { type RoomEpisode } from "./LiveClient";
 
@@ -19,7 +20,7 @@ export default async function Live() {
   // would sit under "Opens in soon" forever once its air time passes.
   const { data: episodeRows } = await supabase
     .from("episodes")
-    .select("id, title, episode_number, air_date, status, channel:channels(name, accent_color)")
+    .select("id, title, episode_number, air_date, status, channel:channels(name, slug, accent_color)")
     .in("status", ["live", "upcoming"])
     .order("air_date", { ascending: true });
 
@@ -29,7 +30,7 @@ export default async function Live() {
     // actual response for this single-FK relation is a plain object, same
     // as every other channel embed in this app (e.g. predict/page.tsx's
     // p.channel.name).
-    const channel = e.channel as unknown as { name: string; accent_color: string | null } | null;
+    const channel = e.channel as unknown as { name: string; slug: string; accent_color: string | null } | null;
     return {
       id: e.id,
       title: e.title,
@@ -37,6 +38,7 @@ export default async function Live() {
       airDate: e.air_date,
       show: channel?.name ?? "",
       accentColor: channel?.accent_color ?? null,
+      image: channel ? liveEpisodeImages[episodeImageKey(channel.slug, e.episode_number)] ?? null : null,
     };
   };
 

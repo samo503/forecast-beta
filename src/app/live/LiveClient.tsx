@@ -2,6 +2,7 @@
 
 import BottomNav from "../components/BottomNav";
 import LocalTime from "../components/LocalTime";
+import PosterBackground from "../components/PosterBackground";
 import TopBar, { type TopBarUser } from "../components/TopBar";
 
 export type RoomEpisode = {
@@ -11,6 +12,10 @@ export type RoomEpisode = {
   airDate: string | null;
   show: string;
   accentColor: string | null;
+  /** Null for the common case (no stand-in mapped for this episode) — the
+   *  row renders text-only then, same as before any imagery existed. Never
+   *  an empty thumbnail frame either way. */
+  image?: string | null;
 };
 
 // Two tiers only, matching PredictClient.tsx's restraint: upcoming rows get
@@ -133,11 +138,16 @@ export default function LiveClient({
                       : undefined
                   }
                 >
-                  {/* No real imagery exists for any channel yet — an empty
-                      44px thumbnail frame here would just be a visible
-                      placeholder for a missing image, not a fallback. Row
-                      layout carries entirely on the accent edge and text
-                      until a channel's approved artwork exists. */}
+                  {/* Only rendered when a real stand-in exists for this
+                      episode — an empty 44px frame for episodes without one
+                      would just be a visible placeholder for a missing
+                      image. Row layout carries on the accent edge and text
+                      alone until then, same as before any imagery existed. */}
+                  {episode.image && (
+                    <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-lg">
+                      <PosterBackground src={episode.image} title="" sizes="44px" />
+                    </div>
+                  )}
                   <div className="flex min-w-0 flex-1 flex-col gap-[2px]">
                     {showsChannelBadge(upcomingEpisodes, i) && (
                       <span className="text-micro text-slate-500">{episode.show}</span>
