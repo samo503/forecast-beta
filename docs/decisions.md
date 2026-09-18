@@ -611,15 +611,15 @@ Fixing it properly needs a real per-network or per-channel
 timezone-offset concept the schema doesn't have today, which is a
 schema change, not a data fix.
 
-## Live rows carry no thumbnails
+## Live thumbnails removed again in 5d4e760, imagery decision still open
 
 Removed once already in `fd9f06f` (no real per-episode imagery existed,
 so the 44px frame always rendered blank) and reintroduced by accident
 when Guide's and Predict's stand-in image mapping went in — `RoomEpisode`
 grew an `image` field and Live's upcoming rows started rendering whatever
 `liveEpisodeImages` happened to map, including a mismatched forest crop
-on Lanterns Episode 8. Removed again, this time along with the `image`
-field and its wiring in `live/page.tsx` (not just the render), so there's
-nothing left to accidentally reconnect a third time. Live rows carry the
-accent edge and text only — full stop, not a fallback state waiting on
-imagery.
+on Lanterns Episode 8. Removed again in `5d4e760`, this time along with
+the `image` field and its wiring in `live/page.tsx`, not just the render.
+This is a note that it happened twice, not a ruling on how Live should
+look — whether Live rows get thumbnails at all is still an open design
+question for this redesign, not settled by either removal.
