@@ -123,6 +123,23 @@ reasons:
 
 Do not describe these as working without re-verifying both of the above.
 
+## Known gap: repo cannot reproduce current production data
+
+**Lanterns' and Love Island USA's `channels`/`episodes` rows exist live
+in production but were never seeded via a committed migration** —
+confirmed by grepping every file in `supabase/migrations/` for an
+`insert into episodes`/`insert into channels` touching either channel
+and finding none; only Emmys (`0008`) and Survivor (`0013`) are real,
+reproducible seeds. Lanterns and Love Island predate this project's
+migration discipline and were inserted by hand via the SQL editor at
+some point before it started. Running every migration in this repo
+against a fresh database would **not** reproduce the app's current
+real-data state — it would be missing two of four channels and all of
+their episodes. Not fixed in this pass (deliberately out of scope, per
+instruction) — a future session backfilling this should write a real
+seed migration from the live rows' actual values, not guess at what
+they might have been.
+
 ## Single most logical next step
 
 No known concrete blocker is outstanding as of this update — deployment,
