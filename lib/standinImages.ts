@@ -13,10 +13,15 @@
 // backgroundPosition at the call site) rather than going without: see the
 // build report for why an active channel rendering as a plain text card
 // next to two inactive channels with art was the thing being fixed.
+//
+// No entry for "emmys" — its stand-in (forecast_guide_card_emmys.png)
+// depicted an Emmy statuette, trademarked franchise iconography under
+// decisions.md's Imagery rule, and was removed along with the asset
+// itself. That channel renders the plain accent-color fallback until a
+// compliant replacement exists.
 export const channelPosters: Record<string, string> = {
   lanterns: "/images/standin/forecast_guide_hero_lanterns.png",
   "love-island-usa": "/images/standin/forecast_guide_card_love_island.png",
-  emmys: "/images/standin/forecast_guide_card_emmys.png",
 };
 
 // Guide's hero strip — keyed per episode, not per channel, since the

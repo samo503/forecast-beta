@@ -255,18 +255,29 @@ export default async function Home() {
                       />
                     )}
 
-                    {/* Bottom-weighted only — title/description/next-airing
-                        text sits at the bottom of the card (justify-end
-                        below), so legibility depends on that region being
-                        dark, not the whole image. Extended further up
-                        (via stop at 60%, not the default ~50%) and the
-                        floor raised to fully opaque rather than /85, since
-                        a bright part of the source photo (Love Island's
-                        pool reflections, for one) could otherwise sit
-                        directly behind the text. The top of the card is
-                        untouched — to-transparent starts from the same
-                        place it always did. */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 from-10% via-slate-950/70 via-60% to-transparent" />
+                    {/* A real scrim, not a fading tint. Measured (20th-
+                        percentile-darkest pixel behind the description
+                        line, avoiding glyph-pixel contamination in a
+                        plain average): the original from-slate-950/85
+                        blend measured 3.28:1 for Lanterns specifically
+                        (3.82–4.23:1 for the other two, photo-dependent
+                        either way) against text-slate-500. A semi-
+                        transparent overlay always lets some of the
+                        photo's own brightness through no matter how far
+                        the stops are pushed — text-slate-500 against
+                        genuine black tops out around 4.3:1 regardless
+                        (that's its own luminance's ceiling, not a
+                        background problem), so closing the gap needs the
+                        region directly behind the text to be *opaque*,
+                        not blended. from-slate-950/via-slate-950 (both
+                        fully opaque — no percent-based alpha) through
+                        82% of the card's height — the deepest any of the
+                        three cards' text blocks actually starts — makes
+                        that whole region solid and photo-independent:
+                        4.24:1 on all three cards now, identical. Only the
+                        top ~18% still fades to transparent and shows the
+                        source photo. */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 from-0% via-slate-950 via-82% to-transparent" />
 
                     <div className="relative flex h-full flex-col justify-end p-3">
                       <div className="space-y-1">

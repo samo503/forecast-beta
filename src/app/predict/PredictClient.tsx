@@ -682,13 +682,15 @@ export default function PredictClient({
   // still scrolls to it and lets the card show its own real state; that's
   // the page being correct, not an error to special-case.
   //
-  // Open no longer renders one element per prediction — it renders one
-  // group per episode — so the scroll target there is the group card
-  // (`prediction-group-<episodeId>`), not a specific prediction's id.
-  // Locked and Past are unchanged, still flat lists of individual cards.
+  // Open renders one group per episode only once grouping is actually
+  // active (two or more episodes with open predictions) — the scroll
+  // target there is the group card (`prediction-group-<episodeId>`), not
+  // a specific prediction's id. With zero or exactly one group, Open
+  // falls back to the same flat individual-card layout Locked and Past
+  // always use, so the scroll target there is the usual prediction id.
   useEffect(() => {
     if (!targetEpisodeId) return;
-    if (activeTab === "open") {
+    if (activeTab === "open" && openGroups.length >= 2) {
       document
         .getElementById(`prediction-group-${targetEpisodeId}`)
         ?.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -832,16 +834,15 @@ export default function PredictClient({
           </p>
 
           <div className="space-y-1">
-            {activeTab === "open" ? (
-              openGroups.length === 0 ? (
-                <div className="rounded-xl border border-white/[0.05] bg-white/[0.015] px-3 py-2">
-                  <p className="text-caption text-slate-600">{tabEmptyMessage.open}</p>
-                </div>
-              ) : (
-                openGroups.map((group) => (
-                  <EventGroupCard key={group.episodeId} group={group} />
-                ))
-              )
+            {/* Grouping only earns its keep once there's more than one
+                event to group — with a single episode, the group card's
+                tap-through is a detour in front of the only thing there is
+                to do on the page. One event falls back to the exact same
+                flat individual-card layout Locked and Past always use. */}
+            {activeTab === "open" && openGroups.length >= 2 ? (
+              openGroups.map((group) => (
+                <EventGroupCard key={group.episodeId} group={group} />
+              ))
             ) : sortedPredictions.length === 0 ? (
               <div className="rounded-xl border border-white/[0.05] bg-white/[0.015] px-3 py-2">
                 <p className="text-caption text-slate-600">{tabEmptyMessage[activeTab]}</p>

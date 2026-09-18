@@ -494,16 +494,26 @@ visual family has actually been art-directed and approved; until then,
 every channel uses the existing accent-color fallback rather than a
 placeholder that looks more finished than it is.
 
-**Exception, six assets only.** These six assets are temporary
-AI-generated atmospheric stand-ins, not final artwork, added Sept 17,
-2026 before the Sept 20 test. They contain no characters, logos, or
-franchise iconography, and are to be replaced by original photography.
-This supersedes the earlier "no artwork until a channel's visual family
-is approved" line for these six assets only — every other channel,
-and any future asset beyond these six, still waits for that approval.
-Mapped in `lib/standinImages.ts`; see the build report for the
-per-surface crop and reuse decisions (Lanterns' channel card reusing
-its own hero photo, in particular).
+**Exception, five assets now — six originally, one removed.** These
+assets are temporary AI-generated atmospheric stand-ins, not final
+artwork, added Sept 17, 2026 before the Sept 20 test. They contain no
+characters, logos, or franchise iconography, and are to be replaced by
+original photography. This supersedes the earlier "no artwork until a
+channel's visual family is approved" line for these assets only — every
+other channel, and any future asset beyond these, still waits for that
+approval. Mapped in `lib/standinImages.ts`; see the build report for
+the per-surface crop and reuse decisions (Lanterns' channel card
+reusing its own hero photo, in particular).
+
+**`forecast_guide_card_emmys.png` removed, Sept 18, 2026.** It depicted
+an Emmy statuette — trademarked franchise iconography, not an
+atmospheric stand-in, and a direct violation of this section's own
+"no characters, logos, copyrighted show stills, or recognizable
+franchise iconography" rule. Deleted from `public/images/standin/` and
+unmapped from `channelPosters` in `lib/standinImages.ts`. The Emmys
+channel renders the plain accent-color fallback again until a
+compliant replacement exists — not a regression, the correct state per
+this section's own rule for a channel with no approved image.
 
 ## Navigation affordances
 
