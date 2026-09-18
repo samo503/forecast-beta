@@ -572,3 +572,41 @@ filtered down to members of `present`. Filtering the vocabulary rather
 than sorting the derived set keeps chip order stable and intentional
 (Drama always before Comedy if both are present) regardless of which
 channels exist or in what order they were seeded.
+
+## Survivor: real channel, and a known timezone limitation in its data
+
+**A real fourth channel**, seeded in `0013_seed_survivor.sql`: CBS's
+*Survivor 51, "The Open Era"* — 21 new castaways, Mamanuca Islands,
+Fiji. Premiere Wednesday, September 23, 2026 (two hours); weekly
+90-minute episodes Wednesdays from September 30, 2026. Four episodes
+seeded (through October 14) — every one mechanically computed from
+those two stated facts with no assumption about the season's total
+length, and exactly the set that falls inside `/schedule`'s real
+30-day window as of the seed date. A fifth episode (October 21) enters
+that window on its own in a few days; seeding it earlier would add a
+row `/schedule` wouldn't show yet for no present benefit — a short
+follow-up seed nearer that date is the cheaper, more honest way to
+extend this than guessing the finale now. No predictions yet (a
+separate content decision) and no artwork yet (accent-color fallback,
+same as any channel with no approved image — see "Imagery," above).
+Episode titles aren't published; `"Episode 1"`, `"Episode 2"`, etc.
+match the same placeholder convention already used for Lanterns'
+untitled episodes.
+
+**Known limitation, deliberate, not to be silently "fixed": Survivor's
+`air_date` is anchored to Pacific time, not Eastern.** CBS airs this
+show at 8:00 PM *simultaneously* in both zones — not a single national
+feed with the usual same-day tape delay for the West Coast, which is
+what "8 PM ET/PT" means for most other programming. `episodes.air_date`
+is one `timestamptz`, one absolute instant, which cannot equal "8:00
+PM" in two different zones at once — the schema has no per-network or
+per-broadcast-zone offset concept. The decision made here: store the
+**Pacific** instant (e.g. the premiere as `2026-09-24T03:00:00Z`).
+`LocalTime` will therefore show the correct 8:00 PM for a Pacific
+viewer but an incorrect 11:00 PM (not the real 8:00 PM) for an Eastern
+one. **This is accepted as a known gap, not a bug** — do not "correct"
+it to anchor Eastern instead without revisiting this decision
+explicitly; that would just move the same error onto Pacific viewers.
+Fixing it properly needs a real per-network or per-channel
+timezone-offset concept the schema doesn't have today, which is a
+schema change, not a data fix.
