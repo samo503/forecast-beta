@@ -271,13 +271,18 @@ export default async function Home() {
                         region directly behind the text to be *opaque*,
                         not blended. from-slate-950/via-slate-950 (both
                         fully opaque — no percent-based alpha) through
-                        82% of the card's height — the deepest any of the
-                        three cards' text blocks actually starts — makes
-                        that whole region solid and photo-independent:
-                        4.24:1 on all three cards now, identical. Only the
-                        top ~18% still fades to transparent and shows the
+                        90% of the card's height makes that whole region
+                        solid and photo-independent regardless of exactly
+                        where a given channel's text block starts. Pushed
+                        from the original 82% after a real-device check on
+                        Lanterns specifically still read as low-contrast
+                        against its cloud/lightning image — the extra
+                        margin covers description-length variance across
+                        channels (four now, not three) rather than
+                        re-measuring one fixed line count. Only the top
+                        ~10% still fades to transparent and shows the
                         source photo. */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 from-0% via-slate-950 via-82% to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 from-0% via-slate-950 via-90% to-transparent" />
 
                     <div className="relative flex h-full flex-col justify-end p-3">
                       <div className="space-y-1">

@@ -789,7 +789,7 @@ export default function PredictClient({
 
           <div className="flex items-center justify-between rounded-xl border border-white/[0.07] bg-white/[0.025] px-5 py-3">
             {/* Accuracy */}
-            <div className="flex flex-col items-center">
+            <div className="flex flex-col items-center gap-0.5">
               <span className="text-title font-black leading-none text-white">
                 {accuracy === null ? "—" : `${accuracy}%`}
               </span>
@@ -798,10 +798,10 @@ export default function PredictClient({
               </span>
             </div>
 
-            <div className="h-6 w-px bg-white/[0.06]" />
+            <div className="h-7 w-px bg-white/[0.06]" />
 
             {/* Predictions */}
-            <div className="flex flex-col items-center">
+            <div className="flex flex-col items-center gap-0.5">
               <span className="text-title font-black leading-none text-white">
                 {predictionsCount}
               </span>
@@ -810,15 +810,15 @@ export default function PredictClient({
               </span>
             </div>
 
-            <div className="h-6 w-px bg-white/[0.06]" />
+            <div className="h-7 w-px bg-white/[0.06]" />
 
             {/* Weeks active */}
-            <div className="flex flex-col items-center">
+            <div className="flex flex-col items-center gap-0.5">
               <div className="flex items-baseline gap-1">
+                {streak > 0 && <span className="text-label leading-none">🔥</span>}
                 <span className="text-title font-black leading-none text-amber-300">
                   {streak}
                 </span>
-                {streak > 0 && <span className="text-label leading-none">🔥</span>}
               </div>
               <span className="text-micro uppercase tracking-[0.12em] text-slate-500">
                 Weeks active

@@ -2,7 +2,6 @@
 
 import BottomNav from "../components/BottomNav";
 import LocalTime from "../components/LocalTime";
-import PosterBackground from "../components/PosterBackground";
 import TopBar, { type TopBarUser } from "../components/TopBar";
 
 export type RoomEpisode = {
@@ -12,10 +11,6 @@ export type RoomEpisode = {
   airDate: string | null;
   show: string;
   accentColor: string | null;
-  /** Null for the common case (no stand-in mapped for this episode) — the
-   *  row renders text-only then, same as before any imagery existed. Never
-   *  an empty thumbnail frame either way. */
-  image?: string | null;
 };
 
 // Two tiers only, matching PredictClient.tsx's restraint: upcoming rows get
@@ -125,7 +120,7 @@ export default function LiveClient({
             <p className="px-0.5 text-caption font-bold uppercase tracking-[0.24em] text-slate-500">
               Upcoming Events
             </p>
-            <div className="divide-y divide-white/[0.04] rounded-xl border border-white/[0.05] bg-white/[0.015] px-3">
+            <div className="divide-y divide-white/[0.04] rounded-xl border border-white/[0.08] bg-white/[0.015] px-3">
               {upcomingEpisodes.map((episode, i) => (
                 <div
                   key={episode.id}
@@ -138,16 +133,6 @@ export default function LiveClient({
                       : undefined
                   }
                 >
-                  {/* Only rendered when a real stand-in exists for this
-                      episode — an empty 44px frame for episodes without one
-                      would just be a visible placeholder for a missing
-                      image. Row layout carries on the accent edge and text
-                      alone until then, same as before any imagery existed. */}
-                  {episode.image && (
-                    <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-lg">
-                      <PosterBackground src={episode.image} title="" sizes="44px" />
-                    </div>
-                  )}
                   <div className="flex min-w-0 flex-1 flex-col gap-[2px]">
                     {showsChannelBadge(upcomingEpisodes, i) && (
                       <span className="text-micro text-slate-500">{episode.show}</span>
