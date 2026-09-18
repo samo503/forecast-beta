@@ -611,15 +611,15 @@ Fixing it properly needs a real per-network or per-channel
 timezone-offset concept the schema doesn't have today, which is a
 schema change, not a data fix.
 
-## Live thumbnails removed again in 5d4e760, imagery decision still open
+## Live upcoming-event thumbnails: conditional on a compliant, matching image
 
-Removed once already in `fd9f06f` (no real per-episode imagery existed,
-so the 44px frame always rendered blank) and reintroduced by accident
-when Guide's and Predict's stand-in image mapping went in — `RoomEpisode`
-grew an `image` field and Live's upcoming rows started rendering whatever
-`liveEpisodeImages` happened to map, including a mismatched forest crop
-on Lanterns Episode 8. Removed again in `5d4e760`, this time along with
-the `image` field and its wiring in `live/page.tsx`, not just the render.
-This is a note that it happened twice, not a ruling on how Live should
-look — whether Live rows get thumbnails at all is still an open design
-question for this redesign, not settled by either removal.
+A row may carry an episode thumbnail when mapped artwork exists **and**
+matches that channel's visual family — Bad Optics (storm/dam) and
+Episode 7 (moon/space) both read as the same cold, otherworldly Lanterns
+world, so both carry one. A row without qualifying artwork renders
+text-only: no empty placeholder frame ever renders, regardless of why the
+artwork is missing (nothing mapped, or what's mapped doesn't fit). Two
+rows with thumbnails and one without, in the same list, is the expected
+shape of this rule, not a bug — see Lanterns Episode 8, which has no
+entry in `liveEpisodeImages` because its only stand-in was generic forest
+stock art with no connection to the show.

@@ -2,6 +2,7 @@
 
 import BottomNav from "../components/BottomNav";
 import LocalTime from "../components/LocalTime";
+import PosterBackground from "../components/PosterBackground";
 import TopBar, { type TopBarUser } from "../components/TopBar";
 
 export type RoomEpisode = {
@@ -11,6 +12,11 @@ export type RoomEpisode = {
   airDate: string | null;
   show: string;
   accentColor: string | null;
+  /** Null when no mapped artwork exists for this episode, or when the
+   *  mapped artwork doesn't match the channel's visual family (see
+   *  standinImages.ts) — the row renders text-only then, never an empty
+   *  placeholder frame. */
+  image?: string | null;
 };
 
 // Two tiers only, matching PredictClient.tsx's restraint: upcoming rows get
@@ -133,6 +139,11 @@ export default function LiveClient({
                       : undefined
                   }
                 >
+                  {episode.image && (
+                    <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-lg">
+                      <PosterBackground src={episode.image} title="" sizes="44px" />
+                    </div>
+                  )}
                   <div className="flex min-w-0 flex-1 flex-col gap-[2px]">
                     {showsChannelBadge(upcomingEpisodes, i) && (
                       <span className="text-micro text-slate-500">{episode.show}</span>

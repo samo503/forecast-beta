@@ -40,10 +40,15 @@ export const heroEpisodeImages: Record<string, string> = {
 // everywhere). Keyed by "<channel slug>-e<episode number>" rather than the
 // episode's database id — stable across environments/reseeds, unlike an
 // auto-generated uuid, and legible on its own in this file.
+// No entry for "lanterns-e8" — its stand-in (forecast_live_lanterns_
+// episode_8.png) was generic forest stock imagery with no visual
+// connection to Lanterns' sci-fi world, unlike Bad Optics (storm/dam) and
+// Episode 7 (moon/space), which share a cold, otherworldly palette. The
+// asset was deleted rather than kept for reuse elsewhere. That row
+// renders text-only until a compliant Lanterns-family replacement exists.
 export const liveEpisodeImages: Record<string, string> = {
   "lanterns-e6": "/images/standin/forecast_live_lanterns_bad_optics.png",
   "lanterns-e7": "/images/standin/forecast_live_lanterns_episode_7.png",
-  "lanterns-e8": "/images/standin/forecast_live_lanterns_episode_8.png",
 };
 
 export function episodeImageKey(

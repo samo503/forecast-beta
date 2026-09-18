@@ -1,5 +1,6 @@
 import { supabase } from "../../../lib/supabase/client";
 import { getCurrentUserBadge } from "../../../lib/supabase/current-user";
+import { episodeImageKey, liveEpisodeImages } from "../../../lib/standinImages";
 import { effectiveEpisodeStatus } from "../../lib/episodeStatus";
 import LiveClient, { type RoomEpisode } from "./LiveClient";
 
@@ -37,6 +38,7 @@ export default async function Live() {
       airDate: e.air_date,
       show: channel?.name ?? "",
       accentColor: channel?.accent_color ?? null,
+      image: channel ? liveEpisodeImages[episodeImageKey(channel.slug, e.episode_number)] ?? null : null,
     };
   };
 
