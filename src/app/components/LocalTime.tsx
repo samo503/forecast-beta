@@ -12,18 +12,23 @@ import { useEffect, useState } from "react";
 // suppressHydrationWarning, which would hide the mismatch instead of
 // avoiding it. Both the server's render and the client's pre-hydration
 // render produce the same empty output, so there's nothing to mismatch.
-export type LocalTimeVariant = "full";
+export type LocalTimeVariant = "full" | "date";
 
 const FORMAT_OPTIONS: Record<LocalTimeVariant, Intl.DateTimeFormatOptions> = {
-  // "Sun, Sep 20, 6:00 PM" — the one format currently needed, shared by
-  // Guide's hero and Live's rows. Add a variant here if a second shape is
-  // ever actually needed; don't pre-build one speculatively.
+  // "Sun, Sep 20, 6:00 PM" — shared by Guide's hero and Live's rows.
   full: {
     weekday: "short",
     month: "short",
     day: "numeric",
     hour: "numeric",
     minute: "2-digit",
+  },
+  // "Sun, Sep 20" — no time, for /schedule's client-side grouping by
+  // viewer-local calendar date.
+  date: {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
   },
 };
 
