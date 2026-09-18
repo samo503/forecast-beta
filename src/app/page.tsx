@@ -174,13 +174,13 @@ export default async function Home() {
             <p className="text-caption text-slate-500">{heroSubtitle}</p>
           </div>
 
-          <div className="-mx-4 overflow-x-auto px-4 pb-2">
+          <div className="-mx-4 overflow-x-auto overscroll-x-contain px-4 pb-2 snap-x snap-mandatory">
             <div className="flex gap-4">
               {heroFeed.map((item) => {
                 return (
                   <article
                     key={item.id}
-                    className="w-[82vw] max-w-[480px] aspect-[16/9] shrink-0 overflow-hidden rounded-2xl border border-white/10 shadow-sm"
+                    className="w-[82vw] max-w-[480px] aspect-[16/9] shrink-0 snap-center overflow-hidden rounded-2xl border border-white/10 shadow-sm"
                     style={{
                       borderLeftWidth: 2,
                       borderLeftColor: item.accentColor ?? undefined,
