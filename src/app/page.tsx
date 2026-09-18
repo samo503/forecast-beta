@@ -22,6 +22,15 @@ import TopBar from "./components/TopBar";
 // until there's real content to back it; data intentionally left in place.
 const SHOW_TONIGHTS_BRIEF = false;
 
+// Fixed order, not alphabetical or derived — see docs/decisions.md's
+// Genre section. Chips render in this order regardless of which channels
+// exist or when they were seeded, filtered down to genres at least one
+// channel actually carries.
+const GENRE_VOCABULARY = [
+  "Drama", "Comedy", "Reality", "Competition",
+  "Sci-Fi", "Sports", "Awards", "Documentary",
+] as const;
+
 const briefTheme: Record<string, { color: string }> = {
   "PREDICTION OPEN": { color: "#fb7185" }, // prediction mechanic — signal pink
   "RETURNING":       { color: "#22d3ee" }, // editorial/news — cyan
@@ -133,6 +142,12 @@ export default async function Home() {
       return a.channel.name.localeCompare(b.channel.name);
     });
 
+  // Vocabulary filtered to members present, not the present set sorted —
+  // keeps chip order stable (Drama always before Comedy if both exist)
+  // regardless of channel order or how many channels exist.
+  const presentGenres = new Set((channelRows ?? []).flatMap((c) => c.genres ?? []));
+  const genreChips = GENRE_VOCABULARY.filter((g) => presentGenres.has(g));
+
   return (
     <main className="relative min-h-screen bg-[#020205] pb-28 text-white">
       <div className="mx-auto flex max-w-[640px] flex-col gap-6 px-4 pt-5">
@@ -223,6 +238,22 @@ export default async function Home() {
           <p className="px-0.5 text-caption font-bold uppercase tracking-[0.24em] text-slate-500">
             Channels
           </p>
+
+          {genreChips.length > 0 && (
+            <div className="-mx-4 overflow-x-auto px-4">
+              <div className="flex gap-1.5">
+                {genreChips.map((genre) => (
+                  <span
+                    key={genre}
+                    className="shrink-0 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-caption font-medium text-slate-400"
+                  >
+                    {genre}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-3">
             {channelsOrdered.map(({ channel, episode, isLive }) => {
               const poster = channelPosters[channel.slug] ?? "";
