@@ -275,9 +275,9 @@ export const followedShows: FollowedShow[] = [
   },
   {
     id: 2,
-    title: "Survivor",
+    title: "Love Is Blind",
     status: "LIVE",
-    poster: "/survivor-challenge.webp",
+    poster: "",
     accuracy: 68,
   },
   {
@@ -323,8 +323,8 @@ export const profileActivity: ProfileActivity[] = [
     id: 2,
     type: "comment",
     action: "Joined room",
-    detail: "Tribal Tonight",
-    show: "Survivor",
+    detail: "Pod Chat Tonight",
+    show: "Love Is Blind",
     time: "15m",
   },
   {
@@ -373,7 +373,7 @@ export const profileFriends: ProfileFriend[] = [
     name: "Tess",
     avatar: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=100&q=80",
     accuracy: 89,
-    activity: "Survivor room",
+    activity: "Love Is Blind room",
   },
   {
     id: 4,
