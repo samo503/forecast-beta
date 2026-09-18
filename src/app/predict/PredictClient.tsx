@@ -1,11 +1,15 @@
 'use client'
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Lock } from "lucide-react";
+import { ChevronRight, Lock } from "lucide-react";
 import BottomNav from "../components/BottomNav";
+import LocalTime from "../components/LocalTime";
+import PosterBackground from "../components/PosterBackground";
 import TopBar, { type TopBarUser } from "../components/TopBar";
 import { lockPrediction } from "../actions/predictions";
+import { episodeImageKey, liveEpisodeImages } from "../../../lib/standinImages";
 import {
   pastItems,
   upcomingItems,
@@ -29,6 +33,12 @@ export type PredictionOption = {
 export type PredictionData = {
   id: string;
   episodeId: string;
+  /** Real episode fields, added for Open-tab event grouping — "" / null
+   *  are honest absences (no episode row), never invented. */
+  episodeTitle: string;
+  episodeNumber: number | null;
+  airDate: string | null;
+  channelSlug: string;
   question: string;
   status: "open" | "locked" | "resolved";
   locksAt: string | null;
@@ -268,7 +278,7 @@ function VotePills({
 // vote pills and the locked/resolved receipts below them read the same at
 // both sizes, since hierarchy here comes from position, not from a
 // different vote-visualization language.
-function PredictionCard({
+export function PredictionCard({
   card,
   variant,
   lockedPicks,
@@ -424,6 +434,141 @@ function PredictionCard({
   );
 }
 
+export type EventGroup = {
+  episodeId: string;
+  show: string;
+  channelSlug: string;
+  accentColor: string | null;
+  episodeTitle: string;
+  episodeNumber: number | null;
+  airDate: string | null;
+  /** First open prediction for this episode, by the same locks_at-ascending
+   *  order the Open tab already sorts by — not editorial copy, the real
+   *  next question in the existing order. */
+  representativeQuestion: string;
+  openCount: number;
+};
+
+// Groups the already-sorted (locks_at ascending) open predictions by their
+// real episode_id — the stable relational identifier already in the
+// schema, not by show name or any display text. Iterating an
+// already-sorted list means the first prediction encountered per episode
+// is automatically "first by existing order," and groups themselves come
+// out in that same chronological order with no separate sort step.
+export function groupOpenPredictionsByEvent(openPredictions: PredictionData[]): EventGroup[] {
+  const order: string[] = [];
+  const groups = new Map<string, EventGroup>();
+
+  for (const p of openPredictions) {
+    const existing = groups.get(p.episodeId);
+    if (existing) {
+      existing.openCount += 1;
+      continue;
+    }
+    order.push(p.episodeId);
+    groups.set(p.episodeId, {
+      episodeId: p.episodeId,
+      show: p.show,
+      channelSlug: p.channelSlug,
+      accentColor: p.accentColor,
+      episodeTitle: p.episodeTitle,
+      episodeNumber: p.episodeNumber,
+      airDate: p.airDate,
+      representativeQuestion: p.question,
+      openCount: 1,
+    });
+  }
+
+  return order.map((id) => groups.get(id)!);
+}
+
+// "Episode N" when the episode has one (Lanterns); otherwise a real date
+// (Emmys' one-off special has no episode_number) — never both, matching
+// which fact is actually meaningful for that kind of event.
+function EventContextLine({ group }: { group: EventGroup }) {
+  if (group.episodeNumber) return <>Episode {group.episodeNumber}</>;
+  if (group.airDate) return <LocalTime iso={group.airDate} />;
+  return null;
+}
+
+// Predict's own restrained version of the app's imagery system — reuses
+// Live's per-episode stand-ins (lib/standinImages.ts), never a new asset,
+// with a shorter crop and a left-to-right gradient rather than Guide/Live's
+// bottom-to-top one: this card's text sits at the left, the count and
+// chevron at the right, so the gradient needs to darken left-to-right to
+// keep the question legible without flattening the whole image the way a
+// uniform overlay would. No mapped image degrades to the same flat,
+// text-first card every other Predict card without art already uses —
+// never an empty image frame.
+function EventGroupCard({ group }: { group: EventGroup }) {
+  const image = liveEpisodeImages[episodeImageKey(group.channelSlug, group.episodeNumber)];
+  const questionCountLabel = group.openCount === 1 ? "open prediction" : "open predictions";
+
+  const showBadge = (
+    <span className="inline-block rounded-full border border-white/10 bg-slate-950/60 px-2 py-[3px] text-caption font-medium text-slate-300">
+      {group.show}
+    </span>
+  );
+
+  const textBlock = (
+    <div className="min-w-0 flex-1 space-y-0.5">
+      {showBadge}
+      <h3 className="text-body font-extrabold leading-snug text-white">
+        {group.episodeTitle}
+      </h3>
+      <p className="text-micro text-slate-400">
+        <EventContextLine group={group} />
+      </p>
+      <p className="line-clamp-2 text-caption leading-snug text-slate-300">
+        {group.representativeQuestion}
+      </p>
+    </div>
+  );
+
+  const countBlock = (
+    <div className="flex shrink-0 items-center gap-1.5 pl-2">
+      <div className="text-right">
+        <div className="text-title font-black leading-none text-white">{group.openCount}</div>
+        <div className="text-micro leading-tight text-slate-400">{questionCountLabel}</div>
+      </div>
+      <ChevronRight className="h-4 w-4 text-slate-500" strokeWidth={2} />
+    </div>
+  );
+
+  return (
+    <Link
+      id={`prediction-group-${group.episodeId}`}
+      href={`/predict/${group.episodeId}`}
+      className="block overflow-hidden rounded-xl border border-white/[0.07] bg-white/[0.02]"
+      style={group.accentColor ? { borderLeftColor: group.accentColor, borderLeftWidth: 2 } : undefined}
+    >
+      {image ? (
+        <div className="relative h-[104px]">
+          <PosterBackground
+            src={image}
+            title=""
+            sizes="(max-width: 640px) 100vw, 640px"
+            quality={50}
+          />
+          {/* Left-to-right, not bottom-to-top: text sits at the left edge
+              here, not the bottom, so the darkest point of the gradient
+              has to track the text block instead of the card's bottom. */}
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950 from-15% via-slate-950/75 via-55% to-slate-950/20" />
+          <div className="relative flex h-full items-center gap-2 p-3">
+            {textBlock}
+            {countBlock}
+          </div>
+        </div>
+      ) : (
+        <div className="flex items-center gap-2 p-3">
+          {textBlock}
+          {countBlock}
+        </div>
+      )}
+    </Link>
+  );
+}
+
 export default function PredictClient({
   predictions,
   myPicks,
@@ -495,6 +640,14 @@ export default function PredictClient({
   };
   const sortedPredictions = tabPredictions[activeTab];
 
+  // Open only: one group per real episode, built from the same
+  // locks_at-ascending list the flat tabs already use — see
+  // groupOpenPredictionsByEvent's own comment for why grouping an
+  // already-sorted list needs no separate ordering step. Locked and Past
+  // stay flat (see the build report for why grouping those would hide
+  // information the current design surfaces at a glance).
+  const openGroups = groupOpenPredictionsByEvent(tabPredictions.open);
+
   // Deep link from Guide's "Make a prediction" CTA (?episode=<id>). A
   // matching episode's predictions can land on any of the three tabs, so
   // this switches to whichever one actually has a match, most-actionable
@@ -528,8 +681,19 @@ export default function PredictClient({
   // prediction has since locked or resolved by the time this runs, this
   // still scrolls to it and lets the card show its own real state; that's
   // the page being correct, not an error to special-case.
+  //
+  // Open no longer renders one element per prediction — it renders one
+  // group per episode — so the scroll target there is the group card
+  // (`prediction-group-<episodeId>`), not a specific prediction's id.
+  // Locked and Past are unchanged, still flat lists of individual cards.
   useEffect(() => {
     if (!targetEpisodeId) return;
+    if (activeTab === "open") {
+      document
+        .getElementById(`prediction-group-${targetEpisodeId}`)
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
     const match = sortedPredictions.find((p) => p.episodeId === targetEpisodeId);
     if (!match) return;
     document.getElementById(`prediction-${match.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -668,7 +832,17 @@ export default function PredictClient({
           </p>
 
           <div className="space-y-1">
-            {sortedPredictions.length === 0 ? (
+            {activeTab === "open" ? (
+              openGroups.length === 0 ? (
+                <div className="rounded-xl border border-white/[0.05] bg-white/[0.015] px-3 py-2">
+                  <p className="text-caption text-slate-600">{tabEmptyMessage.open}</p>
+                </div>
+              ) : (
+                openGroups.map((group) => (
+                  <EventGroupCard key={group.episodeId} group={group} />
+                ))
+              )
+            ) : sortedPredictions.length === 0 ? (
               <div className="rounded-xl border border-white/[0.05] bg-white/[0.015] px-3 py-2">
                 <p className="text-caption text-slate-600">{tabEmptyMessage[activeTab]}</p>
               </div>

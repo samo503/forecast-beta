@@ -255,7 +255,18 @@ export default async function Home() {
                       />
                     )}
 
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-transparent to-transparent" />
+                    {/* Bottom-weighted only — title/description/next-airing
+                        text sits at the bottom of the card (justify-end
+                        below), so legibility depends on that region being
+                        dark, not the whole image. Extended further up
+                        (via stop at 60%, not the default ~50%) and the
+                        floor raised to fully opaque rather than /85, since
+                        a bright part of the source photo (Love Island's
+                        pool reflections, for one) could otherwise sit
+                        directly behind the text. The top of the card is
+                        untouched — to-transparent starts from the same
+                        place it always did. */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 from-10% via-slate-950/70 via-60% to-transparent" />
 
                     <div className="relative flex h-full flex-col justify-end p-3">
                       <div className="space-y-1">

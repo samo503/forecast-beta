@@ -45,5 +45,10 @@ export async function lockPrediction(
   }
 
   revalidatePath('/predict')
+  // The per-episode collection route also reads user_predictions server-
+  // side (myPicks/myResults) — without this it would keep serving the
+  // pre-pick cached version until some unrelated revalidation happened to
+  // touch it.
+  revalidatePath('/predict/[episodeId]', 'page')
   return { ok: true }
 }

@@ -12,7 +12,7 @@ export default async function PredictPage() {
   const { data: predictionRows } = await supabase
     .from("predictions")
     .select(
-      "*, channel:channels(*), options:prediction_options!prediction_options_prediction_id_fkey(*)"
+      "*, channel:channels(*), episode:episodes(title, episode_number, air_date), options:prediction_options!prediction_options_prediction_id_fkey(*)"
     )
     .in("status", ["open", "locked", "resolved"])
     .order("locks_at", { ascending: true });
@@ -39,6 +39,10 @@ export default async function PredictPage() {
     .map((p) => ({
       id: p.id,
       episodeId: p.episode_id,
+      episodeTitle: p.episode?.title ?? "",
+      episodeNumber: p.episode?.episode_number ?? null,
+      airDate: p.episode?.air_date ?? null,
+      channelSlug: p.channel.slug,
       question: p.question,
       status: p.status as "open" | "locked" | "resolved",
       locksAt: p.locks_at,
