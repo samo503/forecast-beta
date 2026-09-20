@@ -636,3 +636,32 @@ Bad Optics, Episode 7, and Episode 8 all appearing back-to-back before
 Survivor's premiere) is the intended feel, not a bug to dedupe away.
 `channelEpisode` itself is unchanged and untouched by this — it's shared
 with, not replaced for, the Channels grid.
+
+## Episode duration: `runtime_minutes`, not `ends_at`
+
+**`episodes.runtime_minutes` (migration `0014`) is a nullable int, not
+a second `ends_at timestamptz`.** Considered and rejected `ends_at`:
+it duplicates what `air_date` + duration already imply, and can drift
+out of sync if one is edited without the other (an `air_date`
+correction with no matching `ends_at` update). A minutes figure has
+nothing to drift against — it's a pure duration, turned into a window
+only at display time by `effectiveEpisodeStatus()`, same mechanism as
+before. It also matches how every seed migration in this project is
+actually authored: by hand, from a plain-language duration ("120
+minutes"), not a precomputed absolute end instant.
+
+**Real backfilled figures, nothing invented beyond them**: Lanterns'
+episodes (Bad Optics, Episode 7, Episode 8) are `60`, not their
+measured ~52–57 minute runtime — HBO airs on the hour, so 60 is the
+safer boundary (a real episode never runs past it) while staying well
+short of the next hour's slot. Survivor's September 23, 2026 premiere
+is `120`; its weekly episodes are `90`. The two already-`ended` rows
+(Love Island, Emmys) were deliberately left `null` — `effectiveEpisodeStatus()`
+returns `ended` for a stored `ended` row before ever consulting a
+duration, so a number there is dead data, and Emmys' real runtime was
+never given to invent. Don't backfill either later without a real
+source.
+
+An episode with no `runtime_minutes` set falls back to
+`LIVE_WINDOW_MINUTES` (90, unchanged) — see `src/lib/episodeStatus.ts`.
+Full investigation: `docs/reports/episode-duration-plan.md`.
