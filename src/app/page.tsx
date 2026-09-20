@@ -242,13 +242,7 @@ export default async function Home() {
         </section>
         )}
 
-        <section className="space-y-2">
-          <p className="px-0.5 text-caption font-bold uppercase tracking-[0.24em] text-slate-500">
-            Channels
-          </p>
-
-          <GuideChannels channelsOrdered={channelsOrdered} genreChips={genreChips} />
-        </section>
+        <GuideChannels channelsOrdered={channelsOrdered} genreChips={genreChips} />
 
         {SHOW_TONIGHTS_BRIEF && (
         <section className="space-y-2.5">

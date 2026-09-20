@@ -35,126 +35,155 @@ export default function GuideChannels({
 
   return (
     <>
+      {/* ── Browse by genre ──
+          Chips are filters, not channels — their own heading, not stacked
+          under a channels-labeled one. */}
       {genreChips.length > 0 && (
-        <div className="-mx-4 overflow-x-auto px-4">
-          <div className="flex gap-1.5">
-            {genreChips.map((genre) => {
-              const active = genre === activeGenre;
+        <section className="space-y-2">
+          <p className="px-0.5 text-caption font-bold uppercase tracking-[0.24em] text-slate-500">
+            Browse by genre
+          </p>
+          <div className="-mx-4 overflow-x-auto px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div className="flex gap-1.5">
+              {genreChips.map((genre) => {
+                const active = genre === activeGenre;
+                return (
+                  <button
+                    key={genre}
+                    type="button"
+                    onClick={() => setActiveGenre(active ? null : genre)}
+                    className={`shrink-0 rounded-full border px-2.5 py-1 text-caption font-medium transition ${
+                      active
+                        ? "border-white/20 bg-white/[0.12] text-white"
+                        : "border-white/10 bg-white/[0.04] text-slate-400"
+                    }`}
+                  >
+                    {genre}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ── Featured channels ──
+          Horizontal scroll-snap carousel, not a 2x2 grid — four channels
+          (and growing) no longer need to consume two full rows. Cards stay
+          non-tappable: there's no channel page yet, so no chevron, no
+          link, nothing implying a destination that doesn't exist. */}
+      <section className="space-y-2">
+        <div className="space-y-0.5">
+          <p className="px-0.5 text-caption font-bold uppercase tracking-[0.24em] text-slate-500">
+            Featured channels
+          </p>
+          <p className="px-0.5 text-caption text-slate-500">
+            Shows, events, and competitions on Forecast.
+          </p>
+        </div>
+
+        <div className="-mx-4 overflow-x-auto overscroll-x-contain px-4 pb-2 snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="flex gap-3">
+            {filtered.map(({ channel, episode, isLive }) => {
+              const poster = channelCardImages[channel.slug] ?? channelPosters[channel.slug] ?? "";
+
               return (
-                <button
-                  key={genre}
-                  type="button"
-                  onClick={() => setActiveGenre(active ? null : genre)}
-                  className={`shrink-0 rounded-full border px-2.5 py-1 text-caption font-medium transition ${
-                    active
-                      ? "border-white/20 bg-white/[0.12] text-white"
-                      : "border-white/10 bg-white/[0.04] text-slate-400"
-                  }`}
+                <article
+                  key={channel.id}
+                  className="flex w-[38vw] max-w-[185px] shrink-0 snap-center flex-col overflow-hidden rounded-xl border border-white/10 shadow-sm"
+                  style={{
+                    borderLeftWidth: 2,
+                    borderLeftColor: channel.accent_color ?? undefined,
+                  }}
                 >
-                  {genre}
-                </button>
+                  {/* Real, unobstructed image region — no scrim, since no
+                      text ever sits over it (see docs/decisions.md's
+                      Channels-grid entry for the full reasoning). Height +
+                      the info region's padding below were both tuned
+                      against real rendered measurements (Playwright,
+                      WebKit) to land in the 40-45% image-height target,
+                      not eyeballed. Matches Up Next's imagery-forward
+                      treatment in spirit without copying its full-bleed,
+                      text-over-photo composition — that stays Up Next's
+                      own. */}
+                  <div className="relative h-[88px] w-full shrink-0 bg-slate-900">
+                    {poster ? (
+                      <PosterBackground
+                        src={poster}
+                        title=""
+                        // Lanterns reuses its own hero photo here (see
+                        // lib/standinImages.ts) — a tighter, higher crop
+                        // than the full-card version this replaced, chosen
+                        // for what actually reads at this card's much
+                        // shorter image band rather than reusing the old
+                        // full-card framing unexamined. Survivor's
+                        // dedicated card crop keeps the coastline horizon
+                        // and the orange cloud-glow in frame at this
+                        // band's real 88px height, checked against the
+                        // actual render, not assumed — see
+                        // docs/decisions.md.
+                        backgroundPosition={
+                          channel.slug === "lanterns"
+                            ? "center 30%"
+                            : channel.slug === "survivor"
+                              ? "center 40%"
+                              : "center"
+                        }
+                        sizes="44vw"
+                      />
+                    ) : (
+                      // No mapped artwork (Emmys only, as of the Survivor
+                      // stand-in landing — see docs/decisions.md): not a
+                      // blank placeholder — a solid wash of the channel's
+                      // own real, already-approved accent color, the same
+                      // identity signal the left rail already carries,
+                      // rather than a second copy of PosterBackground's
+                      // generic gray no-image gradient sitting isolated in
+                      // its own band.
+                      <div
+                        className="absolute inset-0"
+                        style={{
+                          backgroundColor: channel.accent_color
+                            ? `color-mix(in srgb, ${channel.accent_color} 22%, #0b0d12)`
+                            : "#0b0d12",
+                        }}
+                      />
+                    )}
+                  </div>
+
+                  <div className="flex flex-1 flex-col justify-center gap-1 bg-slate-950 p-2">
+                    <p className="text-body font-bold leading-tight tracking-tight text-white">
+                      {channel.name}
+                    </p>
+                    {channel.description && (
+                      <p className="line-clamp-2 text-caption leading-snug text-slate-500">
+                        {channel.description}
+                      </p>
+                    )}
+                    <p
+                      className={`text-caption leading-tight ${
+                        isLive || episode ? "text-slate-500" : "text-slate-600"
+                      }`}
+                    >
+                      {isLive ? (
+                        "Live now"
+                      ) : episode ? (
+                        <>
+                          Next:{" "}
+                          {episode.episode_number ? `E${episode.episode_number} · ` : ""}
+                          <LocalTime iso={episode.air_date!} />
+                        </>
+                      ) : (
+                        "No upcoming episodes"
+                      )}
+                    </p>
+                  </div>
+                </article>
               );
             })}
           </div>
         </div>
-      )}
-
-      <div className="grid grid-cols-2 gap-3">
-        {filtered.map(({ channel, episode, isLive }) => {
-          const poster = channelCardImages[channel.slug] ?? channelPosters[channel.slug] ?? "";
-
-          return (
-            <article
-              key={channel.id}
-              className="flex flex-col overflow-hidden rounded-xl border border-white/10 shadow-sm"
-              style={{
-                borderLeftWidth: 2,
-                borderLeftColor: channel.accent_color ?? undefined,
-              }}
-            >
-              {/* Real, unobstructed image region — no scrim, since no text
-                  ever sits over it (see docs/decisions.md's Channels-grid
-                  entry for the full reasoning). Height + the info region's
-                  padding below were both tuned against real rendered
-                  measurements (Playwright, WebKit) to land in the 40-45%
-                  image-height target, not eyeballed. Matches Up Next's
-                  imagery-forward treatment in spirit without copying its
-                  full-bleed, text-over-photo composition — that stays Up
-                  Next's own. */}
-              <div className="relative h-[88px] w-full shrink-0 bg-slate-900">
-                {poster ? (
-                  <PosterBackground
-                    src={poster}
-                    title=""
-                    // Lanterns reuses its own hero photo here (see
-                    // lib/standinImages.ts) — a tighter, higher crop than
-                    // the full-card version this replaced, chosen for
-                    // what actually reads at this card's new, much
-                    // shorter image band rather than reusing the old
-                    // full-card framing unexamined. Survivor's dedicated
-                    // card crop keeps the coastline horizon and the
-                    // orange cloud-glow in frame at this band's real 88px
-                    // height, checked against the actual render, not
-                    // assumed — see docs/decisions.md.
-                    backgroundPosition={
-                      channel.slug === "lanterns"
-                        ? "center 30%"
-                        : channel.slug === "survivor"
-                          ? "center 40%"
-                          : "center"
-                    }
-                    sizes="(max-width: 640px) 50vw, 320px"
-                  />
-                ) : (
-                  // No mapped artwork (Emmys only, as of the Survivor
-                  // stand-in landing — see docs/decisions.md): not a blank
-                  // placeholder — a solid wash of the channel's own real,
-                  // already-approved accent color, the same identity
-                  // signal the left rail already carries, rather than a
-                  // second copy of PosterBackground's generic gray
-                  // no-image gradient sitting isolated in its own band.
-                  <div
-                    className="absolute inset-0"
-                    style={{
-                      backgroundColor: channel.accent_color
-                        ? `color-mix(in srgb, ${channel.accent_color} 22%, #0b0d12)`
-                        : "#0b0d12",
-                    }}
-                  />
-                )}
-              </div>
-
-              <div className="flex flex-1 flex-col justify-center gap-1 bg-slate-950 p-2">
-                <p className="text-body font-bold leading-tight tracking-tight text-white">
-                  {channel.name}
-                </p>
-                {channel.description && (
-                  <p className="line-clamp-2 text-caption leading-snug text-slate-500">
-                    {channel.description}
-                  </p>
-                )}
-                <p
-                  className={`text-caption leading-tight ${
-                    isLive || episode ? "text-slate-500" : "text-slate-600"
-                  }`}
-                >
-                  {isLive ? (
-                    "Live now"
-                  ) : episode ? (
-                    <>
-                      Next:{" "}
-                      {episode.episode_number ? `E${episode.episode_number} · ` : ""}
-                      <LocalTime iso={episode.air_date!} />
-                    </>
-                  ) : (
-                    "No upcoming episodes"
-                  )}
-                </p>
-              </div>
-            </article>
-          );
-        })}
-      </div>
+      </section>
     </>
   );
 }
