@@ -592,7 +592,34 @@ actually carries** — computed as `present = new Set(channels.flatMap(c
 filtered down to members of `present`. Filtering the vocabulary rather
 than sorting the derived set keeps chip order stable and intentional
 (Drama always before Comedy if both are present) regardless of which
-channels exist or in what order they were seeded.
+channels exist or in what order they were seeded. "All" (added when
+the carousel shipped) is a UI-only prefix — it's not a ninth vocabulary
+word, just the existing `activeGenre === null` state made tappable, and
+is always selected by default.
+
+**Checked 2026-09-20: the eight-word vocabulary is a real, two-place
+hard limit, not just a display convention — expanding it needs a
+migration, not a code change alone.** Two independent lists have to
+move together and neither is derived from the other: this file's
+`GENRE_VOCABULARY` constant in `src/app/page.tsx` (controls chip
+display order) and the `channels_genres_valid` `check` constraint in
+`0012_channel_genres.sql` (controls what the database will actually
+accept in `channels.genres`) — both hardcode the identical eight
+words, in the same order, but as two separate literals with nothing
+keeping them in sync. Today's real channels only ever populate a
+handful of these eight, which is expected and correct (Guide only
+ever shows chips for genres a real channel carries) — but the
+*ceiling* is the eight-word list itself, not how many are currently
+visible. None of a plausible future set — Fantasy, Crime, Thriller,
+Horror, News/Current Events, Animation — exists in either list today;
+inserting a channel with any of those genres would be rejected at the
+database level by the check constraint as it's currently written.
+**Adding a new genre word requires both a migration (widen the check
+constraint's array) and a matching update to `GENRE_VOCABULARY`** —
+this is a real, if small, coupled change, not a config flag. Not done
+here: this is a report of the real ceiling, not a migration written
+speculatively ahead of an actual product decision to expand the
+vocabulary.
 
 ## Survivor: real channel, and a known timezone limitation in its data
 
@@ -749,3 +776,66 @@ state, not an error condition — nothing in Guide, Live, or Predict
 should treat "no open prediction yet" as something to route around,
 hide, or explain away. It resolves itself the same way it always has:
 someone watches the episode and writes the next questions.
+
+## Guide personalization: Following vs. Featured Channels (documented, not built)
+
+**Not implemented.** This records the intended future Guide
+information architecture so personalization and editorial discovery
+don't get confused with each other later — specifically so a future
+Following shelf doesn't get built by copying the Featured Channels
+card component, which would be the easy-but-wrong path.
+
+**Four sections, four different jobs, each answering a different
+question:**
+
+| Section | Question it answers | Scope |
+|---|---|---|
+| Up Next | "What matters next?" | Episode/event-level chronological programming |
+| Following *(not built)* | "What am I following?" | Personalized — only channels the signed-in user explicitly follows |
+| Browse by genre | "Help me find something." | Catalog filtering/discovery |
+| Featured Channels | "What is Forecast surfacing?" | Editorial/discovery, independent of follow status |
+
+**Following is not Featured Channels, and the two should eventually
+coexist**, not replace one another. Future hierarchy, Following
+inserted between Up Next and Browse by genre:
+
+```
+UP NEXT
+
+FOLLOWING
+Your shows and events.
+[compact personalized horizontal shelf]
+
+BROWSE BY GENRE
+
+FEATURED CHANNELS
+Shows, events, and competitions on Forecast.
+[larger editorial discovery cards]
+```
+
+**Design rules for whenever Following is actually built** (documented
+now, not implemented):
+
+- Following only appears when the signed-in user has at least one
+  real followed channel — never shown empty, never fabricated to look
+  populated for a new user.
+- Following is visually more compact than Featured Channels, and does
+  **not** reuse the Featured Channels card component unmodified —
+  Following prioritizes recognition and next-airing information over
+  the richer editorial treatment Featured Channels carries; deliberately
+  a different, smaller surface, not a re-skin.
+- Featured Channels remains the richer editorial/discovery surface
+  regardless of what Following ships with.
+- A channel can legitimately appear in both shelves at once (followed
+  *and* editorially featured) — the two components need to read as
+  visually distinct enough that this doesn't feel like duplicated UI
+  when it happens.
+- Follow/unfollow needs a real persistence model and a real, working
+  interaction before this shelf ships. `channel_follows`/`user_follows`
+  already exist as tables (migration `0010`, see this file's "Still
+  intentionally mock" section) but nothing reads or writes them yet —
+  Following is real work, not a UI-only pass once those tables exist.
+- No heart/bookmark/follow control appears anywhere until that action
+  genuinely persists and works — matches this file's existing
+  "Navigation affordances" rule (no control implying a destination or
+  action that doesn't exist yet).
