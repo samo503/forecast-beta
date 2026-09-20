@@ -81,7 +81,7 @@ export default async function Home() {
   const channelEpisode = new Map<string, NonNullable<typeof episodeRows>[number]>();
   for (const e of episodeRows ?? []) {
     if (!e.channel || channelEpisode.has(e.channel_id)) continue;
-    if (effectiveEpisodeStatus(e.status, e.air_date, now) === "ended") continue;
+    if (effectiveEpisodeStatus(e.status, e.air_date, now, e.runtime_minutes) === "ended") continue;
     channelEpisode.set(e.channel_id, e);
   }
 
@@ -94,13 +94,13 @@ export default async function Home() {
   // powers the Channels grid's own one-per-channel summary.
   const HERO_LIMIT = 8;
   const heroFeed: HeroFeedShow[] = (episodeRows ?? [])
-    .filter((e) => e.channel && effectiveEpisodeStatus(e.status, e.air_date, now) !== "ended")
+    .filter((e) => e.channel && effectiveEpisodeStatus(e.status, e.air_date, now, e.runtime_minutes) !== "ended")
     .slice(0, HERO_LIMIT)
     .map((e, idx) => ({
       id: idx,
       kind: "show",
       episodeId: e.id,
-      isLive: effectiveEpisodeStatus(e.status, e.air_date, now) === "live",
+      isLive: effectiveEpisodeStatus(e.status, e.air_date, now, e.runtime_minutes) === "live",
       hasOpenPrediction: openPredictionEpisodeIds.has(e.id),
       title: e.title,
       subtitle: e.channel.name,
@@ -133,7 +133,7 @@ export default async function Home() {
     .map((c) => {
       const episode = channelEpisode.get(c.id) ?? null;
       const isLive = episode
-        ? effectiveEpisodeStatus(episode.status, episode.air_date, now) === "live"
+        ? effectiveEpisodeStatus(episode.status, episode.air_date, now, episode.runtime_minutes) === "live"
         : false;
       return { channel: c, episode, isLive };
     })
