@@ -494,16 +494,37 @@ visual family has actually been art-directed and approved; until then,
 every channel uses the existing accent-color fallback rather than a
 placeholder that looks more finished than it is.
 
-**Exception, five assets now — six originally, one removed.** These
-assets are temporary AI-generated atmospheric stand-ins, not final
-artwork, added Sept 17, 2026 before the Sept 20 test. They contain no
-characters, logos, or franchise iconography, and are to be replaced by
-original photography. This supersedes the earlier "no artwork until a
-channel's visual family is approved" line for these assets only — every
-other channel, and any future asset beyond these, still waits for that
+**Exception, seven assets now — six originally Sept 17, one removed
+Sept 18, two added Sept 19.** These assets are temporary AI-generated
+atmospheric stand-ins, not final artwork. They contain no characters,
+logos, or franchise iconography, and are to be replaced by original
+photography. This supersedes the earlier "no artwork until a channel's
+visual family is approved" line for these assets only — every other
+channel, and any future asset beyond these, still waits for that
 approval. Mapped in `lib/standinImages.ts`; see the build report for
 the per-surface crop and reuse decisions (Lanterns' channel card
 reusing its own hero photo, in particular).
+
+**`forecast_guide_hero_survivor.png` and `forecast_guide_card_survivor.png`
+added Sept 19, 2026** — a dark tropical coastline at dusk, orange
+cloud-glow upper right, water reflection below, no people. Same
+temporary-stand-in category as the rest of this exception. The hero
+file powers Up Next's carousel for every Survivor episode (E1-E4),
+reused the same way Lanterns' single hero image covers E6/E7/E8; the
+card file is a dedicated (today byte-identical, but separately
+mapped — see `channelCardImages` in `lib/standinImages.ts`) asset for
+the Channels-grid card specifically, replacing that card's
+accent-color wash. Channels-grid crop is `center 40%`, chosen (not
+defaulted) to keep both the horizon and the orange glow inside the
+grid card's real 88px-tall image band — checked against the actual
+rendered card, not assumed. Rail contrast confirmed by direct pixel
+sampling against the hero card's own darkest rendered region (near-
+black palm silhouette at the left edge): Survivor's `#f97316` rail
+measures ~7.2-7.5:1 there, comfortably above WCAG AA. Total transferred
+image weight for Guide at a 390px viewport measured ~145KB (Playwright,
+WebKit) — under the ~400KB budget, no quality/dimension reduction
+needed. Emmys' accent-color wash is unchanged; that channel still has
+no artwork.
 
 **`forecast_guide_card_emmys.png` removed, Sept 18, 2026.** It depicted
 an Emmy statuette — trademarked franchise iconography, not an

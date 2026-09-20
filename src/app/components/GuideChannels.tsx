@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { channelPosters } from "../../../lib/standinImages";
+import { channelCardImages, channelPosters } from "../../../lib/standinImages";
 import LocalTime from "./LocalTime";
 import PosterBackground from "./PosterBackground";
 
@@ -61,7 +61,7 @@ export default function GuideChannels({
 
       <div className="grid grid-cols-2 gap-3">
         {filtered.map(({ channel, episode, isLive }) => {
-          const poster = channelPosters[channel.slug] ?? "";
+          const poster = channelCardImages[channel.slug] ?? channelPosters[channel.slug] ?? "";
 
           return (
             <article
@@ -91,14 +91,23 @@ export default function GuideChannels({
                     // the full-card version this replaced, chosen for
                     // what actually reads at this card's new, much
                     // shorter image band rather than reusing the old
-                    // full-card framing unexamined.
+                    // full-card framing unexamined. Survivor's dedicated
+                    // card crop keeps the coastline horizon and the
+                    // orange cloud-glow in frame at this band's real 88px
+                    // height, checked against the actual render, not
+                    // assumed — see docs/decisions.md.
                     backgroundPosition={
-                      channel.slug === "lanterns" ? "center 30%" : "center"
+                      channel.slug === "lanterns"
+                        ? "center 30%"
+                        : channel.slug === "survivor"
+                          ? "center 40%"
+                          : "center"
                     }
                     sizes="(max-width: 640px) 50vw, 320px"
                   />
                 ) : (
-                  // No mapped artwork (Survivor, Emmys): not a blank
+                  // No mapped artwork (Emmys only, as of the Survivor
+                  // stand-in landing — see docs/decisions.md): not a blank
                   // placeholder — a solid wash of the channel's own real,
                   // already-approved accent color, the same identity
                   // signal the left rail already carries, rather than a
