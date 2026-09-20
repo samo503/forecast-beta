@@ -20,7 +20,9 @@ export default async function Live() {
   // would sit under "Opens in soon" forever once its air time passes.
   const { data: episodeRows } = await supabase
     .from("episodes")
-    .select("id, title, episode_number, air_date, status, channel:channels(name, slug, accent_color)")
+    .select(
+      "id, title, episode_number, air_date, status, runtime_minutes, channel:channels(name, slug, accent_color)"
+    )
     .in("status", ["live", "upcoming"])
     .order("air_date", { ascending: true });
 
@@ -47,10 +49,10 @@ export default async function Live() {
   // dropped, same as an actually-'ended' row already is by the query.
   const now = new Date();
   const liveEpisodes: RoomEpisode[] = episodeRowsNonNull
-    .filter((e) => effectiveEpisodeStatus(e.status, e.air_date, now) === "live")
+    .filter((e) => effectiveEpisodeStatus(e.status, e.air_date, now, e.runtime_minutes) === "live")
     .map(toRoomEpisode);
   const upcomingEpisodes: RoomEpisode[] = episodeRowsNonNull
-    .filter((e) => effectiveEpisodeStatus(e.status, e.air_date, now) === "upcoming")
+    .filter((e) => effectiveEpisodeStatus(e.status, e.air_date, now, e.runtime_minutes) === "upcoming")
     .map(toRoomEpisode);
 
   return (
