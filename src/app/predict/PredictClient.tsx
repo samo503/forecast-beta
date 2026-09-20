@@ -442,10 +442,6 @@ export type EventGroup = {
   episodeTitle: string;
   episodeNumber: number | null;
   airDate: string | null;
-  /** First open prediction for this episode, by the same locks_at-ascending
-   *  order the Open tab already sorts by — not editorial copy, the real
-   *  next question in the existing order. */
-  representativeQuestion: string;
   openCount: number;
 };
 
@@ -474,7 +470,6 @@ export function groupOpenPredictionsByEvent(openPredictions: PredictionData[]): 
       episodeTitle: p.episodeTitle,
       episodeNumber: p.episodeNumber,
       airDate: p.airDate,
-      representativeQuestion: p.question,
       openCount: 1,
     });
   }
@@ -482,24 +477,49 @@ export function groupOpenPredictionsByEvent(openPredictions: PredictionData[]): 
   return order.map((id) => groups.get(id)!);
 }
 
-// "Episode N" when the episode has one (Lanterns); otherwise a real date
-// (Emmys' one-off special has no episode_number) — never both, matching
-// which fact is actually meaningful for that kind of event.
-function EventContextLine({ group }: { group: EventGroup }) {
-  if (group.episodeNumber) return <>Episode {group.episodeNumber}</>;
-  if (group.airDate) return <LocalTime iso={group.airDate} />;
-  return null;
+// Untitled episodes (the "Episode N" placeholder convention documented in
+// docs/decisions.md) carry no real title distinct from their number — the
+// stored title itself already says everything "E{n}" below it would only
+// repeat. This is the one rule for that, not a per-show special case: any
+// title that's exactly "Episode {episodeNumber}" is generic, regardless of
+// which channel it's on. The stored title itself is never touched — this
+// only decides whether a second, redundant line renders next to it.
+function isGenericEpisodeTitle(title: string, episodeNumber: number | null): boolean {
+  return episodeNumber != null && title.trim() === `Episode ${episodeNumber}`;
+}
+
+// Real supporting metadata, not editorial copy: "E{n} · <local air time>",
+// the same "detail · LocalTime" shape Guide's hero and Live's rows already
+// use, so this reads as the same product's own established grammar rather
+// than a new one invented for this card. The episode number is dropped
+// entirely when it would just repeat a generic title (see
+// isGenericEpisodeTitle) — never both a duplicated "Episode 1" line and an
+// "E1" prefix on the same card.
+function EpisodeMetaLine({ group }: { group: EventGroup }) {
+  const generic = isGenericEpisodeTitle(group.episodeTitle, group.episodeNumber);
+  const detail = group.episodeNumber && !generic ? `E${group.episodeNumber}` : "";
+  if (!detail && !group.airDate) return null;
+  return (
+    <>
+      {detail}
+      {detail && group.airDate && " · "}
+      {group.airDate && <LocalTime iso={group.airDate} />}
+    </>
+  );
 }
 
 // Predict's own restrained version of the app's imagery system — reuses
 // Live's per-episode stand-ins (lib/standinImages.ts), never a new asset,
 // with a shorter crop and a left-to-right gradient rather than Guide/Live's
-// bottom-to-top one: this card's text sits at the left, the count and
-// chevron at the right, so the gradient needs to darken left-to-right to
-// keep the question legible without flattening the whole image the way a
-// uniform overlay would. No mapped image degrades to the same flat,
-// text-first card every other Predict card without art already uses —
-// never an empty image frame.
+// bottom-to-top one: this card's text sits at the left, the chevron at the
+// right, so the gradient needs to darken left-to-right to keep the text
+// legible without flattening the whole image the way a uniform overlay
+// would. Deliberately stays muted rather than Guide's newly-unobstructed
+// Channels treatment (docs/decisions.md) — Predict's whole imagery model
+// is quieter than Guide's on purpose: the question is the decision here,
+// not the browse. No mapped image (Survivor) degrades to a plain
+// text-only card — no image slot, no color wash, nothing standing in for
+// artwork that doesn't exist — never an empty image frame.
 function EventGroupCard({ group }: { group: EventGroup }) {
   const image = liveEpisodeImages[episodeImageKey(group.channelSlug, group.episodeNumber)];
   const questionCountLabel = group.openCount === 1 ? "open prediction" : "open predictions";
@@ -510,29 +530,29 @@ function EventGroupCard({ group }: { group: EventGroup }) {
     </span>
   );
 
+  // Hierarchy top to bottom: channel identity, episode/event, prediction
+  // availability, supporting context — matching Guide's own "Predictions
+  // open" pill styling exactly (same bg-white/[0.08] slate-300 pill) so
+  // "N open predictions" reads as the same kind of fact on both surfaces.
   const textBlock = (
-    <div className="min-w-0 flex-1 space-y-0.5">
+    <div className="min-w-0 flex-1 space-y-1">
       {showBadge}
       <h3 className="text-body font-extrabold leading-snug text-white">
         {group.episodeTitle}
       </h3>
-      <p className="text-micro text-slate-400">
-        <EventContextLine group={group} />
-      </p>
-      <p className="line-clamp-2 text-caption leading-snug text-slate-300">
-        {group.representativeQuestion}
+      <span className="inline-flex w-fit items-center rounded-full bg-white/[0.08] px-2 py-0.5 text-caption font-semibold uppercase tracking-[0.1em] text-slate-300">
+        {group.openCount} {questionCountLabel}
+      </span>
+      <p className="text-micro text-slate-500">
+        <EpisodeMetaLine group={group} />
       </p>
     </div>
   );
 
-  const countBlock = (
-    <div className="flex shrink-0 items-center gap-1.5 pl-2">
-      <div className="text-right">
-        <div className="text-title font-black leading-none text-white">{group.openCount}</div>
-        <div className="text-micro leading-tight text-slate-400">{questionCountLabel}</div>
-      </div>
-      <ChevronRight className="h-4 w-4 text-slate-500" strokeWidth={2} />
-    </div>
+  // The count already lives in the hierarchy above — the chevron alone is
+  // the tap affordance here, not a second, competing CTA.
+  const chevron = (
+    <ChevronRight className="h-4 w-4 shrink-0 self-center text-slate-500" strokeWidth={2} />
   );
 
   return (
@@ -556,13 +576,13 @@ function EventGroupCard({ group }: { group: EventGroup }) {
           <div className="absolute inset-0 bg-gradient-to-r from-slate-950 from-15% via-slate-950/75 via-55% to-slate-950/20" />
           <div className="relative flex h-full items-center gap-2 p-3">
             {textBlock}
-            {countBlock}
+            {chevron}
           </div>
         </div>
       ) : (
-        <div className="flex items-center gap-2 p-3">
+        <div className="flex items-center gap-2 p-4">
           {textBlock}
-          {countBlock}
+          {chevron}
         </div>
       )}
     </Link>
@@ -682,15 +702,15 @@ export default function PredictClient({
   // still scrolls to it and lets the card show its own real state; that's
   // the page being correct, not an error to special-case.
   //
-  // Open renders one group per episode only once grouping is actually
-  // active (two or more episodes with open predictions) — the scroll
-  // target there is the group card (`prediction-group-<episodeId>`), not
-  // a specific prediction's id. With zero or exactly one group, Open
-  // falls back to the same flat individual-card layout Locked and Past
-  // always use, so the scroll target there is the usual prediction id.
+  // Open always renders grouped, even with a single open episode/event —
+  // the scroll target there is the group card
+  // (`prediction-group-<episodeId>`), never a specific prediction's id.
+  // Locked and Past stay flat (grouping them would hide information those
+  // tabs surface at a glance), so their scroll target is the usual
+  // prediction id.
   useEffect(() => {
     if (!targetEpisodeId) return;
-    if (activeTab === "open" && openGroups.length >= 2) {
+    if (activeTab === "open" && openGroups.length > 0) {
       document
         .getElementById(`prediction-group-${targetEpisodeId}`)
         ?.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -834,12 +854,15 @@ export default function PredictClient({
           </p>
 
           <div className="space-y-1">
-            {/* Grouping only earns its keep once there's more than one
-                event to group — with a single episode, the group card's
-                tap-through is a detour in front of the only thing there is
-                to do on the page. One event falls back to the exact same
-                flat individual-card layout Locked and Past always use. */}
-            {activeTab === "open" && openGroups.length >= 2 ? (
+            {/* Open = choose an episode/event, always — even with a single
+                open episode, this stays the group card, not a shortcut
+                straight to its questions. Predictions are written after
+                watching the previous episode (see docs/decisions.md), so
+                normally only one collection is open at a time; the single-
+                group case is the common case, not an edge case to route
+                around. Locked and Past stay flat — grouping those would
+                hide information those tabs surface at a glance. */}
+            {activeTab === "open" && openGroups.length > 0 ? (
               openGroups.map((group) => (
                 <EventGroupCard key={group.episodeId} group={group} />
               ))

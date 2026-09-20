@@ -706,3 +706,25 @@ two cards show real photography, two show a flat color block. That gap
 closes only when Survivor and Emmys get real approved artwork; nothing
 in this card redesign should be read as optimized around either
 channel staying image-free permanently.
+
+## Prediction questions are written after watching the previous episode
+
+**Normally only one prediction collection per serialized show is open
+at a time.** Questions for an episode aren't written until after the
+previous episode has aired — Bad Optics' four questions went up once
+Episode 5 had been watched, not speculatively ahead of it. This is why
+Open showing exactly one group per still-serializing show (Lanterns'
+one open episode; Survivor's one open episode, itself a distinct
+show) is the normal, expected shape, not a thin/empty state to design
+around.
+
+**Future scheduled episodes appear in Guide, Live, and `/schedule` as
+programming — without prediction questions — until their questions
+are written and seeded.** Episode 7 and Episode 8 are real, scheduled,
+and already visible everywhere episodes are listed; neither has
+predictions yet, and that's correct, not a gap in either page. An
+upcoming episode with no open prediction is the expected pre-question
+state, not an error condition — nothing in Guide, Live, or Predict
+should treat "no open prediction yet" as something to route around,
+hide, or explain away. It resolves itself the same way it always has:
+someone watches the episode and writes the next questions.
