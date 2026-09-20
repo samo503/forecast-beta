@@ -45,6 +45,22 @@ export default function GuideChannels({
           </p>
           <div className="-mx-4 overflow-x-auto px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <div className="flex gap-1.5">
+              {/* "All" clears genre filtering — the existing `null` state
+                  already means exactly that, so this is a real selection,
+                  not a new state to track. Same neutral active treatment
+                  as every other chip, not the brand pink CTA color — a
+                  filter default, not a primary action. */}
+              <button
+                type="button"
+                onClick={() => setActiveGenre(null)}
+                className={`shrink-0 rounded-full border px-2.5 py-1 text-caption font-medium transition ${
+                  activeGenre === null
+                    ? "border-white/20 bg-white/[0.12] text-white"
+                    : "border-white/10 bg-white/[0.04] text-slate-400"
+                }`}
+              >
+                All
+              </button>
               {genreChips.map((genre) => {
                 const active = genre === activeGenre;
                 return (

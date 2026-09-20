@@ -86,13 +86,20 @@ export default async function Home() {
   }
 
   // ── Up Next hero ──
-  // One card per upcoming/live episode, not one per channel — Channels
-  // (below) answers coverage, Up Next answers "what's next," and
-  // consecutive episodes from one show intermixing with others as their
-  // schedules fill in is the intended feel, not a bug to dedupe away
-  // (see docs/decisions.md). channelEpisode above is untouched and still
-  // powers the Channels grid's own one-per-channel summary.
-  const HERO_LIMIT = 8;
+  // One card per upcoming/live episode, not one per channel — Featured
+  // Channels (below) answers coverage, Up Next answers "what matters
+  // next," and consecutive episodes from one show intermixing with others
+  // as their schedules fill in is the intended feel, not a bug to dedupe
+  // away (see docs/decisions.md). channelEpisode above is untouched and
+  // still powers Featured Channels' own one-per-channel summary.
+  //
+  // Capped at 4, not 8: Up Next answers "what matters next," not "show me
+  // the full schedule" — that's /schedule's job now, linked from this
+  // section's own heading row. No per-channel dedup here either; if
+  // chronological order naturally surfaces two episodes from the same
+  // still-serializing show before anything else airs, that's real and
+  // correct, not something to filter down to one-per-channel.
+  const HERO_LIMIT = 4;
   const heroFeed: HeroFeedShow[] = (episodeRows ?? [])
     .filter((e) => e.channel && effectiveEpisodeStatus(e.status, e.air_date, now, e.runtime_minutes) !== "ended")
     .slice(0, HERO_LIMIT)
@@ -121,7 +128,7 @@ export default async function Home() {
   const heroHeading = primaryHero?.isLive ? "Live now" : "Up next";
   const heroSubtitle = primaryHero?.isLive
     ? "Picks are locked until results are in."
-    : "What's coming up.";
+    : "Upcoming episodes and events on Forecast.";
 
   // ── Channels ──
   // Live first, then soonest upcoming episode, then channels with nothing
@@ -164,13 +171,24 @@ export default async function Home() {
         {heroFeed.length > 0 && (
         <section className="space-y-2">
           <div className="space-y-0.5">
-            <p
-              className={`text-label uppercase tracking-[0.32em] ${
-                primaryHero?.isLive ? "text-rose-400" : "text-cyan-400"
-              }`}
-            >
-              {heroHeading}
-            </p>
+            <div className="flex items-center justify-between gap-2">
+              <p
+                className={`text-label uppercase tracking-[0.32em] ${
+                  primaryHero?.isLive ? "text-rose-400" : "text-cyan-400"
+                }`}
+              >
+                {heroHeading}
+              </p>
+              {/* Restrained — belongs to the heading row, not a second CTA
+                  next to "Make a prediction." /schedule is the full
+                  upcoming list; this is the 4-events teaser. */}
+              <Link
+                href="/schedule"
+                className="shrink-0 text-micro font-semibold text-slate-500 transition hover:text-slate-400"
+              >
+                See full schedule →
+              </Link>
+            </div>
             <p className="text-caption text-slate-500">{heroSubtitle}</p>
           </div>
 
