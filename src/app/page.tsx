@@ -121,7 +121,7 @@ export default async function Home() {
   const heroHeading = primaryHero?.isLive ? "Live now" : "Up next";
   const heroSubtitle = primaryHero?.isLive
     ? "Picks are locked until results are in."
-    : "Upcoming episodes you can predict.";
+    : "What's coming up.";
 
   // ── Channels ──
   // Live first, then soonest upcoming episode, then channels with nothing
