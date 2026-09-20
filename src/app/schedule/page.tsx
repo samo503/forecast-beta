@@ -40,7 +40,7 @@ export default async function Schedule() {
       (e) =>
         e.channel &&
         e.air_date &&
-        effectiveEpisodeStatus(e.status, e.air_date, now) !== "ended"
+        effectiveEpisodeStatus(e.status, e.air_date, now, e.runtime_minutes) !== "ended"
     )
     .map((e) => ({
       id: e.id,
@@ -49,7 +49,7 @@ export default async function Schedule() {
       airDate: e.air_date as string,
       show: e.channel.name,
       accentColor: e.channel.accent_color ?? null,
-      isLive: effectiveEpisodeStatus(e.status, e.air_date, now) === "live",
+      isLive: effectiveEpisodeStatus(e.status, e.air_date, now, e.runtime_minutes) === "live",
       hasOpenPrediction: openPredictionEpisodeIds.has(e.id),
     }));
 
