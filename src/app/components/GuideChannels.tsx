@@ -62,93 +62,85 @@ export default function GuideChannels({
       <div className="grid grid-cols-2 gap-3">
         {filtered.map(({ channel, episode, isLive }) => {
           const poster = channelPosters[channel.slug] ?? "";
-          const renderTypography = !poster;
 
           return (
             <article
               key={channel.id}
-              className="min-h-[150px] overflow-hidden rounded-xl border border-white/10 bg-slate-950/10 shadow-sm"
+              className="flex flex-col overflow-hidden rounded-xl border border-white/10 shadow-sm"
               style={{
                 borderLeftWidth: 2,
                 borderLeftColor: channel.accent_color ?? undefined,
               }}
             >
-              <div className="relative h-full">
-                {renderTypography ? (
-                  <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-slate-900 to-slate-800 px-4" />
-                ) : (
+              {/* Real, unobstructed image region — no scrim, since no text
+                  ever sits over it (see docs/decisions.md's Channels-grid
+                  entry for the full reasoning). Height + the info region's
+                  padding below were both tuned against real rendered
+                  measurements (Playwright, WebKit) to land in the 40-45%
+                  image-height target, not eyeballed. Matches Up Next's
+                  imagery-forward treatment in spirit without copying its
+                  full-bleed, text-over-photo composition — that stays Up
+                  Next's own. */}
+              <div className="relative h-[88px] w-full shrink-0 bg-slate-900">
+                {poster ? (
                   <PosterBackground
                     src={poster}
                     title=""
                     // Lanterns reuses its own hero photo here (see
-                    // lib/standinImages.ts) — a lower crop keeps this
-                    // card visually distinct from the hero's framing
-                    // of the same source image.
+                    // lib/standinImages.ts) — a tighter, higher crop than
+                    // the full-card version this replaced, chosen for
+                    // what actually reads at this card's new, much
+                    // shorter image band rather than reusing the old
+                    // full-card framing unexamined.
                     backgroundPosition={
-                      channel.slug === "lanterns" ? "center 75%" : "center"
+                      channel.slug === "lanterns" ? "center 30%" : "center"
                     }
                     sizes="(max-width: 640px) 50vw, 320px"
                   />
+                ) : (
+                  // No mapped artwork (Survivor, Emmys): not a blank
+                  // placeholder — a solid wash of the channel's own real,
+                  // already-approved accent color, the same identity
+                  // signal the left rail already carries, rather than a
+                  // second copy of PosterBackground's generic gray
+                  // no-image gradient sitting isolated in its own band.
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      backgroundColor: channel.accent_color
+                        ? `color-mix(in srgb, ${channel.accent_color} 22%, #0b0d12)`
+                        : "#0b0d12",
+                    }}
+                  />
                 )}
+              </div>
 
-                {/* A real scrim, not a fading tint. Measured (20th-
-                    percentile-darkest pixel behind the description
-                    line, avoiding glyph-pixel contamination in a
-                    plain average): the original from-slate-950/85
-                    blend measured 3.28:1 for Lanterns specifically
-                    (3.82–4.23:1 for the other two, photo-dependent
-                    either way) against text-slate-500. A semi-
-                    transparent overlay always lets some of the
-                    photo's own brightness through no matter how far
-                    the stops are pushed — text-slate-500 against
-                    genuine black tops out around 4.3:1 regardless
-                    (that's its own luminance's ceiling, not a
-                    background problem), so closing the gap needs the
-                    region directly behind the text to be *opaque*,
-                    not blended. from-slate-950/via-slate-950 (both
-                    fully opaque — no percent-based alpha) through
-                    90% of the card's height makes that whole region
-                    solid and photo-independent regardless of exactly
-                    where a given channel's text block starts. Pushed
-                    from the original 82% after a real-device check on
-                    Lanterns specifically still read as low-contrast
-                    against its cloud/lightning image — the extra
-                    margin covers description-length variance across
-                    channels (four now, not three) rather than
-                    re-measuring one fixed line count. Only the top
-                    ~10% still fades to transparent and shows the
-                    source photo. */}
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 from-0% via-slate-950 via-90% to-transparent" />
-
-                <div className="relative flex h-full flex-col justify-end p-3">
-                  <div className="space-y-1">
-                    <p className="text-body font-bold tracking-tight text-white">
-                      {channel.name}
-                    </p>
-                    {channel.description && (
-                      <p className="line-clamp-2 text-caption text-slate-500">
-                        {channel.description}
-                      </p>
-                    )}
-                    <p
-                      className={`text-caption ${
-                        isLive || episode ? "text-slate-500" : "text-slate-600"
-                      }`}
-                    >
-                      {isLive ? (
-                        "Live now"
-                      ) : episode ? (
-                        <>
-                          Next:{" "}
-                          {episode.episode_number ? `E${episode.episode_number} · ` : ""}
-                          <LocalTime iso={episode.air_date!} />
-                        </>
-                      ) : (
-                        "No upcoming episodes"
-                      )}
-                    </p>
-                  </div>
-                </div>
+              <div className="flex flex-1 flex-col justify-center gap-1 bg-slate-950 p-2">
+                <p className="text-body font-bold leading-tight tracking-tight text-white">
+                  {channel.name}
+                </p>
+                {channel.description && (
+                  <p className="line-clamp-2 text-caption leading-snug text-slate-500">
+                    {channel.description}
+                  </p>
+                )}
+                <p
+                  className={`text-caption leading-tight ${
+                    isLive || episode ? "text-slate-500" : "text-slate-600"
+                  }`}
+                >
+                  {isLive ? (
+                    "Live now"
+                  ) : episode ? (
+                    <>
+                      Next:{" "}
+                      {episode.episode_number ? `E${episode.episode_number} · ` : ""}
+                      <LocalTime iso={episode.air_date!} />
+                    </>
+                  ) : (
+                    "No upcoming episodes"
+                  )}
+                </p>
               </div>
             </article>
           );

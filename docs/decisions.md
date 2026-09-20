@@ -665,3 +665,44 @@ source.
 An episode with no `runtime_minutes` set falls back to
 `LIVE_WINDOW_MINUTES` (90, unchanged) — see `src/lib/episodeStatus.ts`.
 Full investigation: `docs/reports/episode-duration-plan.md`.
+
+## Channels grid: real image region, not a scrimmed full-bleed background
+
+**The 2×2 Channels grid card (`GuideChannels.tsx`) no longer renders
+the poster as a full-card background behind an opaque scrim.** The
+prior composition put a `from-slate-950 via-90%` gradient over ~90% of
+the card so text stayed legible, which left only a thin ~10% sliver of
+actual photo visible — the image was structurally present but not
+actually seen. Replaced with two stacked, non-overlapping regions: an
+unobstructed image band on top (no gradient of any kind — nothing sits
+over it, so nothing needs to fade it) and an opaque `bg-slate-950`
+info region below carrying the title, description, and Next line.
+Tuned by real measurement (Playwright, WebKit, against production
+data), not eyeballed: image height and info-region padding/line-height
+together land the image at 42-45% of the card's real rendered height,
+inside the approved 40-45% target. This intentionally stays short of
+Up Next's full-bleed, text-over-photo treatment — that's Up Next's own
+grammar (the richest imagery on the page, per this file's Imagery
+section), and copying it here would flatten the hierarchy between
+"hero" and "browse grid." Total card height grew from the previous
+150px floor to ~195px real rendered height — a real, visible increase,
+not disguised as free — a genuinely separate, unobstructed image region
+costs vertical space that overlaying text on the photo used to avoid
+paying.
+
+**Survivor and Emmys currently have no mapped artwork** (see this
+file's Imagery section — no channel's art ships until its visual
+family is approved, and neither of these two has been). Their image
+region does not reuse `PosterBackground`'s generic gray no-image
+gradient — isolated alone in its own 40-45%-height band, a second copy
+of that gradient risked reading as a broken/empty placeholder rather
+than an intentional fallback. Instead it's a solid wash of the
+channel's own real `accent_color` (`color-mix(in srgb, accent 22%,
+#0b0d12)`) — the same identity signal the left accent rail already
+carries, not a fabricated image. **This is a known, accepted
+inconsistency, not a bug**: the grid is consistent in rhythm (all four
+image regions are the same height and position) but not in richness —
+two cards show real photography, two show a flat color block. That gap
+closes only when Survivor and Emmys get real approved artwork; nothing
+in this card redesign should be read as optimized around either
+channel staying image-free permanently.
