@@ -15,11 +15,14 @@
 // report for why an active channel rendering as a plain text card next to
 // others with art was the thing being fixed.
 //
-// No entry for "emmys" — its stand-in (forecast_guide_card_emmys.png)
-// depicted an Emmy statuette, trademarked franchise iconography under
-// decisions.md's Imagery rule, and was removed along with the asset
-// itself. That channel renders the plain accent-color fallback until a
-// compliant replacement exists.
+// No entry for "emmys" here — its original stand-in depicted an Emmy
+// statuette (trademarked franchise iconography under decisions.md's
+// Imagery rule) and was removed. A compliant replacement exists now
+// (forecast_guide_card_emmys.png, added 2026-09-20 — see
+// channelCardImages below) but Emmys currently has no upcoming episode,
+// so it never reaches Up Next's carousel; nothing to wire here until
+// that changes. The Channels-grid card still gets it via
+// channelCardImages.
 export const channelPosters: Record<string, string> = {
   lanterns: "/images/standin/forecast_guide_hero_lanterns.png",
   "love-island-usa": "/images/standin/forecast_guide_card_love_island.png",
@@ -31,14 +34,20 @@ export const channelPosters: Record<string, string> = {
 // `channelCardImages[slug] ?? channelPosters[slug]`). Lanterns and Love
 // Island have no entry here and fall through to channelPosters (the same
 // single image reused for both surfaces, differentiated only by
-// backgroundPosition) — Survivor is the first channel with a real,
-// separately-shot-for-the-card asset instead of a reused hero crop, so it
-// gets its own entry rather than forcing the other two into this map for
-// no reason. Today's two Survivor files are byte-identical (same source
-// image, two names) — this split still exists so a future replacement of
-// just the card asset doesn't require a code change.
+// backgroundPosition) — Survivor and Emmys both have a real,
+// separately-shot-for-the-card asset instead of a reused hero crop, so
+// they get their own entries rather than forcing the other two into this
+// map for no reason. Today's two Survivor files are byte-identical (same
+// source image, two names) — this split still exists so a future
+// replacement of just the card asset doesn't require a code change.
+//
+// Emmys (added 2026-09-20): warm golden spotlight beam upper-left,
+// burgundy velvet curtain filling the rest — a real theater stage, no
+// statuette, no logo, no people. Approved stand-in, same temporary
+// AI-generated category as the rest of this file.
 export const channelCardImages: Record<string, string> = {
   survivor: "/images/standin/forecast_guide_card_survivor.png",
+  emmys: "/images/standin/forecast_guide_card_emmys.png",
 };
 
 // Guide's hero strip — keyed per episode, not per channel, since the
