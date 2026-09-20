@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Lock, Target, Flame, Trophy, Star, Crown, Mic, Sparkles, Zap } from "lucide-react";
+import { Lock, Target, Flame, Tv, Crown, Mic, Sparkles, Zap } from "lucide-react";
 import BottomNav from "../components/BottomNav";
 import PosterBackground from "../components/PosterBackground";
 import TopBar from "../components/TopBar";
@@ -25,30 +25,83 @@ const SHOW_FOLLOWING = false;
 const SHOW_ACTIVITY = false;
 const SHOW_FRIENDS = false;
 
+// No lucide primitive reads as "a hand of prediction cards" — every option
+// close enough (Layers, Copy, CreditCard) reads as generic stacked-document
+// iconography, not specifically cards being swept. A small custom mark
+// composed from the same rounded-rect + checkmark vocabulary the rest of
+// the icon set already uses (see Tv/Target/Flame below), not a redrawn
+// logo. Accepts the same {className, strokeWidth} shape every lucide icon
+// here does, so it drops into LOCKED_TROPHIES' icon slot without a
+// special case at the render site.
+function FullSweepIcon({
+  className,
+  strokeWidth = 1.75,
+}: {
+  className?: string;
+  strokeWidth?: number;
+}) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      {/* Back two cards: plain outlines only — a checkmark on every card in
+          an overlapping fan reads as a blob at this size, not three marks.
+          One clear check on the front card communicates "swept" without
+          the clutter. */}
+      <g transform="rotate(-20 12 19)">
+        <rect x="6" y="4" width="7.5" height="11" rx="1.4" />
+      </g>
+      <g transform="rotate(20 12 19)">
+        <rect x="10.5" y="4" width="7.5" height="11" rx="1.4" />
+      </g>
+      <g>
+        <rect x="8.25" y="3" width="7.5" height="11" rx="1.4" />
+        <path d="M10.4 8.3l1.1 1.2 2.3-2.8" strokeWidth={strokeWidth * 0.9} />
+      </g>
+    </svg>
+  );
+}
+
 // Hardcoded and all locked. There's no trophy-awarding logic or schema for
 // any of these yet, so this is a fixed list of goals, not progress pulled
 // from data — see docs/decisions.md's "Trophy rules" section for exactly
 // how each would be derived once an earned-state pass happens.
+//
+// Icon shapes (not colors or unlock state — see the render site) match the
+// approved mockup's iconography: Tv (retro set, antenna and all — lucide's
+// closest primitive) for Called It, a filled Flame for Hot Streak, Target
+// (already a bullseye) for Sharp Eye unchanged, and the custom
+// FullSweepIcon above for Full Sweep in place of the old generic Star.
 const LOCKED_TROPHIES = [
   {
     name: "Called It",
     criterion: "Correctly predict an outcome that most people missed.",
-    icon: Trophy,
+    icon: Tv,
+    filled: false,
   },
   {
     name: "Hot Streak",
     criterion: "Get five predictions right in a row.",
     icon: Flame,
+    filled: true,
   },
   {
     name: "Sharp Eye",
     criterion: "Reach 70%+ accuracy across 10+ resolved predictions.",
     icon: Target,
+    filled: false,
   },
   {
     name: "Full Sweep",
     criterion: "Get every prediction right for a single episode or event.",
-    icon: Star,
+    icon: FullSweepIcon,
+    filled: false,
   },
 ];
 
@@ -162,7 +215,7 @@ export default function ProfileClient({
 
   return (
     <main className="relative min-h-screen bg-[#020205] pb-28 text-white">
-      <div className="mx-auto flex max-w-[640px] flex-col gap-6 px-4 pt-5">
+      <div className="mx-auto flex max-w-[640px] flex-col gap-4 px-4 pt-5">
 
         {/* No top-left avatar on Profile — the hero below is the one real
             identity display on this page; duplicating it in the header
@@ -173,16 +226,21 @@ export default function ProfileClient({
           onRightIconClick={() => router.push("/settings")}
         />
 
-        {/* ── Profile Hero ── */}
-        <div className="relative flex flex-col items-center gap-[5px]">
+        {/* ── Profile Hero ──
+            Compact identity block, not a full-bleed header — avatar, name/
+            handle, optional bio, tightly stacked. Absence of a bio must not
+            leave this taller than the with-bio case would be; every gap
+            here is fixed and small, not padding sized for content that may
+            not exist. */}
+        <div className="relative flex flex-col items-center gap-1">
           {/* Radial depth wash */}
-          <div className="pointer-events-none absolute inset-x-0 -top-4 h-40 bg-[radial-gradient(ellipse_70%_55%_at_50%_10%,rgba(255,255,255,0.06),transparent)]" />
+          <div className="pointer-events-none absolute inset-x-0 -top-4 h-28 bg-[radial-gradient(ellipse_70%_55%_at_50%_10%,rgba(255,255,255,0.06),transparent)]" />
 
           {/* Avatar — no streak badge here; the flame lives on the streak
               stat below now, not duplicated on every avatar in the app. */}
           <div className="relative z-10">
             <div
-              className="flex h-[58px] w-[58px] items-center justify-center overflow-hidden rounded-full bg-slate-900"
+              className="flex h-[50px] w-[50px] items-center justify-center overflow-hidden rounded-full bg-slate-900"
               style={{
                 boxShadow:
                   "0 0 0 1px rgba(255,255,255,0.13), 0 0 22px rgba(255,255,255,0.10)",
@@ -195,7 +253,7 @@ export default function ProfileClient({
                   className="h-full w-full object-cover"
                 />
               ) : (
-                <span className="text-title font-bold text-slate-500">
+                <span className="text-body font-bold text-slate-500">
                   {(profile.name ?? profile.handle.replace(/^@/, "")).charAt(0).toUpperCase()}
                 </span>
               )}
@@ -206,7 +264,7 @@ export default function ProfileClient({
               unset, @handle (always real) becomes the primary identity line
               instead of a fabricated name. No Edit control: there's no edit
               flow anywhere in the app yet (see docs/decisions.md). */}
-          <div className="relative z-10 flex flex-col items-center gap-[3px]">
+          <div className="relative z-10 flex flex-col items-center gap-[2px]">
             {profile.name ? (
               <>
                 <span className="text-title font-black leading-none text-white">
@@ -230,14 +288,14 @@ export default function ProfileClient({
               cap; truncating existing content server-side would risk
               cutting it mid-word for no reason. */}
           {profile.identityLine && (
-            <p className="relative z-10 mx-auto line-clamp-2 max-w-[280px] text-center text-caption leading-relaxed text-slate-400">
+            <p className="relative z-10 mx-auto line-clamp-2 max-w-[280px] text-center text-caption leading-snug text-slate-400">
               {profile.identityLine}
             </p>
           )}
         </div>
 
         {/* ── Stats Row ── */}
-        <div className="flex items-center justify-between rounded-xl border border-white/[0.07] bg-white/[0.025] px-5 py-3">
+        <div className="flex items-center justify-between rounded-xl border border-white/[0.07] bg-white/[0.025] px-5 py-2">
           <div className="flex flex-col items-center gap-0.5">
             <span className="text-title font-black leading-none text-white">
               {stats.accuracy === null ? "—" : `${stats.accuracy}%`}
@@ -266,24 +324,36 @@ export default function ProfileClient({
         {/* ── Trophies (real, locked) ──
             A grid, not a list: four fixed slots read as a shelf with empty
             spaces, which is the point. A vertical checklist would read as
-            a to-do list instead of a shelf. */}
-        <section className="space-y-2">
+            a to-do list instead of a shelf.
+
+            Cards are landscape, not near-square — width comes from the
+            existing 2-column grid unchanged; height is compressed (tight
+            padding/gaps, no wasted vertical space) rather than the grid
+            being narrowed. All four render in the same muted slate-600
+            locked treatment — no trophy here is actually earned yet (see
+            docs/decisions.md's "Trophy rules"), so none gets the mockup's
+            gold/accent unlocked styling regardless of icon shape. */}
+        <section className="space-y-1.5">
           <p className="px-0.5 text-caption font-bold uppercase tracking-[0.24em] text-slate-500">
             Trophies
           </p>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
             {LOCKED_TROPHIES.map((trophy) => {
               const Icon = trophy.icon;
               return (
                 <div
                   key={trophy.name}
-                  className="relative flex flex-col items-center gap-1.5 rounded-xl border border-white/[0.07] bg-white/[0.02] px-3 py-2 text-center"
+                  className="relative flex flex-col items-center justify-center gap-0.5 rounded-xl border border-white/[0.07] bg-white/[0.02] px-3 py-1.5 text-center"
                 >
                   <Lock
                     className="absolute right-2 top-2 h-2.5 w-2.5 text-slate-600"
                     strokeWidth={2}
                   />
-                  <Icon className="h-5 w-5 text-slate-600" strokeWidth={1.75} />
+                  <Icon
+                    className="h-5 w-5 text-slate-600"
+                    strokeWidth={1.75}
+                    {...(trophy.filled ? { fill: "currentColor" } : {})}
+                  />
                   <span className="text-caption font-semibold text-slate-300">{trophy.name}</span>
                   <span className="text-micro leading-snug text-slate-400">
                     {trophy.criterion}
@@ -400,13 +470,13 @@ export default function ProfileClient({
             ) : (
               predictionRecord.map((item) =>
                 item.status === "resolved" ? (
-                  <div key={item.id} className="flex items-start gap-2.5 py-2">
+                  <div key={item.id} className="flex items-start gap-2 py-1.5">
                     <div
-                      className={`mt-[4px] h-[5px] w-[5px] shrink-0 rounded-full ${
+                      className={`mt-[3px] h-[5px] w-[5px] shrink-0 rounded-full ${
                         item.result === "correct" ? "bg-emerald-400/75" : "bg-rose-400/70"
                       }`}
                     />
-                    <div className="flex min-w-0 flex-1 flex-col gap-[2px]">
+                    <div className="flex min-w-0 flex-1 flex-col gap-px">
                       <span className="text-micro text-slate-500">{item.show}</span>
                       <p className="text-caption leading-snug text-slate-400">{item.question}</p>
                       <span className="text-micro text-slate-500">
@@ -414,7 +484,7 @@ export default function ProfileClient({
                         <span className="text-slate-400">{item.pick}</span>
                       </span>
                     </div>
-                    <div className="flex shrink-0 flex-col items-end gap-[2px] pt-[3px]">
+                    <div className="flex shrink-0 flex-col items-end gap-px pt-[2px]">
                       <span
                         className={`text-micro font-semibold ${
                           item.result === "correct" ? "text-emerald-400/75" : "text-rose-400/65"
@@ -428,9 +498,9 @@ export default function ProfileClient({
                     </div>
                   </div>
                 ) : (
-                  <div key={item.id} className="flex items-start gap-2.5 py-2">
-                    <div className="mt-[4px] h-[5px] w-[5px] shrink-0 rounded-full bg-amber-400/60" />
-                    <div className="flex min-w-0 flex-1 flex-col gap-[2px]">
+                  <div key={item.id} className="flex items-start gap-2 py-1.5">
+                    <div className="mt-[3px] h-[5px] w-[5px] shrink-0 rounded-full bg-amber-400/60" />
+                    <div className="flex min-w-0 flex-1 flex-col gap-px">
                       <span className="text-micro text-slate-500">{item.show}</span>
                       <p className="text-caption leading-snug text-slate-400">{item.question}</p>
                       <span className="text-micro text-slate-500">
@@ -438,7 +508,7 @@ export default function ProfileClient({
                         <span className="text-slate-400">{item.pick}</span>
                       </span>
                     </div>
-                    <div className="flex shrink-0 flex-col items-end pt-[3px]">
+                    <div className="flex shrink-0 flex-col items-end pt-[2px]">
                       <span className="text-micro text-slate-600">
                         {pendingStatusLabel(item.locksAt)}
                       </span>
