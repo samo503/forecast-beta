@@ -43,6 +43,36 @@ introduced, announced, found, awarded, or played during the episode.
 
 ---
 
+## Lanterns — Episode 7 (Sept 27, 2026)
+
+Seeded by `supabase/migrations/0016_seed_lanterns_e7_predictions.sql`
+(not yet applied as of this writing).
+
+**`dddddddd-3333-3333-3333-000000000001`**
+Does John Stewart fly using a Green Lantern ring in Episode 7?
+Resolves Yes if John is shown on screen flying under ring power, for
+any length of time. Being carried or jumping does not count.
+
+**`dddddddd-3333-3333-3333-000000000002`**
+Do the Guardians find out that John has Hal's ring?
+Resolves Yes only if the episode explicitly shows the Guardians
+knowing John has Hal's ring, whether they discover it or are told.
+Hints or suspicion do not count.
+
+**`dddddddd-3333-3333-3333-000000000003`**
+Do Guy Gardner and John Stewart fight each other in Episode 7?
+Resolves Yes if Guy and John exchange physical blows or use ring
+constructs against each other, including sparring. A verbal
+confrontation alone does not count.
+
+**`dddddddd-3333-3333-3333-000000000004`**
+Is it revealed who broke Sinestro out of Spazkaban (Space Azkaban)?
+Resolves Yes only if the person who broke Sinestro out of Spazkaban
+(Space Azkaban) is named or shown on screen. Speculation or a teased
+silhouette does not count.
+
+---
+
 ## Lanterns — Episode 6, "Bad Optics"
 
 **Criteria not recoverable from the repo.** These four predictions
