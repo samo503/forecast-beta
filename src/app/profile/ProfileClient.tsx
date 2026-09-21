@@ -33,6 +33,24 @@ const SHOW_FRIENDS = false;
 // logo. Accepts the same {className, strokeWidth} shape every lucide icon
 // here does, so it drops into LOCKED_TROPHIES' icon slot without a
 // special case at the render site.
+//
+// Five cards, not three — matches the approved mockup exactly, and reads
+// clearly at this size specifically *because* it's wider, not because it's
+// simpler: cramming 5 cards into a square icon (the original attempt) is
+// what made it illegible.
+//
+// A single shared rotation pivot (tried first) fans the card *tops* out
+// nicely but forces every card's bottom-center through the exact same
+// point — checkmarks placed anywhere near that point collapse into one
+// blob regardless of where on the card they sit. The mockup's own fan
+// doesn't do that: each card is independently positioned along a shifted
+// baseline and tilted around its *own* center, the way playing cards are
+// actually laid out fanned on a table — not five cards pivoting from one
+// held point. Positioning each card independently (translate + its own
+// small rotation) instead of deriving all five from one shared pivot is
+// what actually reproduces that: adjacent cards overlap by a fixed,
+// controlled amount, and every checkmark sits in its own card's clearly
+// visible area, not near a convergence point.
 function FullSweepIcon({
   className,
   strokeWidth = 1.75,
@@ -40,9 +58,20 @@ function FullSweepIcon({
   className?: string;
   strokeWidth?: number;
 }) {
+  const CARD_W = 8;
+  const CARD_H = 13;
+  const TOP = 6;
+  const cards = [
+    { x: 10, rotate: -26 },
+    { x: 17, rotate: -13 },
+    { x: 24, rotate: 0 },
+    { x: 31, rotate: 13 },
+    { x: 38, rotate: 26 },
+  ];
+  const checkStroke = strokeWidth * 0.85;
   return (
     <svg
-      viewBox="0 0 24 24"
+      viewBox="0 0 56 24"
       fill="none"
       stroke="currentColor"
       strokeWidth={strokeWidth}
@@ -50,20 +79,18 @@ function FullSweepIcon({
       strokeLinejoin="round"
       className={className}
     >
-      {/* Back two cards: plain outlines only — a checkmark on every card in
-          an overlapping fan reads as a blob at this size, not three marks.
-          One clear check on the front card communicates "swept" without
-          the clutter. */}
-      <g transform="rotate(-20 12 19)">
-        <rect x="6" y="4" width="7.5" height="11" rx="1.4" />
-      </g>
-      <g transform="rotate(20 12 19)">
-        <rect x="10.5" y="4" width="7.5" height="11" rx="1.4" />
-      </g>
-      <g>
-        <rect x="8.25" y="3" width="7.5" height="11" rx="1.4" />
-        <path d="M10.4 8.3l1.1 1.2 2.3-2.8" strokeWidth={strokeWidth * 0.9} />
-      </g>
+      {cards.map(({ x, rotate }) => (
+        <g
+          key={x}
+          transform={`rotate(${rotate} ${x + CARD_W / 2} ${TOP + CARD_H})`}
+        >
+          <rect x={x} y={TOP} width={CARD_W} height={CARD_H} rx={1.3} />
+          <path
+            d={`M${x + 2} ${TOP + 7.5} l1.3 1.4 2.3-3`}
+            strokeWidth={checkStroke}
+          />
+        </g>
+      ))}
     </svg>
   );
 }
@@ -75,33 +102,39 @@ function FullSweepIcon({
 //
 // Icon shapes (not colors or unlock state — see the render site) match the
 // approved mockup's iconography: Tv (retro set, antenna and all — lucide's
-// closest primitive) for Called It, a filled Flame for Hot Streak, Target
+// closest primitive) for Called It, an outline Flame for Hot Streak
+// (mockup's own flame renders filled/solid in its unlocked-and-colored
+// state, but every trophy here stays in the muted locked treatment — an
+// outline keeps stroke weight consistent across all four rather than
+// mixing one filled glyph into an otherwise all-outline set), Target
 // (already a bullseye) for Sharp Eye unchanged, and the custom
 // FullSweepIcon above for Full Sweep in place of the old generic Star.
+// `size` is per-trophy (Full Sweep is deliberately wider, not square) —
+// see the render site.
 const LOCKED_TROPHIES = [
   {
     name: "Called It",
     criterion: "Correctly predict an outcome that most people missed.",
     icon: Tv,
-    filled: false,
+    iconSize: "h-6 w-6",
   },
   {
     name: "Hot Streak",
     criterion: "Get five predictions right in a row.",
     icon: Flame,
-    filled: true,
+    iconSize: "h-6 w-6",
   },
   {
     name: "Sharp Eye",
     criterion: "Reach 70%+ accuracy across 10+ resolved predictions.",
     icon: Target,
-    filled: false,
+    iconSize: "h-6 w-6",
   },
   {
     name: "Full Sweep",
     criterion: "Get every prediction right for a single episode or event.",
     icon: FullSweepIcon,
-    filled: false,
+    iconSize: "h-6 w-14",
   },
 ];
 
@@ -350,9 +383,8 @@ export default function ProfileClient({
                     strokeWidth={2}
                   />
                   <Icon
-                    className="h-5 w-5 text-slate-600"
-                    strokeWidth={1.75}
-                    {...(trophy.filled ? { fill: "currentColor" } : {})}
+                    className={`${trophy.iconSize} text-slate-600`}
+                    strokeWidth={1.5}
                   />
                   <span className="text-caption font-semibold text-slate-300">{trophy.name}</span>
                   <span className="text-micro leading-snug text-slate-400">
