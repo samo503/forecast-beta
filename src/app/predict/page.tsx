@@ -75,8 +75,9 @@ export default async function PredictPage() {
     data: { user },
   } = await authedSupabase.auth.getUser();
 
-  // My own picks — RLS only ever returns rows I own (or ones no longer
-  // 'open'), so this is safe to run even when nobody is signed in.
+  // My own picks. RLS alone is not enough here: it also returns everyone
+  // else's rows once a prediction is no longer 'open', so the query below
+  // must filter by user_id explicitly.
   let myPicks: Record<string, string> = {};
   // Resolution outcome for the signed-in user's own picks, keyed by
   // prediction id — same source of truth profile's Prediction Record
@@ -125,6 +126,7 @@ export default async function PredictPage() {
       const { data: pickRows } = await authedSupabase
         .from("user_predictions")
         .select("prediction_id, option_id, is_correct, points_awarded")
+        .eq("user_id", user.id)
         .in(
           "prediction_id",
           predictions.map((p) => p.id)

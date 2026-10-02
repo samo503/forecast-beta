@@ -624,6 +624,10 @@ export default function PredictClient({
   const [activeTab, setActiveTab] = useState<Tab>("open");
 
   useEffect(() => {
+    // Deliberate mount-then-reveal: the vote bars' width transition needs a
+    // render with width:0 to exist first, or the bar would jump straight to
+    // its final width with no animation on first paint.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setBarsMounted(true);
   }, []);
 

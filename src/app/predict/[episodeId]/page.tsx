@@ -108,6 +108,7 @@ export default async function EpisodePredictionsPage({
       const { data: pickRows } = await authedSupabase
         .from("user_predictions")
         .select("prediction_id, option_id, is_correct, points_awarded")
+        .eq("user_id", user.id)
         .in(
           "prediction_id",
           openPredictions.map((p) => p.id)
